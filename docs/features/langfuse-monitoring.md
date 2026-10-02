@@ -28,7 +28,7 @@ Langfuse 是开源项目，你可以 **自部署**（Docker / Kubernetes），�
 
 ### 通过 settings.json 配置（推荐）
 
-在 `.claude/settings.json` 的 `env` 字段中添加，这样每次启动自动生效：
+在 `.uaayzr/settings.json` 的 `env` 字段中添加，这样每次启动自动生效：
 
 ```json
 {

@@ -40,7 +40,7 @@
 | `src/engine/journal.ts` | agentCallKey(hash) + JournalStore 读写实现 |
 | `src/engine/budget.ts` | Budget 累加器 |
 | `src/engine/structuredOutput.ts` | validateAgainstSchema(Ajv) |
-| `src/engine/namedWorkflows.ts` | name → `.claude/workflows/<name>.ts\|js\|mjs` 解析 |
+| `src/engine/namedWorkflows.ts` | name → `.uaayzr/workflows/<name>.ts\|js\|mjs` 解析 |
 | `src/engine/context.ts` | EngineContext + SharedResources |
 | `src/engine/hooks.ts` | agent/parallel/pipeline/phase/log/workflow 实现 |
 | `src/engine/runWorkflow.ts` | 引擎入口：校验/执行/journal/resume |
@@ -171,10 +171,10 @@ git commit -m "feat(workflow): scaffold @claude-code-best/workflow-engine packag
 export const WORKFLOW_TOOL_NAME = 'workflow'
 
 /** 用户命名 workflow 文件目录（相对项目根）。 */
-export const WORKFLOW_DIR_NAME = '.claude/workflows'
+export const WORKFLOW_DIR_NAME = '.uaayzr/workflows'
 
 /** workflow run 持久化目录（journal + run 记录）。 */
-export const WORKFLOW_RUNS_DIR = '.claude/workflow-runs'
+export const WORKFLOW_RUNS_DIR = '.uaayzr/workflow-runs'
 
 /** 命名 workflow 支持的脚本扩展名（按优先级）。 */
 export const WORKFLOW_SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs'] as const
@@ -252,7 +252,7 @@ Expected: 这几个测试只依赖字面量构造，应直接 PASS（作为形�
 export type WorkflowInput = {
   /** 内联脚本源码。 */
   script?: string
-  /** 命名 workflow（解析到 .claude/workflows/<name>.ts|js|mjs）。 */
+  /** 命名 workflow（解析到 .uaayzr/workflows/<name>.ts|js|mjs）。 */
   name?: string
   /** 已有脚本文件绝对路径。 */
   scriptPath?: string
@@ -2224,7 +2224,7 @@ export const workflowInputSchema = z.object({
   name: z
     .string()
     .optional()
-    .describe('命名 workflow，解析到 .claude/workflows/<name>.ts|js|mjs'),
+    .describe('命名 workflow，解析到 .uaayzr/workflows/<name>.ts|js|mjs'),
   scriptPath: z
     .string()
     .optional()
@@ -2349,7 +2349,7 @@ test('脚本语法错 → 返回校验错误（不进后台）', async () => {
   }
 })
 
-test('name 解析到 .claude/workflows/<name>.ts', async () => {
+test('name 解析到 .uaayzr/workflows/<name>.ts', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'wf-tool-'))
   try {
     await mkdir(join(dir, '.claude', 'workflows'), { recursive: true })
@@ -2424,7 +2424,7 @@ export type WorkflowToolDescriptor = {
 
 const WORKFLOW_TOOL_PROMPT = `Use the Workflow tool to execute a workflow script that orchestrates multiple subagents deterministically. The script runs in the background; you receive a run_id immediately and are notified on completion.
 
-Provide the script inline via "script", or reference a named workflow via "name" (resolved from .claude/workflows/), or an existing file via "scriptPath". Pass "args" as a real JSON value (object/array/string), not a stringified string.
+Provide the script inline via "script", or reference a named workflow via "name" (resolved from .uaayzr/workflows/), or an existing file via "scriptPath". Pass "args" as a real JSON value (object/array/string), not a stringified string.
 
 Use "resumeFromRunId" to resume a prior run — completed agent() calls replay from the journal instantly.`
 
@@ -2921,7 +2921,7 @@ function extractStructuredOutput(
 /** 构造完整端口集。adapter 维护 runId → RunBinding 映射供 progress/kill 路由。 */
 export function createWorkflowAdapter(): WorkflowPorts {
   const bindings = new Map<string, RunBinding>()
-  const runsDir = `${getProjectRoot()}/.claude/workflow-runs`
+  const runsDir = `${getProjectRoot()}/.uaayzr/workflow-runs`
 
   return {
     hostFactory: makeHostFactory(),
@@ -3142,7 +3142,7 @@ import {
 import type { Command } from '../types/command.js'
 import { getCwd } from '../utils/cwd.js'
 
-/** 扫描 .claude/workflows/ 下 *.ts|*.js|*.mjs，每个生成一个 /<name> 命令。 */
+/** 扫描 .uaayzr/workflows/ 下 *.ts|*.js|*.mjs，每个生成一个 /<name> 命令。 */
 export async function getWorkflowCommands(
   cwd: string = getCwd(),
 ): Promise<Command[]> {
@@ -3194,7 +3194,7 @@ const call: LocalCommandCall = async _args => {
     lines.push('')
   }
   if (commands.length === 0) {
-    lines.push('No named workflows. Add scripts to .claude/workflows/ (*.ts/*.js/*.mjs).')
+    lines.push('No named workflows. Add scripts to .uaayzr/workflows/ (*.ts/*.js/*.mjs).')
   } else {
     lines.push('Named workflows:')
     for (const cmd of commands) lines.push(`  /${cmd.name} - ${cmd.description}`)
@@ -3334,7 +3334,7 @@ Expected: 零错误。
 Run: `FEATURE_WORKFLOW_SCRIPTS=1 bun run dev`
 然后在 REPL 中：
 1. `/workflows` —— 应显示「No named workflows」+ 提示。
-2. 创建 `.claude/workflows/demo.ts`：`export const meta = { name: 'demo', description: 'd' }\nreturn agent('say hello in one word')`。
+2. 创建 `.uaayzr/workflows/demo.ts`：`export const meta = { name: 'demo', description: 'd' }\nreturn agent('say hello in one word')`。
 3. 让模型调用 Workflow 工具 `name="demo"` —— 应返回 run_id，后台执行，完成时通知。
 4. `/workflows` —— 应看到该 run 的状态。
 

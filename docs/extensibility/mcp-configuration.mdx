@@ -1,7 +1,7 @@
 ---
 title: "MCP 配置 - 多来源合并、作用域与策略管控"
 description: "详细说明 Claude Code MCP 配置的来源层次、合并优先级、传输类型、企业策略管控、插件集成和保留名称机制。"
-keywords: ["MCP", "配置", "settings.json", ".mcp.json", "企业策略", "插件"]
+keywords: ["MCP", "配置", "settings.json", ".uaayzr/mcp.json", "企业策略", "插件"]
 ---
 
 ## 配置来源与作用域
@@ -13,9 +13,9 @@ Claude Code 的 MCP 配置来自多个来源，每个来源对应一个 `scope`�
 | 来源 | Scope | 文件/接口 | 说明 |
 |------|-------|----------|------|
 | 企业管控 | `enterprise` | 系统管理路径 `managed-mcp.json` | **排他模式**：存在时忽略所有其他来源 |
-| 本地项目 | `local` | `<project>/.claude/settings.local.json` | 项目级私有配置（不提交到 VCS） |
-| 项目配置 | `project` | `<project>/.mcp.json` | 项目级共享配置（可提交到 VCS） |
-| 用户全局 | `user` | `~/.claude/settings.json` | 用户级配置，所有项目共享 |
+| 本地项目 | `local` | `<project>/.uaayzr/settings.local.json` | 项目级私有配置（不提交到 VCS） |
+| 项目配置 | `project` | `<project>/.uaayzr/mcp.json` | 项目级共享配置（可提交到 VCS） |
+| 用户全局 | `user` | `~/.uaayzr/settings.json` | 用户级配置，所有项目共享 |
 | 插件 | `dynamic` | 插件 manifest 中 `.mcp.json` / `.mcpb` | 插件提供的 MCP 服务器 |
 | claude.ai | `claudeai` | 通过 API 获取 | claude.ai 网页端配置的连接器 |
 | 内置动态 | `dynamic` | 代码中注册 | Computer Use / Chrome 等内置服务器 |
@@ -30,7 +30,7 @@ claude.ai 连接器        ← 最低优先级
     ↓ 去重
 用户全局配置
     ↓
-项目配置（.mcp.json）    ← 需要用户审批
+项目配置（.uaayzr/mcp.json）    ← 需要用户审批
     ↓
 本地项目配置
     ↓
@@ -178,7 +178,7 @@ claude mcp list
 
 ## 项目配置审批
 
-`.mcp.json` 中的项目配置需要用户显式审批才能生效：
+`.uaayzr/mcp.json` 中的项目配置需要用户显式审批才能生效：
 
 ```typescript
 // config.ts:1166
@@ -190,7 +190,7 @@ for (const [name, config] of Object.entries(projectServers)) {
 }
 ```
 
-首次打开项目时，Claude Code 会提示用户审批 `.mcp.json` 中的每个服务器。审批状态持久化在本地配置中。
+首次打开项目时，Claude Code 会提示用户审批 `.uaayzr/mcp.json` 中的每个服务器。审批状态持久化在本地配置中。
 
 ## 插件 MCP 集成
 

@@ -32,7 +32,7 @@
 
 ### 状态文件
 
-路径: `~/.claude/daemon/remote-control.json`
+路径: `~/.uaayzr/daemon/remote-control.json`
 
 ```json
 {

@@ -6,7 +6,7 @@
 
 ## 1. 背景与现状
 
-当前 `packages/builtin-tools/src/tools/WorkflowTool/WorkflowTool.ts` 是个被阉割的版本：把 `.claude/workflows/` 里的 `.md`/`.yaml` 解析成清单，靠模型手动调用 `advance` 推进，**没有任何子 agent 编排能力**。
+当前 `packages/builtin-tools/src/tools/WorkflowTool/WorkflowTool.ts` 是个被阉割的版本：把 `.uaayzr/workflows/` 里的 `.md`/`.yaml` 解析成清单，靠模型手动调用 `advance` 推进，**没有任何子 agent 编排能力**。
 
 真正的 Workflow 能力是一个**确定性 JS 脚本编排引擎**：后台执行脚本，提供 `agent()`/`parallel()`/`pipeline()`/`phase()`/`log()` 钩子，真正 spawn 子 agent，支持 schema 校验、并发上限、journaling/resume、token budget、进度流。
 
@@ -23,7 +23,7 @@
 
 1. **范围**：完整忠实引擎——全部钩子 + schema 结构化输出 + 并发上限（16/1000/4096）+ journaling/resume + token budget + worktree 隔离 + named-workflow 加载 + 进度流到 `/workflows`。
 2. **包边界**：**严格端口适配（依赖倒置）**。`packages/workflow-engine/` 零 `src/*` / `builtin-tools` 运行时导入；只声明端口接口；核心侧提供一个 adapter 模块实现这些接口；`tools.ts` 装配时注入。
-3. **文件模型**：`.claude/workflows/<name>.ts|.js|.mjs` 脚本文件 → 命名 workflow（`Workflow` 工具 `name` 参数解析到它）+ 生成 `/<name>` 斜杠命令；`/workflows` 变为实时进度查看器。**删除** 现有 `.md`/`.yaml` 清单逻辑。
+3. **文件模型**：`.uaayzr/workflows/<name>.ts|.js|.mjs` 脚本文件 → 命名 workflow（`Workflow` 工具 `name` 参数解析到它）+ 生成 `/<name>` 斜杠命令；`/workflows` 变为实时进度查看器。**删除** 现有 `.md`/`.yaml` 清单逻辑。
 4. **执行路径**：**async 函数包装 + 信号量 + 注入端口**（方案 A）。进程内 async 模型，与 `runAgent` 的 async generator 天然契合，端口可 mock 测试。不用 `vm` 沙箱或 worker 进程。
 
 ## 3. 架构与依赖方向
@@ -53,7 +53,7 @@
 | `AgentRunner` | `agent()` 后端：`runAgentToResult(params, hostHandle) → AgentRunResult` | 委托 `runAgent` + `assembleToolPool`；schema 时注入 StructuredOutput 工具；`finalizeAgentTool` 抽取最终消息 + usage |
 | `ProgressEmitter` | `emit(event)` 推进度事件 | 写 `LocalWorkflowTaskState.progress` + `rootSetAppState` |
 | `TaskRegistrar` | 后台任务生命周期 + 读 `pendingAgentAction` | 复用 `LocalWorkflowTask` API |
-| `JournalStore` | journal 读写（按 runId） | 文件 fs（`.claude/workflow-runs/<runId>/journal.jsonl`），走端口便于 mock |
+| `JournalStore` | journal 读写（按 runId） | 文件 fs（`.uaayzr/workflow-runs/<runId>/journal.jsonl`），走端口便于 mock |
 | `PermissionGate` | `agent()` 前置权限/取消检查 | abort signal + `pendingAgentAction` |
 | `Logger` | 调试日志 + 遥测 | `logForDebugging` / `logEvent` |
 
@@ -82,7 +82,7 @@ packages/workflow-engine/
       journal.ts          hash + 读/写 journal
       budget.ts           budget 累加器（total/spent/remaining）
       structuredOutput.ts JSON Schema → 结果校验（纯函数）
-      namedWorkflows.ts   name → .claude/workflows/<name>.ts|js|mjs 解析（仅 fs）
+      namedWorkflows.ts   name → .uaayzr/workflows/<name>.ts|js|mjs 解析（仅 fs）
       constants.ts        目录/上限常量
     progress/events.ts    ProgressEvent 类型 + emit 委托
     __tests__/ …
@@ -115,7 +115,7 @@ packages/workflow-engine/
 
 ### 4.3 Journal / Resume（`journal.ts`）
 
-- journal = 按**执行顺序**的 `{ key, result }` 列表，存 `.claude/workflow-runs/<runId>/journal.jsonl`。
+- journal = 按**执行顺序**的 `{ key, result }` 列表，存 `.uaayzr/workflow-runs/<runId>/journal.jsonl`。
 - `key` = `hash(prompt + canonical(opts 去掉 label/phase 等纯展示字段))`。
 - 命中：`agent()` 先算 key，与 journal 下一项 key 比对 → **匹配则返回缓存并前进**，不匹配则丢弃后续 journal、现场重跑。
 - 因 JS 去掉 `Date.now`/`random` 后确定，执行顺序确定 → 自然得到「最长未变前缀命中、首个发散点之后全重跑」。

@@ -438,7 +438,7 @@ env overrides → config overrides → [GrowthBook 启用?]
 
 | Gate | 功能 |
 |------|------|
-| `tengu_keybinding_customization_release` | 自定义快捷键（~/.claude/keybindings.json） |
+| `tengu_keybinding_customization_release` | 自定义快捷键（~/.uaayzr/keybindings.json） |
 | `tengu_streaming_tool_execution2` | 流式工具执行（边收边执行） |
 | `tengu_kairos_cron` | 定时任务系统 |
 | `tengu_amber_json_tools` | Token 高效 JSON 工具格式（省 ~4.5%） |
@@ -740,7 +740,7 @@ packages/@ant/computer-use-{input,swift}/src/
 /login → 选择 "OpenAI Compatible" → 填写 Base URL / API Key / 模型名称
 ```
 
-或手动编辑 `~/.claude/settings.json`：
+或手动编辑 `~/.uaayzr/settings.json`：
 
 ```json
 {
@@ -962,7 +962,7 @@ GrowthBook 功能开关系统原为 Anthropic 内部构建设计，硬编码 SDK
 
 ## /login 添加 Custom Platform 选项 (2026-04-03)
 
-在 `/login` 命令的登录方式选择列表中新增 "Custom Platform" 选项（位于第一位），允许用户直接在终端配置第三方 API 兼容服务的 Base URL、API Key 和三种模型映射，保存到 `~/.claude/settings.json`。
+在 `/login` 命令的登录方式选择列表中新增 "Custom Platform" 选项（位于第一位），允许用户直接在终端配置第三方 API 兼容服务的 Base URL、API Key 和三种模型映射，保存到 `~/.uaayzr/settings.json`。
 
 **修改文件：**
 

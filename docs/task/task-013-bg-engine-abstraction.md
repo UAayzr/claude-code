@@ -176,7 +176,7 @@ export async function attachHandler(target: string | undefined): Promise<void> {
 {
   "pid": 12345,
   "engine": "detached",
-  "logPath": "~/.claude/sessions/logs/claude-bg-a1b2c3d4.log",
+  "logPath": "~/.uaayzr/sessions/logs/claude-bg-a1b2c3d4.log",
   "sessionId": "...",
   "cwd": "..."
 }

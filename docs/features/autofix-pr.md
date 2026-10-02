@@ -133,7 +133,7 @@ registerRemoteAgentTask({
     parentSessionId,
   }
   ```
-- **Skills 探测**：扫项目里 autofix-related skills（如 `.claude/skills/autofix-*` 或根目录 `AUTOFIX.md`），命中后拼到 prompt：`Run X and Y for custom instructions on how to autofix.`
+- **Skills 探测**：扫项目里 autofix-related skills（如 `.uaayzr/skills/autofix-*` 或根目录 `AUTOFIX.md`），命中后拼到 prompt：`Run X and Y for custom instructions on how to autofix.`
 
 ### 2.6 Telemetry
 
@@ -394,8 +394,8 @@ import { join } from 'path'
 export function detectAutofixSkills(cwd: string): string[] {
   const candidates = [
     'AUTOFIX.md',
-    '.claude/skills/autofix.md',
-    '.claude/skills/autofix-pr/SKILL.md',
+    '.uaayzr/skills/autofix.md',
+    '.uaayzr/skills/autofix-pr/SKILL.md',
   ]
   return candidates.filter(rel => existsSync(join(cwd, rel)))
 }

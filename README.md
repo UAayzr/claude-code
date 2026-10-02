@@ -45,19 +45,20 @@
 不用克隆仓库, 从 NPM 下载后, 直接使用
 
 ```sh
-npm i -g claude-code-best
+npm i -g uaayzr
 
 # bun 安装比较多问题, 推荐 npm 装
-# bun  i -g claude-code-best
-# bun pm -g trust claude-code-best @claude-code-best/mcp-chrome-bridge
+# bun  i -g uaayzr
 
-ccb # 以 nodejs 打开 claude code
-ccb-bun # 以 bun 形态打开
-ccb update # 更新到最新版本
-CLAUDE_BRIDGE_BASE_URL=https://remote-control.claude-code-best.win/ CLAUDE_BRIDGE_OAUTH_TOKEN=test-my-key ccb --remote-control # 我们有自部署的远程控制
+uaayzr # 以 nodejs 打开 UAayzr
+uaayzr-bun # 以 bun 形态打开
+uaayzr update # 更新到最新版本
+CLAUDE_BRIDGE_BASE_URL=https://remote-control.claude-code-best.win/ CLAUDE_BRIDGE_OAUTH_TOKEN=test-my-key uaayzr --remote-control # 我们有自部署的远程控制
 ```
 
-> **安装/更新失败？** 先 `npm rm -g claude-code-best` 清理旧版本，再 `npm i -g claude-code-best@latest`。仍失败则指定版本号：`npm i -g claude-code-best@<版本号>`
+> UAayzr 与官方 Claude Code 完全独立：命令是 `uaayzr`，个人数据保存在 `~/.uaayzr`，项目内的配置保存在项目文件夹里的 `.uaayzr/`。不要运行 `uaayzr install`，它已经被关掉，避免动到官方版本。
+
+> **安装/更新失败？** 先 `npm rm -g uaayzr` 清理旧版本，再 `npm i -g uaayzr@latest`。仍失败则指定版本号：`npm i -g uaayzr@<版本号>`
 
 ## ⚡ 快速开始(源码版)
 
@@ -213,7 +214,7 @@ TUI (REPL) 模式需要真实终端，无法直接通过 VS Code launch 启动�
 
 ### 学习记录
 
-学习进度保存在 `.claude/skills/teach-me/` 目录下，支持跨主题学习者档案。
+学习进度保存在 `.uaayzr/skills/teach-me/` 目录下，支持跨主题学习者档案。
 
 ## 相关文档及网站
 

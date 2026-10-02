@@ -31,7 +31,7 @@
 ### MVP 方案
 
 - 新增 daemon 状态文件，例如：
-  `~/.claude/daemon/remote-control.json`
+  `~/.uaayzr/daemon/remote-control.json`
 - `start` 时写入：
   - supervisor pid
   - cwd
@@ -168,7 +168,7 @@
 ### MVP 方案
 
 - 模板来源：
-  `.claude/templates/*.md`
+  `.uaayzr/templates/*.md`
 - 模板格式：
   复用现有 markdown + frontmatter 解析，不另外设计 DSL
 - `list`
@@ -176,7 +176,7 @@
   - 显示模板名、description、路径
 - `new <template> [args...]`
   - 解析模板
-  - 在 `~/.claude/jobs/<job-id>/` 下创建 job 目录
+  - 在 `~/.uaayzr/jobs/<job-id>/` 下创建 job 目录
   - 写入 `template.md`、`input.txt`、`state.json`
   - 返回 job id 与目录
 - `reply <job-id> <text>`
@@ -203,7 +203,7 @@
 
 ### 验证
 
-1. `list` 能列出 `.claude/templates`
+1. `list` 能列出 `.uaayzr/templates`
 2. `new` 能创建 job 目录和状态文件
 3. `reply` 能更新 job 内容和状态
 4. Phase 2 再验证 classifier 写状态

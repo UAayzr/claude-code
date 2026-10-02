@@ -32,7 +32,7 @@
 3. **Phase 3 — AdversarialRefutation**: general-purpose refuter 对每个 CRITICAL/HIGH 用新证据反驳
 4. **Phase 4 — FinalReport**: opus judge 综合输出最终报告
 
-journal 完整 10 条 agent 记录在 `.claude/workflow-runs/wtujwahzf/journal.jsonl`。
+journal 完整 10 条 agent 记录在 `.uaayzr/workflow-runs/wtujwahzf/journal.jsonl`。
 
 **审查过程中实证发现的额外 bug**（judge 没覆盖，因为我正好用这个引擎跑审查才暴露）：见下一节。
 
@@ -77,7 +77,7 @@ journal 完整 10 条 agent 记录在 `.claude/workflow-runs/wtujwahzf/journal.j
 ### [LOW] WorkflowTool 的 run_id 提示与实际 run 目录解析路径不一致
 
 - **文件**: `src/workflow/ports.ts:69`、`packages/workflow-engine/src/tool/WorkflowTool.ts:121`
-- **现象**: `WorkflowTool.ts:121` 的 `cwd: host.cwd` 来自 `getCwd()`（运行时 cwd，可能在 worktree 切换时变化）；而 `ports.ts:69` 的 `runsDir = ${getProjectRoot()}/.claude/workflow-runs` 用的是 session 启动时的 project root。两者在某些路径下不一致（如 mid-session `EnterWorktreeTool`）。
+- **现象**: `WorkflowTool.ts:121` 的 `cwd: host.cwd` 来自 `getCwd()`（运行时 cwd，可能在 worktree 切换时变化）；而 `ports.ts:69` 的 `runsDir = ${getProjectRoot()}/.uaayzr/workflow-runs` 用的是 session 启动时的 project root。两者在某些路径下不一致（如 mid-session `EnterWorktreeTool`）。
 - **影响**: 命名 workflow 文件解析（用 cwd）和 journal 持久化路径（用 projectRoot）可能落到不同目录，调试时混乱。
 - **修复方向**: 统一用 `getProjectRoot()`，或在文档里明确两者的语义差异。
 
@@ -156,4 +156,4 @@ journal 完整 10 条 agent 记录在 `.claude/workflow-runs/wtujwahzf/journal.j
 - **smoke test 能跑通、review-commit 不能跑通**——区别在于 review-commit 读 `args.commit`，这暴露了 schema 回归。说明现有测试覆盖（即使是 99.65% 的引擎覆盖率）无法替代真实使用场景的 dogfooding。
 - **refuter 反驳掉 2 个 CRITICAL/HIGH** 是对抗式审查的价值证明：单 reviewer 视角会基于错误假设（JS 并发模型、React ref 语义）报假阳性，多一层反驳能纠偏。
 
-完整 journal（10 条 agent 输出）：`.claude/workflow-runs/wtujwahzf/journal.jsonl`
+完整 journal（10 条 agent 输出）：`.uaayzr/workflow-runs/wtujwahzf/journal.jsonl`

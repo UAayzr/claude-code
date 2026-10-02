@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 让 workflow 的终态 `RunProgress`（含 `returnValue`）落盘到 `.claude/workflow-runs/<runId>/state.json`，跨进程重启可恢复，供 `/workflows` 面板展示历史 run 与按 runId 取 return。
+**Goal:** 让 workflow 的终态 `RunProgress`（含 `returnValue`）落盘到 `.uaayzr/workflow-runs/<runId>/state.json`，跨进程重启可恢复，供 `/workflows` 面板展示历史 run 与按 runId 取 return。
 
 **Architecture:** host 侧新增 `persistence.ts` 模块（原子写 + 容错读 + 扫盘列表），引擎层零改动。`service.ts` 订阅 bus 的 `run_done` 事件写盘；`store.ts` 加 `hydrate()` 注入磁盘 run；面板 mount 时扫盘 hydrate；`getRun` 内存 miss 走 async fallback。三种终态（completed/failed/killed）共用 `run_done` 写盘入口，shutdown 时 kill 也走同路径，无需额外钩子。
 
@@ -22,7 +22,7 @@
 | `src/workflow/__tests__/persistence.test.ts` | 新增 | 持久化往返、原子性、损坏容错、扫盘 |
 | `src/workflow/progress/store.ts` | 改 | `ProgressStore` 类型 + 实现加 `hydrate(run)` |
 | `src/workflow/__tests__/progressStore.test.ts` | 扩展 | hydrate 注入 / 已存在跳过 / 通知 listener |
-| `src/workflow/ports.ts` | 改 | `${getProjectRoot()}/.claude/workflow-runs` → `getRunsDir()` |
+| `src/workflow/ports.ts` | 改 | `${getProjectRoot()}/.uaayzr/workflow-runs` → `getRunsDir()` |
 | `src/workflow/service.ts` | 改 | `makeService(ports, store, bus)`；订阅 `run_done` 写盘；`loadPersistedRuns()`；`getRunAsync(id)` fallback；`persistedLoaded` flag |
 | `src/workflow/__tests__/service.test.ts` | 扩展 | run_done 写盘断言、getRunAsync fallback、loadPersistedRuns、签名更新 |
 | `src/workflow/panel/WorkflowsPanel.tsx` | 改 | mount 时 `void svc.loadPersistedRuns()` |
@@ -200,7 +200,7 @@ const STATE_FILE = 'state.json'
 const STATE_TMP = 'state.json.tmp'
 
 /**
- * runsDir 统一来源：与 ports.ts journalStore 同根（${projectRoot}/.claude/workflow-runs）。
+ * runsDir 统一来源：与 ports.ts journalStore 同根（${projectRoot}/.uaayzr/workflow-runs）。
  * 提取为函数：消除 ports.ts 与持久化逻辑的路径拼接重复，进入 worktree/子目录时保持同根。
  */
 export function getRunsDir(): string {
@@ -443,7 +443,7 @@ import { getRunsDir } from './persistence.js'
 把第 72 行：
 
 ```ts
-  const runsDir = `${getProjectRoot()}/.claude/workflow-runs`
+  const runsDir = `${getProjectRoot()}/.uaayzr/workflow-runs`
 ```
 
 改为：
@@ -1055,7 +1055,7 @@ Expected: 0 errors（typecheck + lint fix + test 全通过）
 - [ ] **Step 5: （可选）手工烟雾验证**
 
 启动 `bun run dev`，跑一个会完成的 workflow（如某个简单命名 workflow），确认：
-1. `.claude/workflow-runs/<runId>/state.json` 生成且含 returnValue
+1. `.uaayzr/workflow-runs/<runId>/state.json` 生成且含 returnValue
 2. 重启 CLI 后打开 `/workflows`，能看到该历史 run
 3. （若面板有详情视图）选中历史 run 能看到 agents/phases
 

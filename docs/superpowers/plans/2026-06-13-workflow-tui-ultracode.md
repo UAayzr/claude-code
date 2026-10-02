@@ -18,7 +18,7 @@
 - `AgentAdapter`（`agentAdapter.ts`）：`{ id, capabilities: {structuredOutput, tools?, stream?}, run(params, ctx: {host, signal, runId}), initialize?(), dispose?() }`。`AgentAdapterRegistry`：`register/default/route/resolve/has/get/initializeAll/disposeAll`。
 - `runWorkflow({script, args?, runId, workflowName?, ports, host, signal, cwd, budgetTotal, resume?, scriptChanged?})` → `WorkflowRunResult`。
 - `createWorkflowTool(ports)` → `WorkflowToolDescriptor`（`call(input, context, canUseTool, parentMessage, onProgress?) → {data:{output}}`）。
-- `parseScript`、`createFileJournalStore(dir)`、`resolveNamedWorkflow(dir, name)`、`listNamedWorkflows(dir)`、`createHostHandle/unwrapHostHandle`、`WORKFLOW_DIR_NAME='.claude/workflows'`、`WORKFLOW_RUNS_DIR='.claude/workflow-runs'`。
+- `parseScript`、`createFileJournalStore(dir)`、`resolveNamedWorkflow(dir, name)`、`listNamedWorkflows(dir)`、`createHostHandle/unwrapHostHandle`、`WORKFLOW_DIR_NAME='.uaayzr/workflows'`、`WORKFLOW_RUNS_DIR='.uaayzr/workflow-runs'`。
 - 核心：`runAgent({agentDefinition, promptMessages, toolUseContext, canUseTool, isAsync, querySource, availableTools, override:{agentId, model?}})`（async generator）；`assembleToolPool(permissionContext, mcpTools)`（`src/tools.ts`）；`finalizeAgentTool(messages, agentId, {prompt, resolvedAgentModel, isBuiltInAgent, startTime, agentType, isAsync})`（`.content`/`.usage.output_tokens`/`.totalTokens`）；`isBuiltInAgent`、`BuiltInAgentDefinition`、`AgentDefinition`（`loadAgentsDir`）。
 - `LocalWorkflowTask`：`registerLocalWorkflowTask(setAppState, {description, workflowName, workflowFile, summary?, toolUseId?, agentId?, abortController?}) → taskId`；`completeWorkflowTask/failWorkflowTask/killWorkflowTask(taskId, setAppState)`。
 - `buildTool(def)`（`src/Tool.ts`）；`Tool.call(args, context, canUseTool, parentMessage, onProgress?)`。
@@ -1030,7 +1030,7 @@ export function createWorkflowPorts(opts: {
   store: ProgressStore
 }): WorkflowPorts {
   const bindings = new Map<string, RunBinding>()
-  const runsDir = `${getProjectRoot()}/.claude/workflow-runs`
+  const runsDir = `${getProjectRoot()}/.uaayzr/workflow-runs`
   const registry = buildRegistry()
 
   // 遥测订阅（独立于 store）
@@ -1270,7 +1270,7 @@ export function getWorkflowService(): WorkflowService {
 /** 测试用：注入 ports。 */
 export function makeService(ports: WorkflowPorts, store: ProgressStore): WorkflowService {
   const runsDir = () =>
-    process.env.WORKFLOW_RUNS_DIR ?? `${getProjectRoot()}/.claude/workflow-runs`
+    process.env.WORKFLOW_RUNS_DIR ?? `${getProjectRoot()}/.uaayzr/workflow-runs`
 
   const buildHost = (
     toolUseContext: ToolUseContext,
@@ -1945,8 +1945,8 @@ user-invocable: true
 
 ## 文件与命令
 
-- 脚本目录：`.claude/workflows/<name>.ts|js|mjs` → 自动成 `/<name>` 命令。
-- run 记录：`.claude/workflow-runs/<runId>/journal.jsonl`。
+- 脚本目录：`.uaayzr/workflows/<name>.ts|js|mjs` → 自动成 `/<name>` 命令。
+- run 记录：`.uaayzr/workflow-runs/<runId>/journal.jsonl`。
 - 监控面板：`/workflows`（双栏：左 run 列表，右 phase+agent；j/k/r/x/n/q）。
 - 工具：`Workflow`（input: `script`/`name`/`scriptPath`/`args`/`resumeFromRunId`）。
 ```

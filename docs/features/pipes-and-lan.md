@@ -258,7 +258,7 @@ attach 后，对方变为 slave，你变为 master。可以向它发送 prompt�
             └──────────────┘            └──────────────┘
 ```
 
-- **UDS**：本机实例间通讯，通过文件系统路径寻址（`~/.claude/pipes/cli-xxx.sock`）
+- **UDS**：本机实例间通讯，通过文件系统路径寻址（`~/.uaayzr/pipes/cli-xxx.sock`）
 - **TCP**：LAN 实例间通讯，动态端口，通过 beacon 发现
 - **UDP Multicast**：peer 发现，3 秒广播一次 announce 包
 
@@ -279,7 +279,7 @@ attach 后，对方变为 slave，你变为 master。可以向它发送 prompt�
 
 ### 发现机制
 
-**本机**：通过 `~/.claude/pipes/registry.json` 文件（带文件锁），`machineId` 绑定主机身份。
+**本机**：通过 `~/.uaayzr/pipes/registry.json` 文件（带文件锁），`machineId` 绑定主机身份。
 
 **LAN**：通过 UDP multicast beacon：
 1. 每 3 秒广播 `{ proto, pipeName, machineId, ip, tcpPort, role }`

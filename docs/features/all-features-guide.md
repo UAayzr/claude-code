@@ -386,14 +386,14 @@ AI 可在对话中自动调用 `MonitorTool` 监控日志、构建输出等。
 **Feature Flag**: `WORKFLOW_SCRIPTS`
 
 ### 说明
-执行 `.claude/workflows/` 目录下的用户定义工作流脚本。
+执行 `.uaayzr/workflows/` 目录下的用户定义工作流脚本。
 
 ### 使用
 
 **创建工作流**：
 ```bash
-mkdir -p .claude/workflows
-cat > .claude/workflows/deploy.sh << 'EOF'
+mkdir -p .uaayzr/workflows
+cat > .uaayzr/workflows/deploy.sh << 'EOF'
 #!/bin/bash
 echo "Running tests..."
 bun test
@@ -401,7 +401,7 @@ echo "Building..."
 bun run build
 echo "Deploying..."
 EOF
-chmod +x .claude/workflows/deploy.sh
+chmod +x .uaayzr/workflows/deploy.sh
 ```
 
 **列出可用工作流**：

@@ -38,7 +38,7 @@
 三层防护机制：
 
 1. **LRU 内存缓存**：`storedImagePaths` Map 上限 200 条目（`MAX_STORED_IMAGE_PATHS`），超出自动驱逐最早条目
-2. **磁盘持久化**：图片 base64 数据写入 `~/.claude/image-cache/<sessionId>/`，内存中仅保留路径字符串
+2. **磁盘持久化**：图片 base64 数据写入 `~/.uaayzr/image-cache/<sessionId>/`，内存中仅保留路径字符串
 3. **立即释放**：`setPastedContents({})` 在消息提交/命令执行后清空 React state 中的 base64 数据
 
 ### 关键代码

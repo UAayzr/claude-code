@@ -46,7 +46,7 @@ CLAUDE_GB_ADAPTER_KEY=sdk-xxx
 - **Gate**: `tengu_keybinding_customization_release` → `true`
 - **编译 flag**: 无（已内置）
 - **代码量**: 473 行，完整实现
-- **功能**: 加载 `~/.claude/keybindings.json`，支持热重载、重复键检测、结构验证
+- **功能**: 加载 `~/.uaayzr/keybindings.json`，支持热重载、重复键检测、结构验证
 - **效果**: 用户可自定义所有快捷键
 - **风险**: 无
 
@@ -115,7 +115,7 @@ CLAUDE_GB_ADAPTER_KEY=sdk-xxx
 - **Gate**: `tengu_passport_quail` → `true`（相关：`tengu_moth_copse`、`tengu_coral_fern`）
 - **编译 flag**: `EXTRACT_MEMORIES`（需新增）
 - **代码量**: 616 行，完整实现
-- **功能**: 对话中自动提取持久记忆到 `~/.claude/projects/<path>/memory/`
+- **功能**: 对话中自动提取持久记忆到 `~/.uaayzr/projects/<path>/memory/`
 - **效果**: 自动构建项目知识库
 - **依赖**: Claude API（forked subagent）
 - **风险**: 低

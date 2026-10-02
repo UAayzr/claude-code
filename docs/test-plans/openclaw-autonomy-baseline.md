@@ -51,7 +51,7 @@ Establish a stable baseline around the parts of `Claude-code-bast` that later au
 ### Cron task storage
 
 1. Session-only cron tasks remain in memory only.
-2. Durable cron tasks are persisted to `.claude/scheduled_tasks.json`.
+2. Durable cron tasks are persisted to `.uaayzr/scheduled_tasks.json`.
 3. Daemon-style `dir`-scoped reads exclude session-only cron tasks.
 4. `removeCronTasks()` without `dir` can remove session-only tasks.
 5. `removeCronTasks()` with `dir` does not mutate session-only task storage.

@@ -141,9 +141,9 @@ Fields to fill in:
 
 - **Tab / Shift+Tab** to switch fields, **Enter** to confirm and move to the next, press Enter on the last field to save
 - Model fields auto-fill from current environment variables
-- Configuration saves to `~/.claude/settings.json` under the `env` key, effective immediately
+- Configuration saves to `~/.uaayzr/settings.json` under the `env` key, effective immediately
 
-You can also edit `~/.claude/settings.json` directly:
+You can also edit `~/.uaayzr/settings.json` directly:
 
 ```json
 {

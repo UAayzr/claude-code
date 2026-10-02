@@ -14,7 +14,7 @@
 
 Long-running sessions with active scheduled tasks (cron) and/or HEARTBEAT-driven proactive ticks accumulated growing memory, eventually OOM'ing the Bun process. The visible signature was:
 
-- `runs.json` under `.claude/autonomy/` growing toward the 200-record cap with most entries stuck at `queued` or `running`
+- `runs.json` under `.uaayzr/autonomy/` growing toward the 200-record cap with most entries stuck at `queued` or `running`
 - The internal command queue in REPL / headless mode draining slower than scheduled fires arrive
 - Each new fire calling `prepareAutonomyTurnPrompt`, which loads `AGENTS.md` + `HEARTBEAT.md` text and merges due-task lists into a fresh string, holding more closure state per pending command
 
@@ -36,11 +36,11 @@ Not a single deterministic repro — load-induced. Rough recipe:
 - Configure two `HEARTBEAT.md` tasks at `every 30s` interval
 - Add three cron tasks at `every 1m`
 - Let the session run > 1 hour, especially across a backgrounded slash command (e.g. KAIROS `/sleep`-style detached fork)
-- Watch `.claude/autonomy/runs.json` active-status entry count and Bun heap RSS
+- Watch `.uaayzr/autonomy/runs.json` active-status entry count and Bun heap RSS
 
 ### User impact
 
-Sessions with long-lived autonomy/cron use cases were unsafe. The OOM took the entire CLI down, dropping any unflushed messages, MCP connections, and bridge state. Because `.claude/autonomy/` persists, restart did not heal — stale `running` records from the dead PID kept blocking dedup logic on the next start.
+Sessions with long-lived autonomy/cron use cases were unsafe. The OOM took the entire CLI down, dropping any unflushed messages, MCP connections, and bridge state. Because `.uaayzr/autonomy/` persists, restart did not heal — stale `running` records from the dead PID kept blocking dedup logic on the next start.
 
 ---
 
@@ -81,7 +81,7 @@ Sessions with long-lived autonomy/cron use cases were unsafe. The OOM took the e
 | REPL | Slash command pipeline | `processUserInput → processUserInputBase → processSlashCommand` now threads `autonomy` context so commands can defer completion |
 | Headless | `runHeadlessStreaming` cron path | Same migration to `createAutonomyQueuedPromptIfNoActiveSource`, plus `shouldCreate` callback honouring `inputClosed` |
 | Tool harness | `ToolUseContext.options.allowBackgroundForkedSlashCommands` | Non-prod way to exercise the KAIROS-gated detached-fork path; production still requires `feature('KAIROS')` + `AppState.kairosEnabled` |
-| Persistence | `.claude/autonomy/runs.json` | Schema gains `ownerProcessId`, `ownerSessionId`; readers must tolerate older records lacking these fields |
+| Persistence | `.uaayzr/autonomy/runs.json` | Schema gains `ownerProcessId`, `ownerSessionId`; readers must tolerate older records lacking these fields |
 
 ---
 
@@ -367,7 +367,7 @@ Why previous local patches likely failed: any one of these in isolation looks fi
 
 ## 12. Verification
 
-### Commands (binding per `.claude/autonomy/AGENTS.md` §4)
+### Commands (binding per `.uaayzr/autonomy/AGENTS.md` §4)
 
 ```bash
 bun run typecheck
@@ -461,7 +461,7 @@ chore: reformat processSlashCommand with Biome   # ~250 lines, formatter-only
 feat: thread autonomy run id through forked slash commands for deferred completion   # ~50 lines, contract logic
 ```
 
-This satisfies `~/.claude/rules/deep-debug/core.md` §2 ("bug fix 不允许混入...格式化")
+This satisfies `~/.uaayzr/rules/deep-debug/core.md` §2 ("bug fix 不允许混入...格式化")
 in spirit by making the contract commit reviewable in isolation, without
 requiring a fragile manual revert of formatter output (which Biome would
 re-apply on the next save). All other 7 modified files in the OOM fix do not

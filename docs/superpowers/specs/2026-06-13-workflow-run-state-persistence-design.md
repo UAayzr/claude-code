@@ -8,7 +8,7 @@
 
 Workflow 脚本的 `return` 值和终态 `RunProgress`（status / agents / phases / returnValue / error）只活在 `ProgressStore`（`src/workflow/progress/store.ts`）的内存 Map 里。一旦 Claude Code 进程关闭/重启，全部丢失。
 
-已落盘的 `.claude/workflow-runs/<runId>/journal.jsonl` 只记录每个 `agent()` 调用的结构化结果，**不**包含脚本顶层 `return` 值，也无法重建 `/workflows` 面板需要的 `RunProgress` 摘要。重启后面板为空，对话 agent 也无法按 runId 取回 return 值。
+已落盘的 `.uaayzr/workflow-runs/<runId>/journal.jsonl` 只记录每个 `agent()` 调用的结构化结果，**不**包含脚本顶层 `return` 值，也无法重建 `/workflows` 面板需要的 `RunProgress` 摘要。重启后面板为空，对话 agent 也无法按 runId 取回 return 值。
 
 ## 目标
 
@@ -18,7 +18,7 @@ Workflow 脚本的 `return` 值和终态 `RunProgress`（status / agents / phase
 ## 非目标
 
 - **(c) 跨进程 resume 明确排除** — 不重建 abort controller、agent binding、未完成 phase 的中间态。当前 resume 机制（同进程内 journal replay）保持不变；跨进程续跑是独立大特性，不在本 spec 范围。
-- **自动清理** — `.claude/workflow-runs/` 持续累积，依赖项目 `.gitignore` 与用户手动清理。生命周期管理是后续特性。
+- **自动清理** — `.uaayzr/workflow-runs/` 持续累积，依赖项目 `.gitignore` 与用户手动清理。生命周期管理是后续特性。
 
 ## 架构
 
@@ -32,7 +32,7 @@ Workflow 脚本的 `return` 值和终态 `RunProgress`（status / agents / phase
 | `src/workflow/progress/store.ts` | 改 | 新增 `hydrate(run: RunProgress): void` —— 绕过 bus 直接注入磁盘 run（用于 `loadPersistedRuns`） |
 | `src/workflow/service.ts` | 改 | 订阅 bus `run_done` → `writeRunState`；`getRun(id)` 内存 miss → `readRunState` fallback；新增 `loadPersistedRuns(): Promise<void>` |
 | `src/workflow/panel/WorkflowsPanel.tsx` | 改 | mount 时调一次 `svc.loadPersistedRuns()`（flag 在 service 单例内部守护，panel 无脑调，重复调用是 no-op） |
-| `src/workflow/ports.ts` | 改 | `${getProjectRoot()}/.claude/workflow-runs` 提取为 `getRunsDir()` 共享（消除重复拼接，与 persistence.ts 同源） |
+| `src/workflow/ports.ts` | 改 | `${getProjectRoot()}/.uaayzr/workflow-runs` 提取为 `getRunsDir()` 共享（消除重复拼接，与 persistence.ts 同源） |
 
 ## 数据流
 

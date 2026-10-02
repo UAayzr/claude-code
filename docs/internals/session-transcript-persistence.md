@@ -49,7 +49,7 @@ flowchart TD
 ### 存储拓扑
 
 ```text
-~/.claude/projects/<project-key>/
+~/.uaayzr/projects/<project-key>/
   <sessionId>.jsonl
   <sessionId>/
     subagents/

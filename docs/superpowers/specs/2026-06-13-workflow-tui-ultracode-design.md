@@ -60,7 +60,7 @@
 - `src/workflow/wiring.ts` → 薄包装，走 `service`
 - `src/workflow/progressStore.ts` → 拆进 `progress/{bus,store}.ts`
 - `src/workflow/hostHandle.ts` → 清理（保留不透明 bundle 语义）
-- `src/workflow/namedWorkflowCommands.ts` → 重写（扫 `.claude/workflows/` → `/<name>`）
+- `src/workflow/namedWorkflowCommands.ts` → 重写（扫 `.uaayzr/workflows/` → `/<name>`）
 - `src/commands/workflows/index.ts` → 原地重写：`local` 文本命令 → `local-jsx` 面板入口（命令名仍为 `workflows`）
 
 **改接线点（接口不变，换实现来源）**
@@ -186,7 +186,7 @@ export const claudeCodeBackend: AgentAdapter = {
 
 - `progress/bus.ts`：`createProgressBus()` 返回 `{ emit(event), subscribe(fn) }`。emit 广播给所有订阅者（store、面板、遥测）。替换旧"只有 in-memory Map"的单消费者模型。
 - `progress/store.ts`：`RunProgress[]` reducer，沿用 `RunProgress` 形状（runId/status/phases/currentPhase/agents/logs/agentCount/returnValue/error/updatedAt）。新增 `AgentProgress.id: number`；`agent_done` 按 `event.agentId` 精确匹配 `agents[].id`（修掉旧 LIFO 竞态）。`subscribe()` 暴露给 React `useSyncExternalStore`。
-- 状态为进程内（live runs）；resume 读磁盘 journal（`.claude/workflow-runs/<runId>/journal.jsonl`）。
+- 状态为进程内（live runs）；resume 读磁盘 journal（`.uaayzr/workflow-runs/<runId>/journal.jsonl`）。
 
 ## 9. `/workflows` 双栏面板（左列表 / 右 phase+agent）
 
@@ -219,7 +219,7 @@ j/k run · r resume · x kill · n new
 - `WorkflowDetail.tsx`：右栏。一行头（workflow 名 + 状态）+ **Phases 横条**（`✓`/`●`/`○` 内联）+ **扁平 agent 列表**（每项状态符 + label + token，自动换行排版，不嵌套）。终态显示 `returnValue`/`error`。
 - `useWorkflowKeyboard.ts`：键位见下。
 
-**键位**：`j/k` 选 run · `r` resume 聚焦 workflow（读 journal）· `x` kill · `n` 选命名 workflow 启动 · `q`/`esc` 经 `onDone()` 关闭。空 run 时左栏聚焦 NAMED，右栏给"新建脚本到 `.claude/workflows/`"提示。
+**键位**：`j/k` 选 run · `r` resume 聚焦 workflow（读 journal）· `x` kill · `n` 选命名 workflow 启动 · `q`/`esc` 经 `onDone()` 关闭。空 run 时左栏聚焦 NAMED，右栏给"新建脚本到 `.uaayzr/workflows/`"提示。
 
 **颜色（Impeccable 体系）**：running = Claude Orange `#D77757` 动态点；done = 绿；failed = 红；killed = 灰；底栏键位 `subtle`。
 
@@ -242,7 +242,7 @@ j/k run · r resume · x kill · n new
 - **确定性约束**：脚本内禁 `Date.now()`/`Math.random()`（经 `args` 传时间戳/种子）；`meta` 必须纯字面量。
 - **后端路由**：`AgentAdapterRegistry` 按 model/agentType 路由；v1 默认 `claude-code`，深度读会话 provider/model/agent 体系。
 - **resume/budget**：`resumeFromRunId` 重放 journal；`budget.total` 硬顶（默认无限）。
-- **文件与命令**：`.claude/workflows/`、`.claude/workflow-runs/<runId>/journal.jsonl`、`/workflows` 面板、`/<name>` 命名命令。
+- **文件与命令**：`.uaayzr/workflows/`、`.uaayzr/workflow-runs/<runId>/journal.jsonl`、`/workflows` 面板、`/<name>` 命名命令。
 
 调用即注入上下文，**不改主循环、零运行时副作用**。
 

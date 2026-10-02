@@ -35,7 +35,7 @@
 
 ### 模板来源
 
-`.claude/templates/*.md`
+`.uaayzr/templates/*.md`
 
 ### 模板格式
 
@@ -49,7 +49,7 @@
 ### new 命令
 
 - 解析模板
-- 在 `~/.claude/jobs/<job-id>/` 下创建 job 目录
+- 在 `~/.uaayzr/jobs/<job-id>/` 下创建 job 目录
 - 写入 `template.md`, `input.txt`, `state.json`
 - 返回 job id 与目录路径
 
@@ -60,7 +60,7 @@
 
 ## 验证步骤
 
-- [ ] `list` 能列出 `.claude/templates` 下的所有模板
+- [ ] `list` 能列出 `.uaayzr/templates` 下的所有模板
 - [ ] `new <template> [args...]` 能创建 job 目录和状态文件
 - [ ] `reply <job-id> <text>` 能更新 job 内容和状态
 - [ ] frontmatter schema 最小字段集已定义

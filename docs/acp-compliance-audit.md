@@ -812,7 +812,7 @@
 
 - **能力广告**: `sessionCapabilities.delete: {}`（通过类型增强写入,因 SDK 0.19.0 的 SessionCapabilities 类型早于该 RFD）。
 - **方法路由**: SDK 0.19.0 的方法分发器 `default` 分支调用 `agent.extMethod(method, params)`,因此 `session/delete` 通过 extMethod 钩子路由到 `unstable_deleteSession`。
-- **语义**: 硬删除（unlink `~/.claude/projects/<sanitized-path>/<sessionId>.jsonl`）。spec 允许 soft/hard delete,选 hard delete 简化实现。
+- **语义**: 硬删除（unlink `~/.uaayzr/projects/<sanitized-path>/<sessionId>.jsonl`）。spec 允许 soft/hard delete,选 hard delete 简化实现。
 - **幂等性**: 删不存在的 session 也成功（ENOENT 视为成功）。
 - **未知方法**: extMethod 对未识别方法抛 `RequestError.methodNotFound(method)`（JSON-RPC -32601）。
 - **测试覆盖**: 6 个测试用例（能力广播 / extMethod 路由 / 幂等 / 内存清理 / 缺 sessionId 拒绝 / 未知方法拒绝）。

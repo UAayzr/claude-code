@@ -10,7 +10,7 @@
 Machine A (192.168.50.22)                Machine B (192.168.50.27)
 ┌───────────────────────────┐           ┌───────────────────────────┐
 │ PipeServer                │           │ PipeServer                │
-│   UDS: ~/.claude/pipes/   │           │   UDS: ~/.claude/pipes/   │
+│   UDS: ~/.uaayzr/pipes/   │           │   UDS: ~/.uaayzr/pipes/   │
 │       cli-abc.sock        │           │       cli-def.sock        │
 │   TCP: 0.0.0.0:<random>  │◄──TCP───►│   TCP: 0.0.0.0:<random>  │
 ├───────────────────────────┤           ├───────────────────────────┤

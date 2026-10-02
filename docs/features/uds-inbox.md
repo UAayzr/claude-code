@@ -37,7 +37,7 @@
 
 - 服务端：`src/utils/udsMessaging.ts`
 - 客户端：`src/utils/udsClient.ts`
-- 发现方式：读取 `~/.claude/sessions/*.json`
+- 发现方式：读取 `~/.uaayzr/sessions/*.json`
 - 地址方式：`uds:<socket-path>`
 - 传输方式：**本机 Unix socket / Windows named pipe**
 
@@ -48,7 +48,7 @@
 - 服务端/客户端：`src/utils/pipeTransport.ts`
 - 注册表：`src/utils/pipeRegistry.ts`
 - 生效入口：`src/screens/REPL.tsx`
-- 发现方式：扫描 `~/.claude/pipes/` + `registry.json`
+- 发现方式：扫描 `~/.uaayzr/pipes/` + `registry.json`
 - 会话名：`cli-${sessionId.slice(0, 8)}`
 - 传输方式：**本机 Unix socket / Windows named pipe**
 

@@ -157,15 +157,15 @@ grep -n "claude" ~/.zshrc ~/.bashrc ~/.bash_profile 2>/dev/null
 
 ```bash
 # 备份现有配置（如有自定义 settings）
-cp ~/.claude/settings.json ~/claude-settings.backup.json 2>/dev/null || true
+cp ~/.uaayzr/settings.json ~/claude-settings.backup.json 2>/dev/null || true
 
 # 清理官方缓存
-rm -f ~/.claude.json                  # GrowthBook 远程配置缓存
-rm -rf ~/.claude/logs/                # 1P 事件重试队列
-rm -rf ~/.claude/remoteManagedSettings/  # 企业远程配置缓存
+rm -f ~/.uaayzr.json                  # GrowthBook 远程配置缓存
+rm -rf ~/.uaayzr/logs/                # 1P 事件重试队列
+rm -rf ~/.uaayzr/remoteManagedSettings/  # 企业远程配置缓存
 ```
 
-> `~/.claude/settings.json` 建议留着，CCB 项目会复用它存 `/login` 配置。真遇到冲突了再删也不迟。
+> `~/.uaayzr/settings.json` 建议留着，CCB 项目会复用它存 `/login` 配置。真遇到冲突了再删也不迟。
 
 ### 步骤 3：安装 CCB 项目
 
