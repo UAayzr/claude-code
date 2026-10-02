@@ -16,7 +16,7 @@ describe('callLocalMemory', () => {
 
   beforeEach(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), 'lm-launch-test-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     messages.length = 0
     const mod = await import('../launchLocalMemory.js')
     callLocalMemory = mod.callLocalMemory
@@ -24,7 +24,7 @@ describe('callLocalMemory', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('no args renders action panel without completing', async () => {

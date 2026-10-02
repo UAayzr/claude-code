@@ -85,9 +85,9 @@ async function waitForEnqueues(
 }
 
 beforeEach(async () => {
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
   tempConfigDir = await mkdtemp(join(tmpdir(), 'uds-messaging-home-'))
-  process.env.CLAUDE_CONFIG_DIR = tempConfigDir
+  process.env.UAAYZR_CONFIG_DIR = tempConfigDir
 })
 
 afterEach(async () => {
@@ -95,9 +95,9 @@ afterEach(async () => {
   drainInbox()
   await stopUdsMessaging()
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   if (tempConfigDir) {
     await rm(tempConfigDir, { recursive: true, force: true })
@@ -671,12 +671,12 @@ describe('UDS inbox retention', () => {
     })
 
     test('fails closed when the capability directory is not private', async () => {
-      const previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+      const previousConfigDir = process.env.UAAYZR_CONFIG_DIR
       const tempHome = join(
         tmpdir(),
         `uds-capability-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       )
-      process.env.CLAUDE_CONFIG_DIR = tempHome
+      process.env.UAAYZR_CONFIG_DIR = tempHome
       const capabilityDir = join(tempHome, 'messaging-capabilities')
       await mkdir(capabilityDir, { recursive: true, mode: 0o755 })
       await chmod(capabilityDir, 0o755)
@@ -689,22 +689,22 @@ describe('UDS inbox retention', () => {
         await expect(stat(path)).rejects.toThrow()
       } finally {
         if (previousConfigDir === undefined) {
-          delete process.env.CLAUDE_CONFIG_DIR
+          delete process.env.UAAYZR_CONFIG_DIR
         } else {
-          process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+          process.env.UAAYZR_CONFIG_DIR = previousConfigDir
         }
         await rm(tempHome, { recursive: true, force: true })
       }
     })
 
     test('fails closed when the capability directory is a symlink', async () => {
-      const previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+      const previousConfigDir = process.env.UAAYZR_CONFIG_DIR
       const tempHome = join(
         tmpdir(),
         `uds-capability-link-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       )
       const target = join(tempHome, 'target')
-      process.env.CLAUDE_CONFIG_DIR = tempHome
+      process.env.UAAYZR_CONFIG_DIR = tempHome
       await mkdir(target, { recursive: true, mode: 0o700 })
       await symlink(target, join(tempHome, 'messaging-capabilities'), 'dir')
 
@@ -714,9 +714,9 @@ describe('UDS inbox retention', () => {
         ).rejects.toThrow('not a private directory')
       } finally {
         if (previousConfigDir === undefined) {
-          delete process.env.CLAUDE_CONFIG_DIR
+          delete process.env.UAAYZR_CONFIG_DIR
         } else {
-          process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+          process.env.UAAYZR_CONFIG_DIR = previousConfigDir
         }
         await rm(tempHome, { recursive: true, force: true })
       }

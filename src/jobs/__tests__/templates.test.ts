@@ -1,7 +1,7 @@
 /**
  * Tests for src/jobs/templates.ts
  *
- * Uses real temp directories and CLAUDE_CONFIG_DIR env var
+ * Uses real temp directories and UAAYZR_CONFIG_DIR env var
  * instead of mocking fs, to avoid cross-test mock pollution.
  */
 import { describe, expect, test, beforeEach, afterAll } from 'bun:test'
@@ -15,11 +15,11 @@ const tempBase = mkdtempSync(join(tmpdir(), 'jobs-templates-test-'))
 
 beforeEach(() => {
   const tempHome = mkdtempSync(join(tempBase, 'home-'))
-  process.env.CLAUDE_CONFIG_DIR = tempHome
+  process.env.UAAYZR_CONFIG_DIR = tempHome
 })
 
 afterAll(() => {
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
   try {
     rmSync(tempBase, { recursive: true, force: true })
   } catch {
@@ -40,7 +40,7 @@ describe('listTemplates', () => {
   })
 
   test('discovers templates from user-level dir', () => {
-    const userDir = join(process.env.CLAUDE_CONFIG_DIR!, 'templates')
+    const userDir = join(process.env.UAAYZR_CONFIG_DIR!, 'templates')
     mkdirSync(userDir, { recursive: true })
     writeFileSync(
       join(userDir, 'greeting.md'),
@@ -56,7 +56,7 @@ describe('listTemplates', () => {
   })
 
   test('skips non-md files', () => {
-    const userDir = join(process.env.CLAUDE_CONFIG_DIR!, 'templates')
+    const userDir = join(process.env.UAAYZR_CONFIG_DIR!, 'templates')
     mkdirSync(userDir, { recursive: true })
     writeFileSync(join(userDir, 'notes.txt'), 'not a template', 'utf-8')
     writeFileSync(join(userDir, 'data.json'), '{}', 'utf-8')
@@ -72,7 +72,7 @@ describe('loadTemplate', () => {
   })
 
   test('returns template by name', () => {
-    const userDir = join(process.env.CLAUDE_CONFIG_DIR!, 'templates')
+    const userDir = join(process.env.UAAYZR_CONFIG_DIR!, 'templates')
     mkdirSync(userDir, { recursive: true })
     writeFileSync(
       join(userDir, 'deploy.md'),

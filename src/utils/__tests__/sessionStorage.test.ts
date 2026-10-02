@@ -24,22 +24,22 @@ beforeEach(() => {
     `claude-session-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   )
   mkdirSync(tempDir, { recursive: true })
-  // `getProjectsDir()` returns `${CLAUDE_CONFIG_DIR}/projects`, and
+  // `getProjectsDir()` returns `${UAAYZR_CONFIG_DIR}/projects`, and
   // loadSessionFile reads from `${getProjectsDir()}/${sessionId}.jsonl`.
   // Pre-create the projects subdir so writeFileSync doesn't fail.
   mkdirSync(join(tempDir, 'projects'), { recursive: true })
-  // Pin session-file lookups to a temp dir via CLAUDE_CONFIG_DIR.
+  // Pin session-file lookups to a temp dir via UAAYZR_CONFIG_DIR.
   // Restoring in afterEach keeps tests hermetic.
-  originalConfigDir = process.env.CLAUDE_CONFIG_DIR
-  process.env.CLAUDE_CONFIG_DIR = tempDir
+  originalConfigDir = process.env.UAAYZR_CONFIG_DIR
+  process.env.UAAYZR_CONFIG_DIR = tempDir
 })
 
 afterEach(() => {
   clearSessionMessagesCache()
   if (originalConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = originalConfigDir
+    process.env.UAAYZR_CONFIG_DIR = originalConfigDir
   }
   if (tempDir && existsSync(tempDir)) {
     rmSync(tempDir, { recursive: true, force: true })
@@ -49,7 +49,7 @@ afterEach(() => {
 function sessionFilePath(sessionId: string): string {
   // Mirror sessionStorage.ts's path computation:
   //   getSessionProjectDir() ?? getProjectDir(getOriginalCwd())
-  // With CLAUDE_CONFIG_DIR=tempDir and getSessionProjectDir() returning
+  // With UAAYZR_CONFIG_DIR=tempDir and getSessionProjectDir() returning
   // null in tests, files live at `${tempDir}/projects/${sessionId}.jsonl`.
   return join(tempDir, 'projects', `${sessionId}.jsonl`)
 }

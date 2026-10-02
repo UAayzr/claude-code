@@ -25,7 +25,7 @@ const originalEnv = { ...process.env }
 beforeEach(() => {
   resetEnv()
   const tempHome = mkdtempSync(join(tempBase, 'home-'))
-  process.env.CLAUDE_CONFIG_DIR = tempHome
+  process.env.UAAYZR_CONFIG_DIR = tempHome
 })
 
 afterAll(() => {

@@ -18,7 +18,7 @@ import type { SettingsJson } from '../../settings/types.js'
 
 const testRoot = mkdtempSync(join(tmpdir(), 'provider-gates-'))
 const testConfigDir = join(testRoot, 'config')
-process.env.CLAUDE_CONFIG_DIR = testConfigDir
+process.env.UAAYZR_CONFIG_DIR = testConfigDir
 process.env.NODE_ENV = 'test'
 mkdirSync(testConfigDir, { recursive: true })
 

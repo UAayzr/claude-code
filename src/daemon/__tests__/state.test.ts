@@ -1,7 +1,7 @@
 /**
  * Tests for src/daemon/state.ts
  *
- * Uses real temp directories and CLAUDE_CONFIG_DIR env var
+ * Uses real temp directories and UAAYZR_CONFIG_DIR env var
  * instead of mocking fs/envUtils, to avoid cross-test mock pollution.
  */
 import { describe, expect, test, beforeEach, afterAll } from 'bun:test'
@@ -15,7 +15,7 @@ import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
 const tempBase = mkdtempSync(join(tmpdir(), 'daemon-state-test-'))
 
 beforeEach(() => {
-  // Clear lodash memoize cache so CLAUDE_CONFIG_DIR env var takes effect
+  // Clear lodash memoize cache so UAAYZR_CONFIG_DIR env var takes effect
   if (
     typeof getClaudeConfigHomeDir === 'function' &&
     'cache' in getClaudeConfigHomeDir
@@ -23,11 +23,11 @@ beforeEach(() => {
     ;(getClaudeConfigHomeDir as any).cache.clear?.()
   }
   const tempHome = mkdtempSync(join(tempBase, 'home-'))
-  process.env.CLAUDE_CONFIG_DIR = tempHome
+  process.env.UAAYZR_CONFIG_DIR = tempHome
 })
 
 afterAll(() => {
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
   // Clear memoize cache after all tests so other files see fresh state
   if (
     typeof getClaudeConfigHomeDir === 'function' &&

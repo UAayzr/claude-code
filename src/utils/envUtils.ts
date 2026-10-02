@@ -6,18 +6,18 @@ import {
   UAAYZR_CONFIG_DIR_NAME,
 } from '../constants/identity.js'
 
-// Memoized: 150+ callers, many on hot paths. The legacy CLAUDE_CONFIG_DIR is
-// still accepted for compatibility, but UAAYZR_CONFIG_DIR is authoritative.
+// Memoized: 150+ callers, many on hot paths. UAayzr data lives exclusively
+// under a UAayzr-named directory: UAAYZR_CONFIG_DIR env overrides the default
+// ~/.uaayzr. The legacy UAAYZR_CONFIG_DIR is deliberately NOT honored, so no
+// external setting can redirect data into an official Claude directory.
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
       process.env[UAAYZR_CONFIG_DIR_ENV] ??
-      process.env.CLAUDE_CONFIG_DIR ??
       join(homedir(), UAAYZR_CONFIG_DIR_NAME)
     ).normalize('NFC')
   },
-  () =>
-    `${process.env[UAAYZR_CONFIG_DIR_ENV] ?? ''}\0${process.env.CLAUDE_CONFIG_DIR ?? ''}`,
+  () => `${process.env[UAAYZR_CONFIG_DIR_ENV] ?? ''}`,
 )
 
 export const getUaayzrConfigHomeDir = getClaudeConfigHomeDir

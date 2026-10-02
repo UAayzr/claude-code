@@ -19,12 +19,12 @@ beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'perf-test-'))
   claudeDir = join(tmpDir, '.claude')
   mkdirSync(claudeDir, { recursive: true })
-  process.env.CLAUDE_CONFIG_DIR = claudeDir
+  process.env.UAAYZR_CONFIG_DIR = claudeDir
 })
 
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true })
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
 })
 
 describe('perf-issue command', () => {
@@ -557,12 +557,12 @@ describe('perf-issue command', () => {
     const { homedir } = await import('node:os')
     const home = homedir()
     // Write an invalid perf report dir to force writeFileSync to fail
-    // by pointing CLAUDE_CONFIG_DIR to a file (not a directory).
+    // by pointing UAAYZR_CONFIG_DIR to a file (not a directory).
     const filePath = join(tmpDir, 'not-a-dir')
     const { writeFileSync: wfs } = await import('node:fs')
     wfs(filePath, 'block', 'utf8')
-    // Override CLAUDE_CONFIG_DIR to point to a file so mkdirSync inside call() fails
-    process.env.CLAUDE_CONFIG_DIR = filePath
+    // Override UAAYZR_CONFIG_DIR to point to a file so mkdirSync inside call() fails
+    process.env.UAAYZR_CONFIG_DIR = filePath
 
     const mod = await import('../index.js')
     const loaded = await (
@@ -577,8 +577,8 @@ describe('perf-issue command', () => {
     ).load()
     const result = await loaded.call('', {} as never)
 
-    // Restore CLAUDE_CONFIG_DIR so subsequent tests are not affected
-    process.env.CLAUDE_CONFIG_DIR = claudeDir
+    // Restore UAAYZR_CONFIG_DIR so subsequent tests are not affected
+    process.env.UAAYZR_CONFIG_DIR = claudeDir
 
     if (result.type === 'text' && result.value.includes('Failed')) {
       // Must not contain the raw home directory path

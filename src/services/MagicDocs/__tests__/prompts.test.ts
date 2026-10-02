@@ -183,7 +183,7 @@ const mockedGetClaudeConfigHomeDirMD: (() => string) & {
   () =>
     useMockForMagicDocs
       ? '/mock/home/.claude'
-      : (process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.uaayzr')).normalize(
+      : (process.env.UAAYZR_CONFIG_DIR ?? join(homedir(), '.uaayzr')).normalize(
           'NFC',
         ),
   { cache: { clear: () => {}, get: (_k: unknown) => undefined } },
@@ -209,7 +209,7 @@ mock.module('src/utils/envUtils.js', () => ({
     join(
       useMockForMagicDocs
         ? '/mock/home/.claude'
-        : (process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.uaayzr')),
+        : (process.env.UAAYZR_CONFIG_DIR ?? join(homedir(), '.uaayzr')),
       'teams',
     ),
   hasNodeOption: (flag: string) => {

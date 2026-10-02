@@ -25,13 +25,13 @@ let tempDir: string
 let previousConfigDir: string | undefined
 
 beforeEach(async () => {
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
   tempDir = join(
     tmpdir(),
     `autonomy-cli-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   )
   await mkdir(tempDir, { recursive: true })
-  process.env.CLAUDE_CONFIG_DIR = join(tempDir, 'config')
+  process.env.UAAYZR_CONFIG_DIR = join(tempDir, 'config')
   resetStateForTests()
   setOriginalCwd(tempDir)
   setProjectRoot(tempDir)
@@ -40,9 +40,9 @@ beforeEach(async () => {
 afterEach(async () => {
   resetStateForTests()
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   await rm(tempDir, { recursive: true, force: true })
 })

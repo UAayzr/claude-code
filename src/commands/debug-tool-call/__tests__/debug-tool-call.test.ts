@@ -15,17 +15,17 @@ mock.module('src/services/analytics/index.js', () => ({
 let tmpDir: string
 let claudeDir: string
 
-// Mock envUtils to read CLAUDE_CONFIG_DIR from process.env dynamically.
+// Mock envUtils to read UAAYZR_CONFIG_DIR from process.env dynamically.
 // Other test files (cacheStats, SessionMemory/prompts, MagicDocs/prompts)
 // mock envUtils with static paths — by reading process.env at call time,
 // our mock stays compatible with the full suite where other tests also
-// drive the real CLAUDE_CONFIG_DIR.
+// drive the real UAAYZR_CONFIG_DIR.
 mock.module('src/utils/envUtils.js', () => ({
   getClaudeConfigHomeDir: () =>
-    process.env.CLAUDE_CONFIG_DIR ?? `${tmpdir()}/dummy-claude`,
+    process.env.UAAYZR_CONFIG_DIR ?? `${tmpdir()}/dummy-claude`,
   isEnvTruthy: (v: unknown) => Boolean(v),
   getTeamsDir: () =>
-    join(process.env.CLAUDE_CONFIG_DIR ?? `${tmpdir()}/dummy-claude`, 'teams'),
+    join(process.env.UAAYZR_CONFIG_DIR ?? `${tmpdir()}/dummy-claude`, 'teams'),
   hasNodeOption: () => false,
   isEnvDefinedFalsy: () => false,
   isBareMode: () => false,
@@ -39,12 +39,12 @@ beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'dtc-test-'))
   claudeDir = join(tmpDir, '.claude')
   mkdirSync(claudeDir, { recursive: true })
-  process.env.CLAUDE_CONFIG_DIR = claudeDir
+  process.env.UAAYZR_CONFIG_DIR = claudeDir
 })
 
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true })
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
 })
 
 async function makeLogWithToolCalls(

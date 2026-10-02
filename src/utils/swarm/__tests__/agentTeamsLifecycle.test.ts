@@ -80,13 +80,13 @@ function writeTeamConfig(teamName: string, config: unknown): void {
 
 beforeEach(() => {
   terminateCalls = []
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
   previousAnthropicApiKey = process.env.ANTHROPIC_API_KEY
   tempHome = join(
     tmpdir(),
     `agent-teams-lifecycle-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   )
-  process.env.CLAUDE_CONFIG_DIR = tempHome
+  process.env.UAAYZR_CONFIG_DIR = tempHome
   process.env.ANTHROPIC_API_KEY = 'test-key'
   state = {
     teamContext: undefined,
@@ -107,9 +107,9 @@ beforeEach(() => {
 
 afterEach(() => {
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   if (previousAnthropicApiKey === undefined) {
     delete process.env.ANTHROPIC_API_KEY

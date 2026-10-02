@@ -38,7 +38,7 @@ export function getBreakCacheAlwaysPath(): string {
  * two concurrent `/break-cache once` invocations race. Each break appends one
  * line; `readStats()` aggregates at read time.
  *
- * Uses getClaudeConfigHomeDir() so that CLAUDE_CONFIG_DIR env var overrides
+ * Uses getClaudeConfigHomeDir() so that UAAYZR_CONFIG_DIR env var overrides
  * the path in test environments.
  */
 export function getBreakCacheStatsPath(): string {

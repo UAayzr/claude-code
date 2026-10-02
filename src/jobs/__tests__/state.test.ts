@@ -1,7 +1,7 @@
 /**
  * Tests for src/jobs/state.ts
  *
- * Uses real temp directories and CLAUDE_CONFIG_DIR env var
+ * Uses real temp directories and UAAYZR_CONFIG_DIR env var
  * instead of mocking fs, to avoid cross-test mock pollution.
  */
 import { describe, expect, test, beforeEach, afterAll } from 'bun:test'
@@ -16,11 +16,11 @@ const tempBase = mkdtempSync(join(tmpdir(), 'jobs-state-test-'))
 beforeEach(() => {
   // Each test gets a fresh config dir
   const tempHome = mkdtempSync(join(tempBase, 'home-'))
-  process.env.CLAUDE_CONFIG_DIR = tempHome
+  process.env.UAAYZR_CONFIG_DIR = tempHome
 })
 
 afterAll(() => {
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
   try {
     rmSync(tempBase, { recursive: true, force: true })
   } catch {

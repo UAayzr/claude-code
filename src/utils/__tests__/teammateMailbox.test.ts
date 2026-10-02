@@ -187,16 +187,16 @@ describe('compactMailboxMessages', () => {
 
 describe('teammate mailbox retention', () => {
   beforeEach(() => {
-    previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+    previousConfigDir = process.env.UAAYZR_CONFIG_DIR
     tempHome = mkdtempSync(join(tmpdir(), 'teammate-mailbox-'))
-    process.env.CLAUDE_CONFIG_DIR = tempHome
+    process.env.UAAYZR_CONFIG_DIR = tempHome
   })
 
   afterEach(async () => {
     if (previousConfigDir === undefined) {
-      delete process.env.CLAUDE_CONFIG_DIR
+      delete process.env.UAAYZR_CONFIG_DIR
     } else {
-      process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+      process.env.UAAYZR_CONFIG_DIR = previousConfigDir
     }
     await rm(tempHome, { recursive: true, force: true })
     tempHome = ''

@@ -74,7 +74,7 @@ beforeEach(() => {
   process.chdir(root)
   process.env = { ...originalEnv }
   process.env.CLAUDE_SKILL_LEARNING_HOME = join(root, 'learning-home')
-  process.env.CLAUDE_CONFIG_DIR = join(root, 'config')
+  process.env.UAAYZR_CONFIG_DIR = join(root, 'config')
   process.env.SKILL_LEARNING_ENABLED = '1'
   process.env.NODE_ENV = 'test'
   resetRuntimeObserverForTest()

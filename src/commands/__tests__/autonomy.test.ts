@@ -41,8 +41,8 @@ async function callAutonomy(args = ''): Promise<{
 
 beforeEach(async () => {
   tempDir = await createTempDir('autonomy-command-')
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
-  process.env.CLAUDE_CONFIG_DIR = join(tempDir, 'config')
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
+  process.env.UAAYZR_CONFIG_DIR = join(tempDir, 'config')
   resetStateForTests()
   resetCommandQueue()
   setOriginalCwd(tempDir)
@@ -53,9 +53,9 @@ afterEach(async () => {
   resetStateForTests()
   resetCommandQueue()
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   if (tempDir) {
     await cleanupTempDir(tempDir)
@@ -307,7 +307,7 @@ describe('/autonomy', () => {
       }),
     )
 
-    const teamDir = join(process.env.CLAUDE_CONFIG_DIR ?? '', 'teams', 'alpha')
+    const teamDir = join(process.env.UAAYZR_CONFIG_DIR ?? '', 'teams', 'alpha')
     await mkdir(teamDir, { recursive: true })
     await writeFile(
       join(teamDir, 'config.json'),

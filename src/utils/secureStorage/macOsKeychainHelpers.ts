@@ -31,8 +31,7 @@ export function getMacOsKeychainStorageServiceName(
   serviceSuffix: string = '',
 ): string {
   const configDir = getClaudeConfigHomeDir()
-  const isDefaultDir =
-    !process.env[UAAYZR_CONFIG_DIR_ENV] && !process.env.CLAUDE_CONFIG_DIR
+  const isDefaultDir = !process.env[UAAYZR_CONFIG_DIR_ENV]
 
   // Use a hash of the config dir path to create a unique but stable suffix
   // Only add suffix for non-default directories to maintain backwards compatibility

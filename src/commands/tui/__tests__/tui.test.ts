@@ -27,9 +27,9 @@ beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'tui-test-'))
   claudeDir = join(tmpDir, '.claude')
   mkdirSync(claudeDir, { recursive: true })
-  process.env.CLAUDE_CONFIG_DIR = claudeDir
+  process.env.UAAYZR_CONFIG_DIR = claudeDir
   // getClaudeConfigHomeDir is `memoize(...)` — clear its cache so this
-  // suite's CLAUDE_CONFIG_DIR overrides any value cached by an earlier
+  // suite's UAAYZR_CONFIG_DIR overrides any value cached by an earlier
   // test file in the same process.
   getClaudeConfigHomeDir.cache?.clear?.()
   // Save env vars we may mutate
@@ -39,7 +39,7 @@ beforeEach(() => {
 
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true })
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
   // Restore env vars
   if (origEnv.CLAUDE_CODE_NO_FLICKER === undefined) {
     delete process.env.CLAUDE_CODE_NO_FLICKER
@@ -207,7 +207,7 @@ describe('tui unknown subcommand', () => {
 })
 
 describe('getTuiMarkerPath', () => {
-  test('returns path under CLAUDE_CONFIG_DIR', async () => {
+  test('returns path under UAAYZR_CONFIG_DIR', async () => {
     const { getTuiMarkerPath } = await import('../index.js')
     const p = getTuiMarkerPath()
     expect(p).toContain(claudeDir)

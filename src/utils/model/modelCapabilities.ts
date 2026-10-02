@@ -60,7 +60,7 @@ function sortForMatching(models: ModelCapability[]): ModelCapability[] {
   )
 }
 
-// Keyed on cache path so tests that set CLAUDE_CONFIG_DIR get a fresh read
+// Keyed on cache path so tests that set UAAYZR_CONFIG_DIR get a fresh read
 const loadCache = memoize(
   (path: string): ModelCapability[] | null => {
     try {

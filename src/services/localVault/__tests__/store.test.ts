@@ -51,7 +51,7 @@ describe('store (AES-256-GCM file fallback)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'local-vault-test-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     // Use a fixed passphrase via env to avoid file creation
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
@@ -66,7 +66,7 @@ describe('store (AES-256-GCM file fallback)', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 
@@ -222,7 +222,7 @@ describe('store: security invariants (I1)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'vault-sec-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
     keychainMock.set.mockImplementation(keychainUnavailable)
@@ -235,7 +235,7 @@ describe('store: security invariants (I1)', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 
@@ -267,7 +267,7 @@ describe('store: AES-GCM tamper detection (I2)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'vault-tamper-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
     keychainMock.set.mockImplementation(keychainUnavailable)
@@ -280,7 +280,7 @@ describe('store: AES-GCM tamper detection (I2)', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 
@@ -340,7 +340,7 @@ describe('store: invalid-UTF-8 decryption rejection (H3)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'vault-utf8-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
     keychainMock.set.mockImplementation(keychainUnavailable)
@@ -353,7 +353,7 @@ describe('store: invalid-UTF-8 decryption rejection (H3)', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 
@@ -440,7 +440,7 @@ describe('store: value size limit (D1)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'vault-size-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
     keychainMock.set.mockImplementation(keychainUnavailable)
@@ -449,7 +449,7 @@ describe('store: value size limit (D1)', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 

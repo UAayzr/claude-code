@@ -15,12 +15,12 @@ let tempDir = ''
 let previousConfigDir: string | undefined
 
 beforeEach(() => {
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
   tempDir = join(
     tmpdir(),
     `assistant-team-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   )
-  process.env.CLAUDE_CONFIG_DIR = join(tempDir, 'config')
+  process.env.UAAYZR_CONFIG_DIR = join(tempDir, 'config')
   resetStateForTests()
   setOriginalCwd(tempDir)
   setCwdState(tempDir)
@@ -29,9 +29,9 @@ beforeEach(() => {
 afterEach(async () => {
   resetStateForTests()
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   await rm(tempDir, { recursive: true, force: true })
 })

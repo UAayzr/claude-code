@@ -147,7 +147,7 @@ beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'share-gh-test-'))
   claudeDir = join(tmpDir, '.claude')
   mkdirSync(claudeDir, { recursive: true })
-  process.env.CLAUDE_CONFIG_DIR = claudeDir
+  process.env.UAAYZR_CONFIG_DIR = claudeDir
   // Reset to a neutral default (succeeds with empty output) so adjacent test files
   // that don't explicitly set up this mock see a passable gh check.
   _execFileImpl = (_cmd, _args, _opts, cb) => cb(null, '', '')
@@ -156,7 +156,7 @@ beforeEach(() => {
 
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true })
-  delete process.env.CLAUDE_CONFIG_DIR
+  delete process.env.UAAYZR_CONFIG_DIR
 })
 
 // ── Helpers ──

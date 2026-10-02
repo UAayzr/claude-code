@@ -10,12 +10,12 @@ describe('multiStore', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'multi-store-test-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
   })
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('listStores returns empty when no stores exist', async () => {
@@ -174,12 +174,12 @@ describe('multiStore: path traversal rejection (E1 regression)', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'multi-store-sec-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
   })
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('store name ".." is rejected', async () => {
@@ -245,12 +245,12 @@ describe('multiStore: getEntryBounded short-read handling (M5 audit #9)', () => 
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'multi-store-bounded-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
   })
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('getEntryBounded: full read with file <= maxBytes returns truncated=false', async () => {

@@ -26,8 +26,7 @@ export const getGlobalClaudeFile = memoize((): string => {
   }
 
   const filename = `${UAAYZR_GLOBAL_CONFIG_FILE}${fileSuffixForOauthConfig()}.json`
-  const configuredDir =
-    process.env[UAAYZR_CONFIG_DIR_ENV] ?? process.env.CLAUDE_CONFIG_DIR
+  const configuredDir = process.env[UAAYZR_CONFIG_DIR_ENV]
   return join(configuredDir || homedir(), filename)
 })
 

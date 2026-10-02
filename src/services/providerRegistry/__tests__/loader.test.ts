@@ -20,11 +20,11 @@ let tmpDir: string
 
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), 'provider-loader-test-'))
-  process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+  process.env['UAAYZR_CONFIG_DIR'] = tmpDir
 })
 
 afterEach(async () => {
-  delete process.env['CLAUDE_CONFIG_DIR']
+  delete process.env['UAAYZR_CONFIG_DIR']
   rmSync(tmpDir, { recursive: true, force: true })
   // J1 fix: invalidate the per-process cache between tests so each test starts fresh
   const { _invalidateProviderCache } = await import('../loader.js')

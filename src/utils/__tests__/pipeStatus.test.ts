@@ -9,19 +9,19 @@ let tempDir: string
 let previousConfigDir: string | undefined
 
 beforeEach(() => {
-  previousConfigDir = process.env.CLAUDE_CONFIG_DIR
+  previousConfigDir = process.env.UAAYZR_CONFIG_DIR
   tempDir = join(
     tmpdir(),
     `pipe-status-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   )
-  process.env.CLAUDE_CONFIG_DIR = tempDir
+  process.env.UAAYZR_CONFIG_DIR = tempDir
 })
 
 afterEach(async () => {
   if (previousConfigDir === undefined) {
-    delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.UAAYZR_CONFIG_DIR
   } else {
-    process.env.CLAUDE_CONFIG_DIR = previousConfigDir
+    process.env.UAAYZR_CONFIG_DIR = previousConfigDir
   }
   await rm(tempDir, { recursive: true, force: true })
 })

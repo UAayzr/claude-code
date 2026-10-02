@@ -43,7 +43,7 @@ describe('callLocalVault', () => {
 
   beforeEach(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), 'lv-launch-test-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
     process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE'] =
       'test-passphrase-fixed-32chars-xxx'
     messages.length = 0
@@ -53,7 +53,7 @@ describe('callLocalVault', () => {
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
     delete process.env['CLAUDE_LOCAL_VAULT_PASSPHRASE']
   })
 
