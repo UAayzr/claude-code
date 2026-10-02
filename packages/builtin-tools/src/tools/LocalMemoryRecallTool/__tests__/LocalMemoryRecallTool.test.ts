@@ -7,19 +7,19 @@ import { mockToolContext } from '../../../../../../tests/mocks/toolContext.js'
 // We test the tool through its public interface: schema validation +
 // checkPermissions logic + call return shape. The tool is read-only and
 // uses the multiStore backend, so we drive it with a real tmpdir and the
-// CLAUDE_CONFIG_DIR override.
+// UAAYZR_CONFIG_DIR override.
 
 describe('LocalMemoryRecallTool', () => {
   let tmpDir: string
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'lmrt-test-'))
-    process.env['CLAUDE_CONFIG_DIR'] = tmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = tmpDir
   })
 
   afterEach(() => {
     rmSync(tmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('list_stores returns empty array when no stores exist', async () => {
@@ -504,11 +504,11 @@ describe('LocalMemoryRecallTool: budget consumeBudget eviction', () => {
   let evictTmpDir: string
   beforeEach(() => {
     evictTmpDir = mkdtempSync(join(tmpdir(), 'lmrt-evict-'))
-    process.env['CLAUDE_CONFIG_DIR'] = evictTmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = evictTmpDir
   })
   afterEach(() => {
     rmSync(evictTmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('FETCH_BUDGET_USED FIFO eviction triggers when >MAX_BUDGET_KEYS distinct turns fetch', async () => {
@@ -606,14 +606,14 @@ describe('LocalMemoryRecallTool: turn-key fallback paths (via fetch)', () => {
   let turnTmpDir: string
   beforeEach(() => {
     turnTmpDir = mkdtempSync(join(tmpdir(), 'lmrt-turn-'))
-    process.env['CLAUDE_CONFIG_DIR'] = turnTmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = turnTmpDir
     const baseDir = join(turnTmpDir, 'local-memory', 'turn-store')
     mkdirSync(baseDir, { recursive: true })
     writeFileSync(join(baseDir, 'k.md'), 'value')
   })
   afterEach(() => {
     rmSync(turnTmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('uses last assistant message uuid for turnKey', async () => {
@@ -719,11 +719,11 @@ describe('LocalMemoryRecallTool: defensive call() guards', () => {
   let dgTmpDir: string
   beforeEach(() => {
     dgTmpDir = mkdtempSync(join(tmpdir(), 'lmrt-dg-'))
-    process.env['CLAUDE_CONFIG_DIR'] = dgTmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = dgTmpDir
   })
   afterEach(() => {
     rmSync(dgTmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('list_entries without store returns internal error (defensive)', async () => {
@@ -811,11 +811,11 @@ describe('LocalMemoryRecallTool: call() catch path', () => {
   let catchTmpDir: string
   beforeEach(() => {
     catchTmpDir = mkdtempSync(join(tmpdir(), 'lmrt-catch-'))
-    process.env['CLAUDE_CONFIG_DIR'] = catchTmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = catchTmpDir
   })
   afterEach(() => {
     rmSync(catchTmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('call() catch returns error when local-memory is a regular file (ENOTDIR)', async () => {
@@ -860,11 +860,11 @@ describe('LocalMemoryRecallTool: truncate edge cases', () => {
   let truncTmpDir: string
   beforeEach(() => {
     truncTmpDir = mkdtempSync(join(tmpdir(), 'lmrt-trunc-'))
-    process.env['CLAUDE_CONFIG_DIR'] = truncTmpDir
+    process.env['UAAYZR_CONFIG_DIR'] = truncTmpDir
   })
   afterEach(() => {
     rmSync(truncTmpDir, { recursive: true, force: true })
-    delete process.env['CLAUDE_CONFIG_DIR']
+    delete process.env['UAAYZR_CONFIG_DIR']
   })
 
   test('truncateUtf8 walks back past multi-byte UTF-8 continuation bytes', async () => {

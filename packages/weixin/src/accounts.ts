@@ -23,9 +23,7 @@ export function getStateDir(): string {
   const dir =
     process.env.WEIXIN_STATE_DIR ||
     join(
-      process.env.UAAYZR_CONFIG_DIR ||
-        process.env.CLAUDE_CONFIG_DIR ||
-        join(homedir(), '.uaayzr'),
+      process.env.UAAYZR_CONFIG_DIR || join(homedir(), '.uaayzr'),
       'channels',
       'weixin',
     )
