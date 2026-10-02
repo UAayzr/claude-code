@@ -14,7 +14,11 @@ import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-if (process.env.CLAUDE_CODE_SKIP_CHROME_MCP_SETUP === '1') {
+if (
+  process.env.CLAUDE_CODE_SKIP_CHROME_MCP_SETUP === '1' ||
+  process.env.UAAYZR_ENABLE_CHROME_MCP !== '1'
+) {
+  console.log('[UAayzr] Chrome MCP setup is disabled by default.')
   process.exit(0)
 }
 

@@ -202,7 +202,7 @@ describe('callOnboarding behavior', () => {
     const result = await callOnboarding(fn, makeContext(), 'mcp');
     expect(result).toBeNull();
     expect(calls[0]?.msg).toContain('mcp add');
-    expect(calls[0]?.msg).toContain('.mcp.json');
+    expect(calls[0]?.msg).toContain('.uaayzr/mcp.json');
   });
 
   test('status subcommand renders state view (React element)', async () => {

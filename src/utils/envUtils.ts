@@ -1,17 +1,26 @@
 import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { join } from 'path'
+import {
+  UAAYZR_CONFIG_DIR_ENV,
+  UAAYZR_CONFIG_DIR_NAME,
+} from '../constants/identity.js'
 
-// Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
-// tests that change the env var get a fresh value without explicit cache.clear.
+// Memoized: 150+ callers, many on hot paths. The legacy CLAUDE_CONFIG_DIR is
+// still accepted for compatibility, but UAAYZR_CONFIG_DIR is authoritative.
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
-      process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
+      process.env[UAAYZR_CONFIG_DIR_ENV] ??
+      process.env.CLAUDE_CONFIG_DIR ??
+      join(homedir(), UAAYZR_CONFIG_DIR_NAME)
     ).normalize('NFC')
   },
-  () => process.env.CLAUDE_CONFIG_DIR,
+  () =>
+    `${process.env[UAAYZR_CONFIG_DIR_ENV] ?? ''}\0${process.env.CLAUDE_CONFIG_DIR ?? ''}`,
 )
+
+export const getUaayzrConfigHomeDir = getClaudeConfigHomeDir
 
 export function getTeamsDir(): string {
   return join(getClaudeConfigHomeDir(), 'teams')

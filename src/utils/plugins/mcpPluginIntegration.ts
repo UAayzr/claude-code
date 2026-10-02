@@ -135,6 +135,8 @@ export async function loadPluginMcpServers(
   let servers: Record<string, McpServerConfig> = {}
 
   // Check for .mcp.json in plugin directory first (lowest priority)
+  // .mcp.json is the plugin-bundle contract filename (like .claude-plugin),
+  // not UAayzr's project-scoped config — leave it as-is for plugin compat.
   const defaultMcpServers = await loadMcpServersFromFile(
     plugin.path,
     '.mcp.json',
@@ -239,7 +241,7 @@ async function loadMcpServersFromFile(
   try {
     const parsed = jsonParse(content)
 
-    // Check if it's in the .mcp.json format with mcpServers key
+    // Check if it's in the plugin .mcp.json format with mcpServers key
     const mcpServers = parsed.mcpServers || parsed
 
     // Validate each server config

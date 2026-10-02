@@ -1,9 +1,9 @@
 {
-  "name": "claude-code-best",
+  "name": "uaayzr",
   "version": "2.8.4",
-  "description": "Reverse-engineered Anthropic Claude Code CLI — interactive AI coding assistant in the terminal",
+  "description": "UAayzr - an independent interactive AI coding assistant for the terminal",
   "type": "module",
-  "author": "claude-code-best <claude-code-best@proton.me>",
+  "author": "UAayzr",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/claude-code-best/claude-code.git"
@@ -25,9 +25,8 @@
     "bun": ">=1.3.0"
   },
   "bin": {
-    "ccb": "dist/cli-node.js",
-    "ccb-bun": "dist/cli-bun.js",
-    "claude-code-best": "dist/cli-node.js"
+    "uaayzr": "dist/cli-node.js",
+    "uaayzr-bun": "dist/cli-bun.js"
   },
   "workspaces": [
     "packages/*",
@@ -62,7 +61,8 @@
     "check:bundle": "bun run scripts/check-bundle-integrity.ts",
     "check:unused": "knip-bun",
     "health": "bun run scripts/health-check.ts",
-    "postinstall": "node scripts/run-parallel.mjs scripts/postinstall.cjs scripts/setup-chrome-mcp.mjs",
+    "postinstall": "node scripts/postinstall.cjs",
+    "setup:chrome": "node scripts/setup-chrome-mcp.mjs",
     "docs:dev": "npx mintlify dev",
     "typecheck": "tsc --noEmit",
     "precheck": "bun run typecheck && bun run check:fix && bun test",

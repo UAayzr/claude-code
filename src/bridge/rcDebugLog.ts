@@ -1,16 +1,16 @@
 /**
  * File-based debug logger for Remote Control bridge diagnostics.
- * Writes [RC-DEBUG] lines to ~/.claude/rc-debug.log so they survive
+ * Writes [RC-DEBUG] lines to ~/.uaayzr/rc-debug.log so they survive
  * Ink's stdout capture in the REPL / bridge UI.
  */
 import { appendFileSync, mkdirSync, existsSync } from 'node:fs'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { getClaudeConfigHomeDir } from '../utils/envUtils.js'
 
-const LOG_PATH = join(homedir(), '.claude', 'rc-debug.log')
+const LOG_PATH = join(getClaudeConfigHomeDir(), 'rc-debug.log')
 
 function ensureLogDir() {
-  const dir = join(homedir(), '.claude')
+  const dir = getClaudeConfigHomeDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
 }
 

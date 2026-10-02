@@ -16,7 +16,6 @@ import {
   cleanupOldMessageFilesInBackground,
   cleanupOldVersionsThrottled,
 } from './cleanup.js'
-import { cleanupOldVersions } from './nativeInstaller/index.js'
 import { autoUpdateMarketplacesAndPluginsInBackground } from './plugins/pluginAutoupdate.js'
 
 // 24 hours in milliseconds
@@ -73,8 +72,6 @@ export function startBackgroundHousekeeping(): void {
       ).unref()
       return
     }
-
-    await cleanupOldVersions()
   }
 
   setTimeout(
@@ -88,7 +85,6 @@ export function startBackgroundHousekeeping(): void {
   if (process.env.USER_TYPE === 'ant') {
     const interval = setInterval(() => {
       void cleanupNpmCacheForAnthropicPackages()
-      void cleanupOldVersionsThrottled()
     }, RECURRING_CLEANUP_INTERVAL_MS)
 
     // Don't let this interval keep the process alive

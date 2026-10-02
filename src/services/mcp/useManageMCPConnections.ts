@@ -775,7 +775,7 @@ export function useManageMCPConnections(
 
       setAppState(prevState => {
         // Disconnect MCP servers that are stale: plugin servers removed from
-        // config, or any server whose config hash changed (edited .mcp.json).
+        // config, or any server whose config hash changed (edited .uaayzr/mcp.json).
         // Stale servers get re-added as 'pending' below since their name is
         // now absent from mcpWithoutStale.clients.
         const { stale, ...mcpWithoutStale } = excludeStalePluginClients(

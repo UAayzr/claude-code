@@ -19,12 +19,12 @@ type CachedParse = { ok: true; value: unknown } | { ok: false }
 //    old lodash memoize which wrapped the entire try/catch).
 // Bounded to 50 entries to prevent unbounded memory growth — previously this
 // used lodash memoize which cached every unique JSON string forever (settings,
-// .mcp.json, notebooks, tool results), causing a significant memory leak.
+// .uaayzr/mcp.json, notebooks, tool results), causing a significant memory leak.
 // Note: shouldLogError is intentionally excluded from the cache key (matching
 // lodash memoize default resolver = first arg only).
 // Skip caching above this size — the LRU stores the full string as the key,
 // so a 200KB config file would pin ~10MB in #keyList across 50 slots. Large
-// inputs like ~/.claude.json also change between reads (numStartups bumps on
+// inputs like ~/.uaayzr.json also change between reads (numStartups bumps on
 // every CC startup), so the cache never hits anyway.
 const PARSE_CACHE_MAX_KEY_BYTES = 8 * 1024
 

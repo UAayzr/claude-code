@@ -144,10 +144,10 @@ export const callOnboarding: LocalJSXCommandCall = async (onDone, _context, args
     onDone(
       'MCP server setup:\n' +
         '  - `/mcp` — list configured MCP servers\n' +
-        '  - `claude mcp add <name> <command>` — add a server (in your shell)\n' +
-        '  - `claude mcp remove <name>` — remove a server\n' +
-        'Servers also load from `.mcp.json` in the workspace and from ' +
-        '`~/.claude.json` globally.',
+        '  - `uaayzr mcp add <name> <command>` — add a server (in your shell)\n' +
+        '  - `uaayzr mcp remove <name>` — remove a server\n' +
+        'Servers also load from `.uaayzr/mcp.json` in the workspace and from ' +
+        '`~/.uaayzr.json` globally.',
       { display: 'system' },
     );
     return null;

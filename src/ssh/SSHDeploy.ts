@@ -4,8 +4,8 @@ import { logForDebugging } from 'src/utils/debug.js'
 
 const SSH_TIMEOUT_MS = 60_000
 const REMOTE_BIN_DIR = '~/.local/bin'
-const REMOTE_CLI_FILE = 'claude-code-cli.js'
-const REMOTE_WRAPPER = 'claude'
+const REMOTE_CLI_FILE = 'uaayzr-cli.js'
+const REMOTE_WRAPPER = 'uaayzr'
 
 export interface DeployOptions {
   host: string

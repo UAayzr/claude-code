@@ -39,7 +39,7 @@ export type WorkflowToolDescriptor = {
 
 const WORKFLOW_TOOL_PROMPT = `Use the Workflow tool to execute a workflow script that orchestrates multiple subagents deterministically. The script runs in the background; you receive a run_id immediately and are notified on completion.
 
-Provide the script inline via "script", or reference a named workflow via "name" (resolved from .claude/workflows/), or an existing file via "scriptPath". Pass "args" as a real JSON value (object/array/string), not a stringified string.
+Provide the script inline via "script", or reference a named workflow via "name" (resolved from .uaayzr/workflows/), or an existing file via "scriptPath". Pass "args" as a real JSON value (object/array/string), not a stringified string.
 
 Use "resumeFromRunId" to resume a prior run — completed agent() calls replay from the journal instantly.
 

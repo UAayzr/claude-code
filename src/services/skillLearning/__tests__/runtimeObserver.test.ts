@@ -132,7 +132,7 @@ describe('runtimeObserver', () => {
       existsSync(
         join(
           root,
-          '.claude',
+          '.uaayzr',
           'skills',
           'testing-choosing-between-mock-testing-library',
           'SKILL.md',

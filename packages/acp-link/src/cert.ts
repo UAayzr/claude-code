@@ -45,7 +45,10 @@ function extractSanIPs(x509: X509Certificate): string[] {
   return ips
 }
 
-const CERT_DIR = join(homedir(), '.acp-proxy')
+const CERT_DIR = join(
+  process.env.UAAYZR_CONFIG_DIR ?? join(homedir(), '.uaayzr'),
+  'acp-proxy',
+)
 const KEY_PATH = join(CERT_DIR, 'key.pem')
 const CERT_PATH = join(CERT_DIR, 'cert.pem')
 

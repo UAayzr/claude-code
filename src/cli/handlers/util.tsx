@@ -89,22 +89,14 @@ export async function doctorHandler(root: Root): Promise<void> {
 }
 
 // install handler
-export async function installHandler(target: string | undefined, options: { force?: boolean }): Promise<void> {
-  const { setup } = await import('../../setup.js');
-  await setup(cwd(), 'default', false, false, undefined, false);
-  const { install } = await import('../../commands/install.js');
-  await new Promise<void>(resolve => {
-    const args: string[] = [];
-    if (target) args.push(target);
-    if (options.force) args.push('--force');
-
-    void install.call(
-      result => {
-        void resolve();
-        process.exit(result.includes('failed') ? 1 : 0);
-      },
-      {},
-      args,
-    );
-  });
+// UAayzr: the native installer is disabled. This stub keeps the dead install
+// UI (commands/install.tsx) — which would reach cleanupShellAliases /
+// removeInstalledSymlink — unreachable, matching the CLI stub in main.tsx.
+export async function installHandler(_target?: string, _options?: { force?: boolean }): Promise<void> {
+  void _target;
+  void _options;
+  process.stderr.write(
+    'UAayzr does not support the native installer. Install or update it with your package manager (for example: npm install -g uaayzr).\n',
+  );
+  process.exitCode = 1;
 }

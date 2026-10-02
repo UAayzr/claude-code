@@ -69,7 +69,7 @@ test('mergePhases: actual but undeclared phase appended to the end', () => {
 // clearly running under them — and worse, the previous phase stayed "running" because phase_done
 // only fires on the next phase() call. Derive status from agents when no actual record exists.
 test('mergePhases: derives status from agents when phase_started was never emitted', () => {
-  // Mirrors the real .claude/workflow-runs/wnxct9u3q/script.js shape:
+  // Mirrors the real .uaayzr/workflow-runs/wnxct9u3q/script.js shape:
   // phase('Map') called, 8 Map agents done; pipeline stage with phase:'Find' running (1/4);
   // Verify / Synthesize declared but not started; phase('Synthesize') not yet reached so
   // phase_done Map has not fired either — actual Map is still 'running'.

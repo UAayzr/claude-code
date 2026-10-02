@@ -471,7 +471,7 @@ export const LocalMemoryRecallTool = buildTool({
       const cap = previewMode ? PREVIEW_CAP_BYTES : FETCH_CAP_BYTES
 
       // M4 fix: bounded read. Even if an attacker writes a 1GB markdown
-      // file directly to ~/.claude/local-memory/<store>/<key>.md, we only
+      // file directly to ~/.uaayzr/local-memory/<store>/<key>.md, we only
       // ever load `cap + 16` bytes into memory. The +16 slack covers
       // the at-most-3-byte UTF-8 codepoint walk in truncateUtf8.
       const bounded = getEntryBounded(store, key, cap + 16)

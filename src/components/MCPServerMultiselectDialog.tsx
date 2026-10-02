@@ -63,7 +63,7 @@ export function MCPServerMultiselectDialog({ serverNames, onDone }: Props): Reac
   return (
     <>
       <Dialog
-        title={`${serverNames.length} new MCP servers found in .mcp.json`}
+        title={`${serverNames.length} new MCP servers found in .uaayzr/mcp.json`}
         subtitle="Select any you wish to enable."
         color="warning"
         onCancel={handleEscRejectAll}

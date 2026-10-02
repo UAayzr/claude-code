@@ -9,7 +9,7 @@ export const workflowInputSchema = z.object({
   name: z
     .string()
     .optional()
-    .describe('Named workflow, resolved to .claude/workflows/<name>.ts|js|mjs'),
+    .describe('Named workflow, resolved to .uaayzr/workflows/<name>.ts|js|mjs'),
   scriptPath: z
     .string()
     .optional()

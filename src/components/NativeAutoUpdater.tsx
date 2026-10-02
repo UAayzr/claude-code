@@ -210,7 +210,7 @@ export function NativeAutoUpdater({
       )}
       {maxVersionIssue && process.env.USER_TYPE === 'ant' && (
         <Text color="warning">
-          ⚠ Known issue: {maxVersionIssue} &middot; Run <Text bold>claude rollback --safe</Text> to downgrade
+          ⚠ Known issue: {maxVersionIssue} &middot; Run <Text bold>uaayzr rollback --safe</Text> to downgrade
         </Text>
       )}
     </Box>

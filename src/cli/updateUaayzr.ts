@@ -1,5 +1,5 @@
 /**
- * `ccb update` — Check and install the latest version of claude-code-best.
+ * `uaayzr update` — Check and install the latest version of UAayzr.
  *
  * Detection strategy:
  *  1. If `bun` is available and the current installation was done via bun → use `bun update -g`
@@ -16,7 +16,7 @@ import { execFileNoThrowWithCwd } from '../utils/execFileNoThrow.js'
 import { gracefulShutdown } from '../utils/gracefulShutdown.js'
 import { writeToStdout } from '../utils/process.js'
 
-const PACKAGE_NAME = 'claude-code-best'
+const PACKAGE_NAME = 'uaayzr'
 
 function getCurrentVersion(): string {
   // Read version from the nearest package.json (walks up from dist root)
@@ -91,7 +91,7 @@ function gte(a: string, b: string): boolean {
   return true
 }
 
-export async function updateCCB(): Promise<void> {
+export async function updateUaayzr(): Promise<void> {
   const currentVersion = getCurrentVersion()
   writeToStdout(`Current version: ${currentVersion}\n`)
 
@@ -114,7 +114,9 @@ export async function updateCCB(): Promise<void> {
 
   // Already up to date?
   if (latestVersion === currentVersion || gte(currentVersion, latestVersion)) {
-    writeToStdout(chalk.green(`ccb is up to date (${currentVersion})`) + '\n')
+    writeToStdout(
+      chalk.green(`UAayzr is up to date (${currentVersion})`) + '\n',
+    )
     await gracefulShutdown(0)
     return
   }

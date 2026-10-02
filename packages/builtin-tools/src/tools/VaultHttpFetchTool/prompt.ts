@@ -1,6 +1,6 @@
 export const DESCRIPTION =
   "Make an authenticated HTTPS request using a secret stored in the user's " +
-  'encrypted local vault (~/.claude/local-vault/). You only specify the vault ' +
+  'encrypted local vault (~/.uaayzr/local-vault/). You only specify the vault ' +
   'key NAME — never the secret value. The tool framework injects the secret ' +
   'directly into a request header and the secret is NEVER returned in tool_result, ' +
   'NEVER logged, NEVER passed to a shell. ' +

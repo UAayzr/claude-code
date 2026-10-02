@@ -5,7 +5,7 @@ const localMemoryCommand: Command = {
   name: 'local-memory',
   aliases: ['lm'],
   description:
-    'Manage local memory stores for notes and context. Stored in ~/.claude/local-memory/ — no API key required.',
+    'Manage local memory stores for notes and context. Stored in ~/.uaayzr/local-memory/ — no API key required.',
   // Avoid `<store>` / `<key>` / `<value>` in hint — REPL markdown renderer
   // strips angle-bracketed words as HTML tags. Uppercase placeholders are
   // visible. Same fix as /local-vault.

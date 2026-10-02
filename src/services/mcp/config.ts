@@ -1,5 +1,5 @@
 import { feature } from 'bun:bundle'
-import { chmod, open, rename, stat, unlink } from 'fs/promises'
+import { chmod, mkdir, open, rename, stat, unlink } from 'fs/promises'
 import mapValues from 'lodash-es/mapValues.js'
 import memoize from 'lodash-es/memoize.js'
 import { dirname, join, parse } from 'path'
@@ -81,12 +81,13 @@ function addScopeToServers(
 }
 
 /**
- * Internal utility: Write MCP config to .mcp.json file.
+ * Internal utility: Write MCP config to .uaayzr/mcp.json file.
  * Preserves file permissions and flushes to disk before rename.
  * Uses the original path for rename (does not follow symlinks).
  */
 async function writeMcpjsonFile(config: McpJsonConfig): Promise<void> {
-  const mcpJsonPath = join(getCwd(), '.mcp.json')
+  const mcpJsonPath = join(getCwd(), '.uaayzr', 'mcp.json')
+  await mkdir(dirname(mcpJsonPath), { recursive: true })
 
   // Read existing file permissions to preserve them
   let existingMode: number | undefined
@@ -267,7 +268,7 @@ export function dedupPluginMcpServers(
 
 /**
  * Filter claude.ai connectors, dropping any whose signature matches an enabled
- * manually-configured server. Manual wins: a user who wrote .mcp.json or ran
+ * manually-configured server. Manual wins: a user who wrote .uaayzr/mcp.json or ran
  * `claude mcp add` expressed higher intent than a connector toggled in the web UI.
  *
  * Connector keys are `claude.ai <DisplayName>` so they never key-collide with
@@ -683,7 +684,7 @@ export async function addMcpConfig(
     case 'project': {
       const { servers } = getProjectMcpConfigsFromCwd()
       if (servers[name]) {
-        throw new Error(`MCP server ${name} already exists in .mcp.json`)
+        throw new Error(`MCP server ${name} already exists in .uaayzr/mcp.json`)
       }
       break
     }
@@ -724,11 +725,11 @@ export async function addMcpConfig(
       mcpServers[name] = validatedConfig
       const mcpConfig = { mcpServers }
 
-      // Write back to .mcp.json
+      // Write back to .uaayzr/mcp.json
       try {
         await writeMcpjsonFile(mcpConfig)
       } catch (error) {
-        throw new Error(`Failed to write to .mcp.json: ${error}`)
+        throw new Error(`Failed to write to .uaayzr/mcp.json: ${error}`)
       }
       break
     }
@@ -775,10 +776,12 @@ export async function removeMcpConfig(
       const { servers: existingServers } = getProjectMcpConfigsFromCwd()
 
       if (!existingServers[name]) {
-        throw new Error(`No MCP server found with name: ${name} in .mcp.json`)
+        throw new Error(
+          `No MCP server found with name: ${name} in .uaayzr/mcp.json`,
+        )
       }
 
-      // Strip scope information when writing back to .mcp.json
+      // Strip scope information when writing back to .uaayzr/mcp.json
       const mcpServers: Record<string, McpServerConfig> = {}
       for (const [serverName, serverConfig] of Object.entries(
         existingServers,
@@ -792,7 +795,7 @@ export async function removeMcpConfig(
       try {
         await writeMcpjsonFile(mcpConfig)
       } catch (error) {
-        throw new Error(`Failed to remove from .mcp.json: ${error}`)
+        throw new Error(`Failed to remove from .uaayzr/mcp.json: ${error}`)
       }
       break
     }
@@ -835,10 +838,10 @@ export async function removeMcpConfig(
 
 /**
  * Get MCP configs from current directory only (no parent traversal).
- * Used by addMcpConfig and removeMcpConfig to modify the local .mcp.json file.
+ * Used by addMcpConfig and removeMcpConfig to modify the local .uaayzr/mcp.json file.
  * Exported for testing purposes.
  *
- * @returns Servers with scope information and any validation errors from current directory's .mcp.json
+ * @returns Servers with scope information and any validation errors from current directory's .uaayzr/mcp.json
  */
 export function getProjectMcpConfigsFromCwd(): {
   servers: Record<string, ScopedMcpServerConfig>
@@ -849,7 +852,7 @@ export function getProjectMcpConfigsFromCwd(): {
     return { servers: {}, errors: [] }
   }
 
-  const mcpJsonPath = join(getCwd(), '.mcp.json')
+  const mcpJsonPath = join(getCwd(), '.uaayzr', 'mcp.json')
 
   const { config, errors } = parseMcpConfigFromFilePath({
     filePath: mcpJsonPath,
@@ -857,7 +860,7 @@ export function getProjectMcpConfigsFromCwd(): {
     scope: 'project',
   })
 
-  // Missing .mcp.json is expected, but malformed files should report errors
+  // Missing .uaayzr/mcp.json is expected, but malformed files should report errors
   if (!config) {
     const nonMissingErrors = errors.filter(
       e => !e.message.startsWith('MCP config file not found'),
@@ -921,7 +924,7 @@ export function getMcpConfigsByScope(
 
       // Process from root downward to CWD (so closer files have higher priority)
       for (const dir of dirs.reverse()) {
-        const mcpJsonPath = join(dir, '.mcp.json')
+        const mcpJsonPath = join(dir, '.uaayzr', 'mcp.json')
 
         const { config, errors } = parseMcpConfigFromFilePath({
           filePath: mcpJsonPath,
@@ -929,7 +932,7 @@ export function getMcpConfigsByScope(
           scope: 'project',
         })
 
-        // Missing .mcp.json in parent directories is expected, but malformed files should report errors
+        // Missing .uaayzr/mcp.json in parent directories is expected, but malformed files should report errors
         if (!config) {
           const nonMissingErrors = errors.filter(
             e => !e.message.startsWith('MCP config file not found'),

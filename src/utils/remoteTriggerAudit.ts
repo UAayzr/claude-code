@@ -1,9 +1,13 @@
 import { randomUUID } from 'crypto'
 import { mkdir, readFile, appendFile } from 'fs/promises'
 import { dirname, join } from 'path'
+import { UAAYZR_PROJECT_CONFIG_DIR } from '../constants/identity.js'
 import { getProjectRoot } from '../bootstrap/state.js'
 
-const REMOTE_TRIGGER_AUDIT_REL = join('.claude', 'remote-trigger-audit.jsonl')
+const REMOTE_TRIGGER_AUDIT_REL = join(
+  UAAYZR_PROJECT_CONFIG_DIR,
+  'remote-trigger-audit.jsonl',
+)
 const MAX_AUDIT_RECORDS = 200
 
 export type RemoteTriggerAuditRecord = {

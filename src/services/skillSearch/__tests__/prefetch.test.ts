@@ -50,7 +50,7 @@ afterEach(() => {
 
 describe('skill search prefetch', () => {
   test('auto-loads high-confidence project skill content', async () => {
-    const skillDir = join(root, '.claude', 'skills', 'feature-audit')
+    const skillDir = join(root, '.uaayzr', 'skills', 'feature-audit')
     mkdirSync(skillDir, { recursive: true })
     writeFileSync(
       join(skillDir, 'SKILL.md'),

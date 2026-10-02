@@ -27,7 +27,7 @@ ANTHROPIC_API_KEY=sk-... \
 - `ANTHROPIC_API_KEY`（必填）
 - `ANTHROPIC_MODEL`：默认 `claude-sonnet-4-5`
 - `WORKFLOW_API_CONCURRENCY`：API 并发上限，默认 `3`（见下）。低 tier 可设 `1` 串行
-- `RESEARCH_RUNS_DIR`：journal 目录，默认 `~/.claude/workflow-runs`（resume 时复用）
+- `RESEARCH_RUNS_DIR`：journal 目录，默认 `~/.uaayzr/workflow-runs`（resume 时复用）
 
 ## 健壮性与排错
 
@@ -59,7 +59,7 @@ runner 内置了几项让真实 API 跑得稳的处理：
 ## 扩展点
 
 - **联网调研**：给 `llmAgent` 的 `messages.create` 加 `tools: [{ type: 'web_search_20250305' }]`（Anthropic server-side web search），research 角度即可联网。
-- **命名命令复用**：把 `research-report.workflow.mjs` 复制到项目 `.claude/workflows/research-report.mjs`，即可通过 `/research-report` 或 Workflow 工具运行（同一脚本，两种入口）。
+- **命名命令复用**：把 `research-report.workflow.mjs` 复制到项目 `.uaayzr/workflows/research-report.mjs`，即可通过 `/research-report` 或 Workflow 工具运行（同一脚本，两种入口）。
 - **token 预算**：`runWorkflow({ budgetTotal: 200000 })` 设上限；脚本内用 `budget.remaining()` 自适应规模。
 - **resume**：同 `runId` + `resume: true` 重放 journal，已完成的 agent 不重跑。
 

@@ -169,7 +169,9 @@ function printResumeHint(): void {
 
       writeSync(
         1,
-        chalk.dim(`\nResume this session with:\nccb --resume ${resumeArg}\n`),
+        chalk.dim(
+          `\nResume this session with:\nuaayzr --resume ${resumeArg}\n`,
+        ),
       )
       resumeHintPrinted = true
     } catch {

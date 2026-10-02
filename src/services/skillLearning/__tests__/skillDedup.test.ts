@@ -19,7 +19,7 @@ let skillsRoot: string
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), 'skill-learning-dedup-'))
-  skillsRoot = join(root, '.claude', 'skills')
+  skillsRoot = join(root, '.uaayzr', 'skills')
   mkdirSync(skillsRoot, { recursive: true })
 })
 

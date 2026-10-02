@@ -589,7 +589,7 @@ $i = New-Object MUp+INPUT; $i.type=0; $i.mi.dwFlags=0x0004; [MUp]::SendInput(1, 
           require('./platforms/win32.js') as typeof import('./platforms/win32.js')
 
         const agentCmd: Record<string, string> = {
-          claude: 'claude',
+          claude: 'uaayzr',
           codex: 'codex',
           gemini: 'gemini',
           custom: opts.command ?? '',

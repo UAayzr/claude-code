@@ -45,7 +45,7 @@ export function createWhatsNewFeed(releaseNotes: string[]): FeedConfig {
 
   const emptyMessage =
     process.env.USER_TYPE === 'ant'
-      ? 'Unable to fetch latest claude-cli-internal commits'
+      ? 'Unable to fetch latest uaayzr-cli-internal commits'
       : 'Check the Claude Code changelog for updates';
 
   return {

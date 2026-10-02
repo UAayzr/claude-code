@@ -10,7 +10,7 @@ import { ProvidersFileSchema, type ProviderConfig } from './types.js'
  * The four built-in OpenAI-compat providers.
  *
  * These are used when providers.json is absent or contains no entries.
- * User-defined providers in ~/.claude/providers.json are merged on top
+ * User-defined providers in ~/.uaayzr/providers.json are merged on top
  * (they replace a built-in with the same id).
  */
 export const DEFAULT_PROVIDERS: ProviderConfig[] = [
@@ -69,7 +69,7 @@ export function _invalidateProviderCache(): void {
  *
  * Strategy:
  * 1. Start with DEFAULT_PROVIDERS.
- * 2. If ~/.claude/providers.json exists, parse and validate it with Zod.
+ * 2. If ~/.uaayzr/providers.json exists, parse and validate it with Zod.
  *    - Valid entries replace defaults with matching id; new ids are appended.
  *    - Corrupt/invalid file: log warning, return defaults only.
  * 3. Empty providers.json: return defaults.
@@ -184,7 +184,7 @@ function providerConfigEqual(a: ProviderConfig, b: ProviderConfig): boolean {
 }
 
 /**
- * Write additional providers to ~/.claude/providers.json.
+ * Write additional providers to ~/.uaayzr/providers.json.
  *
  * Only writes providers that are NOT already in DEFAULT_PROVIDERS (or the
  * existing file). If a provider with the same id exists, it is replaced.

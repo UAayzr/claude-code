@@ -135,7 +135,7 @@ export const callTeleport: LocalJSXCommandCall = async (
           error: meta(msg.slice(0, 200)),
         })
         onDone(
-          'Teleport: permission denied fetching sessions. Check your OAuth token (`claude auth status`).',
+          'Teleport: permission denied fetching sessions. Check your OAuth token (`uaayzr auth status`).',
           { display: 'system' },
         )
         return null

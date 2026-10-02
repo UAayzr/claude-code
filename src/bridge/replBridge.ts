@@ -493,7 +493,7 @@ export async function initBridgeCore(
   // Crash-recovery pointer: written now so a kill -9 at any point after
   // this leaves a recoverable trail. Cleared in teardown (non-perpetual)
   // or left alone (perpetual mode — pointer survives clean exit too).
-  // `claude remote-control --continue` from the same directory will detect
+  // `uaayzr remote-control --continue` from the same directory will detect
   // it and offer to resume.
   await writeBridgePointer(dir, {
     sessionId: currentSessionId,

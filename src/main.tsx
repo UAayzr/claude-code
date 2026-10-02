@@ -194,6 +194,7 @@ import { hasNodeOption, isBareMode, isEnvTruthy, isInProtectedNamespace } from '
 import { refreshExampleCommands } from './utils/exampleCommands.js';
 import type { FpsMetrics } from './utils/fpsTracker.js';
 import { getWorktreePaths } from './utils/getWorktreePaths.js';
+import { UAAYZR_APP_NAME, UAAYZR_COMMAND } from './constants/identity.js';
 import { findGitRoot, getBranch, getIsGit, getWorktreeCount } from './utils/git.js';
 import { getGhAuthStatus } from './utils/github/ghAuthStatus.js';
 import { safeParseJSON } from './utils/json.js';
@@ -826,7 +827,7 @@ export async function main() {
     // URL arrives via Apple Event (not argv). LaunchServices overwrites
     // __CFBundleIdentifier to the launching bundle's ID, which is a precise
     // positive signal — cheaper than importing and guessing with heuristics.
-    if (process.platform === 'darwin' && process.env.__CFBundleIdentifier === 'com.anthropic.claude-code-url-handler') {
+    if (process.platform === 'darwin' && process.env.__CFBundleIdentifier === 'com.uaayzr.cli-url-handler') {
       const { enableConfigs } = await import('./utils/config.js');
       enableConfigs();
       const { handleUrlSchemeLaunch } = await import('./utils/deepLink/protocolHandler.js');
@@ -838,7 +839,7 @@ export async function main() {
   // `claude assistant [sessionId]` — stash and strip so the main
   // command handles it, giving the full interactive TUI. Position-0 only
   // (matching the ssh pattern below) — indexOf would false-positive on
-  // `claude -p "explain assistant"`. Root-flag-before-subcommand
+  // `uaayzr -p "explain assistant"`. Root-flag-before-subcommand
   // (e.g. `--debug assistant`) falls through to the stub, which
   // prints usage.
   if (feature('KAIROS') && _pendingAssistantChat) {
@@ -893,7 +894,7 @@ export async function main() {
       }
       // Forward session-resume + model flags to the remote CLI's initial spawn.
       // --continue/-c and --resume <uuid> operate on the REMOTE session history
-      // (which persists under the remote's ~/.claude/projects/<cwd>/).
+      // (which persists under the remote's ~/.uaayzr/projects/<cwd>/).
       // --model controls which model the remote uses.
       const extractFlag = (flag: string, opts: { hasValue?: boolean; as?: string } = {}) => {
         const i = rawCliArgs.indexOf(flag);
@@ -1100,7 +1101,7 @@ async function run(): Promise<CommanderCommand> {
     // terminal shell integration may mirror the process name to the tab.
     // After init() so settings.json env can also gate this (gh-4765).
     if (!isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_TERMINAL_TITLE)) {
-      process.title = 'claude';
+      process.title = UAAYZR_COMMAND;
     }
 
     // Attach logging sinks so subcommand handlers can use logEvent/logError.
@@ -1148,8 +1149,10 @@ async function run(): Promise<CommanderCommand> {
   });
 
   program
-    .name('claude')
-    .description(`Claude Code - starts an interactive session by default, use -p/--print for non-interactive output`)
+    .name(UAAYZR_COMMAND)
+    .description(
+      `${UAAYZR_APP_NAME} - starts an interactive session by default, use -p/--print for non-interactive output`,
+    )
     .argument('[prompt]', 'Your prompt', String)
     // Subcommands inherit helpOption via commander's copyInheritedSettings —
     // setting it once here covers mcp, plugin, auth, and all other subcommands.
@@ -1453,7 +1456,7 @@ async function run(): Promise<CommanderCommand> {
         logEvent('tengu_single_word_prompt', { length: prompt.length });
       }
 
-      // Assistant mode: when .claude/settings.json has assistant: true AND
+      // Assistant mode: when .uaayzr/settings.json has assistant: true AND
       // the tengu_kairos GrowthBook gate is on, force brief on. Permission
       // mode is left to the user — settings defaultMode or --permission-mode
       // apply as normal. REPL-typed messages already default to 'next'
@@ -1463,10 +1466,10 @@ async function run(): Promise<CommanderCommand> {
       // kairosEnabled is computed once here and reused at the
       // getAssistantSystemPromptAddendum() call site further down.
       //
-      // Trust gate: .claude/settings.json is attacker-controllable in an
+      // Trust gate: .uaayzr/settings.json is attacker-controllable in an
       // untrusted clone. We run ~1000 lines before showSetupScreens() shows
       // the trust dialog, and by then we've already appended
-      // .claude/agents/assistant.md to the system prompt. Refuse to activate
+      // .uaayzr/agents/assistant.md to the system prompt. Refuse to activate
       // until the directory has been explicitly trusted.
       let kairosEnabled = false;
       let assistantTeamContext:
@@ -2270,7 +2273,7 @@ async function run(): Promise<CommanderCommand> {
       logForDebugging('[STARTUP] Loading MCP configs...');
       const mcpConfigStart = Date.now();
       let mcpConfigResolvedMs: number | undefined;
-      // --bare skips auto-discovered MCP (.mcp.json, user settings, plugins) —
+      // --bare skips auto-discovered MCP (.uaayzr/mcp.json, user settings, plugins) —
       // only explicit --mcp-config works. dynamicMcpConfig is spread onto
       // allMcpConfigs downstream so it survives this skip.
       const mcpConfigPromise = (
@@ -2432,7 +2435,7 @@ async function run(): Promise<CommanderCommand> {
 
       if (getIsNonInteractiveSession()) {
         // Apply full merged settings env now (including project-scoped
-        // .claude/settings.json PATH/GIT_DIR/GIT_WORK_TREE) so gitExe() and
+        // .uaayzr/settings.json PATH/GIT_DIR/GIT_WORK_TREE) so gitExe() and
         // the git spawn below see it. Trust is implicit in -p mode; the
         // docstring at managedEnv.ts:96-97 says this applies "potentially
         // dangerous environment variables such as LD_PRELOAD, PATH" from all
@@ -3071,9 +3074,9 @@ async function run(): Promise<CommanderCommand> {
 
       logManagedSettings();
 
-      // Register PID file for concurrent-session detection (~/.claude/sessions/)
+      // Register PID file for concurrent-session detection (~/.uaayzr/sessions/)
       // and fire multi-clauding telemetry. Lives here (not init.ts) so only the
-      // REPL path registers — not subcommands like `claude doctor`. Chained:
+      // REPL path registers — not subcommands like `uaayzr doctor`. Chained:
       // count must run after register's write completes or it misses our own file.
       void registerSession().then(registered => {
         if (!registered) return;
@@ -3330,7 +3333,7 @@ async function run(): Promise<CommanderCommand> {
           }
           // Suppress claude.ai connectors that duplicate an enabled
           // manual server (URL-signature match). Plugin dedup above only
-          // handles `plugin:*` keys; this catches manual `.mcp.json` entries.
+          // handles `plugin:*` keys; this catches manual `.uaayzr/mcp.json` entries.
           // plugin:* must be excluded here — step 1 already suppressed
           // those (claude.ai wins); leaving them in suppresses the
           // connector too, and neither survives (gh-39974).
@@ -4609,7 +4612,7 @@ async function run(): Promise<CommanderCommand> {
     return program;
   }
 
-  // claude mcp
+  // uaayzr mcp
 
   const mcp = program
     .command('mcp')
@@ -4649,7 +4652,7 @@ async function run(): Promise<CommanderCommand> {
   mcp
     .command('list')
     .description(
-      'List configured MCP servers. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      'List configured MCP servers. Note: The workspace trust dialog is skipped and stdio servers from .uaayzr/mcp.json are spawned for health checks. Only use this command in directories you trust.',
     )
     .action(async () => {
       const { mcpListHandler } = await import('./cli/handlers/mcp.js');
@@ -4659,7 +4662,7 @@ async function run(): Promise<CommanderCommand> {
   mcp
     .command('get <name>')
     .description(
-      'Get details about an MCP server. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      'Get details about an MCP server. Note: The workspace trust dialog is skipped and stdio servers from .uaayzr/mcp.json are spawned for health checks. Only use this command in directories you trust.',
     )
     .action(async (name: string) => {
       const { mcpGetHandler } = await import('./cli/handlers/mcp.js');
@@ -4687,7 +4690,7 @@ async function run(): Promise<CommanderCommand> {
 
   mcp
     .command('reset-project-choices')
-    .description('Reset all approved and rejected project-scoped (.mcp.json) servers within this project')
+    .description('Reset all approved and rejected project-scoped (.uaayzr/mcp.json) servers within this project')
     .action(async () => {
       const { mcpResetChoicesHandler } = await import('./cli/handlers/mcp.js');
       await mcpResetChoicesHandler();
@@ -4807,7 +4810,7 @@ async function run(): Promise<CommanderCommand> {
         process.stderr.write(
           'Usage: claude ssh <user@host | ssh-config-alias> [dir]\n\n' +
             "Runs Claude Code on a remote Linux host. You don't need to install\n" +
-            'anything on the remote or run `claude auth login` there — the binary is\n' +
+            'anything on the remote or run `uaayzr auth login` there — the binary is\n' +
             'deployed over SSH and API auth tunnels back through your local machine.\n',
         );
         process.exit(1);
@@ -4862,7 +4865,7 @@ async function run(): Promise<CommanderCommand> {
       );
   }
 
-  // claude auth
+  // uaayzr auth
 
   const auth = program.command('auth').description('Manage authentication').configureHelp(createSortedHelpConfig());
 
@@ -5022,7 +5025,7 @@ async function run(): Promise<CommanderCommand> {
     .alias('rm')
     .description('Uninstall an installed plugin')
     .option('-s, --scope <scope>', 'Uninstall from scope: user, project, or local', 'user')
-    .option('--keep-data', "Preserve the plugin's persistent data directory (~/.claude/plugins/data/{id}/)")
+    .option('--keep-data', "Preserve the plugin's persistent data directory (~/.uaayzr/plugins/data/{id}/)")
     .addOption(coworkOption())
     .action(
       async (
@@ -5238,7 +5241,7 @@ async function run(): Promise<CommanderCommand> {
   program
     .command('doctor')
     .description(
-      'Check the health of your Claude Code auto-updater. Note: The workspace trust dialog is skipped and stdio servers from .mcp.json are spawned for health checks. Only use this command in directories you trust.',
+      'Check the health of your Claude Code auto-updater. Note: The workspace trust dialog is skipped and stdio servers from .uaayzr/mcp.json are spawned for health checks. Only use this command in directories you trust.',
     )
     .action(async () => {
       const [{ doctorHandler }, { createRoot }] = await Promise.all([
@@ -5262,13 +5265,13 @@ async function run(): Promise<CommanderCommand> {
       });
   }
 
-  // claude rollback (ant-only)
+  // uaayzr rollback (ant-only)
   // Rolls back to previous releases
   if (process.env.USER_TYPE === 'ant') {
     program
       .command('rollback [target]')
       .description(
-        '[ANT-ONLY] Roll back to a previous release\n\nExamples:\n  claude rollback                                    Go 1 version back from current\n  claude rollback 3                                  Go 3 versions back from current\n  claude rollback 2.0.73-dev.20251217.t190658        Roll back to a specific version',
+        '[ANT-ONLY] Roll back to a previous release\n\nExamples:\n  uaayzr rollback                                    Go 1 version back from current\n  uaayzr rollback 3                                  Go 3 versions back from current\n  uaayzr rollback 2.0.73-dev.20251217.t190658        Roll back to a specific version',
       )
       .option('-l, --list', 'List recent published versions with ages')
       .option('--dry-run', 'Show what would be installed without installing')
@@ -5288,25 +5291,26 @@ async function run(): Promise<CommanderCommand> {
       );
   }
 
-  // claude install
+  // The upstream native installer is intentionally disabled. It writes to
+  // the official Claude paths and can remove the official installation.
   program
     .command('install [target]')
-    .description(
-      'Install Claude Code native build. Use [target] to specify version (stable, latest, or specific version)',
-    )
+    .description(`The ${UAAYZR_APP_NAME} native installer is disabled to protect the official Claude installation`)
     .option('--force', 'Force installation even if already installed')
-    .action(async (target: string | undefined, options: { force?: boolean }) => {
-      const { installHandler } = await import('./cli/handlers/util.js');
-      await installHandler(target, options);
+    .action(() => {
+      process.stderr.write(
+        `${UAAYZR_APP_NAME} does not support the native installer. Install or update it with your package manager (for example: npm install -g uaayzr).\n`,
+      );
+      process.exitCode = 1;
     });
 
-  // claude update — update ccb to the latest version via npm or bun
+  // uaayzr update — update UAayzr via npm or bun
   program
     .command('update')
-    .description('Update claude-code-best (ccb) to the latest version')
+    .description(`Update ${UAAYZR_APP_NAME} to the latest version`)
     .action(async () => {
-      const { updateCCB } = await import('./cli/updateCCB.js');
-      await updateCCB();
+      const { updateUaayzr } = await import('./cli/updateUaayzr.js');
+      await updateUaayzr();
     });
 
   // ant-only commands

@@ -46,7 +46,7 @@ type SessionSpawnerDeps = {
   execPath: string
   /**
    * Arguments that must precede the CLI flags when spawning. Empty for
-   * compiled binaries (where execPath is the claude binary itself); contains
+   * compiled binaries (where execPath is the uaayzr binary itself); contains
    * the script path (process.argv[1]) for npm installs where execPath is the
    * node runtime. Without this, node sees --sdk-url as a node option and
    * exits with "bad option: --sdk-url" (see anthropics/claude-code#28334).
@@ -262,7 +262,7 @@ export function createSessionSpawner(deps: SessionSpawnerDeps): SessionSpawner {
           debugFile = `${deps.debugFile}-${safeId}`
         }
       } else if (deps.verbose || process.env.USER_TYPE === 'ant') {
-        debugFile = join(tmpdir(), 'claude', `bridge-session-${safeId}.log`)
+        debugFile = join(tmpdir(), 'uaayzr', `bridge-session-${safeId}.log`)
       }
 
       // Transcript file: write raw NDJSON lines for post-hoc analysis.

@@ -5,7 +5,7 @@
  * API host and that subscription OAuth requests stay on the subscription plane.
  * This prevents credential leakage to third-party hosts.
  *
- * Design: ~/.claude/rules/deep-debug/security.md §2 (read-only investigation first,
+ * Design: ~/.uaayzr/rules/deep-debug/security.md §2 (read-only investigation first,
  * then minimal guard at earliest detection point).
  */
 

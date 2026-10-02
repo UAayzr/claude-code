@@ -107,7 +107,7 @@ describe('autonomyRuns', () => {
     })
     expect(runs[0]?.ownerSessionId).toBeString()
     expect(flows).toHaveLength(0)
-    expect(resolveAutonomyRunsPath(tempDir)).toContain('.claude')
+    expect(resolveAutonomyRunsPath(tempDir)).toContain('.uaayzr')
   })
 
   test('createAutonomyQueuedPrompt defaults currentDir to the active cwd for nested authority', async () => {
@@ -836,7 +836,7 @@ describe('autonomyRuns', () => {
       '..',
       '..',
       '..',
-      '.claude',
+      '.uaayzr',
       'autonomy',
       'HEARTBEAT.md',
     )

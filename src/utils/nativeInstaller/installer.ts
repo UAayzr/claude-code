@@ -48,12 +48,7 @@ import { getShellType } from '../localInstaller.js'
 import * as lockfile from '../lockfile.js'
 import { logError } from '../log.js'
 import { gt, gte } from '../semver.js'
-import {
-  filterClaudeAliases,
-  getShellConfigPaths,
-  readFileLines,
-  writeFileLines,
-} from '../shellConfig.js'
+import { getShellConfigPaths } from '../shellConfig.js'
 import { sleep } from '../sleep.js'
 import {
   getUserBinDir,
@@ -109,7 +104,7 @@ export function getPlatform(): string {
 }
 
 export function getBinaryName(platform: string): string {
-  return platform.startsWith('win32') ? 'claude.exe' : 'claude'
+  return platform.startsWith('win32') ? 'uaayzr.exe' : 'uaayzr'
 }
 
 function getBaseDirectories() {
@@ -118,13 +113,13 @@ function getBaseDirectories() {
 
   return {
     // Data directories (permanent storage)
-    versions: join(getXDGDataHome(), 'claude', 'versions'),
+    versions: join(getXDGDataHome(), 'uaayzr', 'versions'),
 
     // Cache directories (can be deleted)
-    staging: join(getXDGCacheHome(), 'claude', 'staging'),
+    staging: join(getXDGCacheHome(), 'uaayzr', 'staging'),
 
     // State directories
-    locks: join(getXDGStateHome(), 'claude', 'locks'),
+    locks: join(getXDGStateHome(), 'uaayzr', 'locks'),
 
     // User bin
     executable: join(getUserBinDir(), executableName),
@@ -331,7 +326,7 @@ async function installVersionFromPackage(
     const nodeModulesDir = join(stagingPath, 'node_modules', '@anthropic-ai')
     const entries = await readdir(nodeModulesDir)
     const nativePackage = entries.find((entry: string) =>
-      entry.startsWith('claude-cli-native-'),
+      entry.startsWith('uaayzr-cli-native-'),
     )
 
     if (!nativePackage) {
@@ -943,31 +938,17 @@ type InstallLatestResult = {
   lockHolderPid?: number
 }
 
-// In-process singleflight guard. NativeAutoUpdater remounts whenever the
-// prompt suggestions overlay toggles (PromptInput.tsx:2916), and the
-// isUpdating guard does not survive the remount. Each remount kicked off a
-// fresh 271MB binary download while previous ones were still in flight.
-// Telemetry: session 42fed33f saw arrayBuffers climb to 91GB at ~650MB/s.
-let inFlightInstall: Promise<InstallLatestResult> | null = null
-
 export function installLatest(
   channelOrVersion: string,
   forceReinstall: boolean = false,
 ): Promise<InstallLatestResult> {
-  if (forceReinstall) {
-    return installLatestImpl(channelOrVersion, forceReinstall)
-  }
-  if (inFlightInstall) {
-    logForDebugging('installLatest: joining in-flight call')
-    return inFlightInstall
-  }
-  const promise = installLatestImpl(channelOrVersion, forceReinstall)
-  inFlightInstall = promise
-  const clear = (): void => {
-    inFlightInstall = null
-  }
-  void promise.then(clear, clear)
-  return promise
+  void channelOrVersion
+  void forceReinstall
+  return Promise.reject(
+    new Error(
+      'UAayzr native installation is disabled. Install or update with your package manager.',
+    ),
+  )
 }
 
 async function installLatestImpl(
@@ -1043,6 +1024,8 @@ function getLockFilePathFromVersionPath(
  * (unlike mtime-based locking which requires a 30-day timeout)
  */
 export async function lockCurrentVersion(): Promise<void> {
+  return
+  /* istanbul ignore next -- native installer disabled for UAayzr */
   const dirs = getBaseDirectories()
 
   // Only lock if we're running from the versions directory
@@ -1179,260 +1162,10 @@ async function forceRemoveLock(versionFilePath: string): Promise<void> {
 }
 
 export async function cleanupOldVersions(): Promise<void> {
-  // Yield to ensure we don't block startup
-  await Promise.resolve()
-
-  const dirs = getBaseDirectories()
-  const oneHourAgo = Date.now() - 3600000
-
-  // Clean up old renamed executables on Windows (no longer running at startup)
-  if (getPlatform().startsWith('win32')) {
-    const executableDir = dirname(dirs.executable)
-    try {
-      const files = await readdir(executableDir)
-      let cleanedCount = 0
-      for (const file of files) {
-        if (!/^claude\.exe\.old\.\d+$/.test(file)) continue
-        try {
-          await unlink(join(executableDir, file))
-          cleanedCount++
-        } catch {
-          // File might still be in use by another process
-        }
-      }
-      if (cleanedCount > 0) {
-        logForDebugging(
-          `Cleaned up ${cleanedCount} old Windows executables on startup`,
-        )
-      }
-    } catch (error) {
-      if (!isENOENT(error)) {
-        logForDebugging(`Failed to clean up old Windows executables: ${error}`)
-      }
-    }
-  }
-
-  // Clean up orphaned staging directories older than 1 hour
-  try {
-    const stagingEntries = await readdir(dirs.staging)
-    let stagingCleanedCount = 0
-    for (const entry of stagingEntries) {
-      const stagingPath = join(dirs.staging, entry)
-      try {
-        // stat() is load-bearing here (we need mtime). There is a theoretical
-        // TOCTOU where a concurrent installer could freshen a stale staging
-        // dir between stat and rm — but the 1-hour threshold makes this
-        // vanishingly unlikely, and rm({force:true}) tolerates concurrent
-        // deletion.
-        const stats = await stat(stagingPath)
-        if (stats.mtime.getTime() < oneHourAgo) {
-          await rm(stagingPath, { recursive: true, force: true })
-          stagingCleanedCount++
-          logForDebugging(`Cleaned up old staging directory: ${entry}`)
-        }
-      } catch {
-        // Ignore individual errors
-      }
-    }
-    if (stagingCleanedCount > 0) {
-      logForDebugging(
-        `Cleaned up ${stagingCleanedCount} orphaned staging directories`,
-      )
-      logEvent('tengu_native_staging_cleanup', {
-        cleaned_count: stagingCleanedCount,
-      })
-    }
-  } catch (error) {
-    if (!isENOENT(error)) {
-      logForDebugging(`Failed to clean up staging directories: ${error}`)
-    }
-  }
-
-  // Clean up stale PID locks (crashed processes) — cleanupStaleLocks handles ENOENT
-  if (isPidBasedLockingEnabled()) {
-    const staleLocksCleaned = cleanupStaleLocks(dirs.locks)
-    if (staleLocksCleaned > 0) {
-      logForDebugging(`Cleaned up ${staleLocksCleaned} stale version locks`)
-      logEvent('tengu_native_stale_locks_cleanup', {
-        cleaned_count: staleLocksCleaned,
-      })
-    }
-  }
-
-  // Single readdir of versions dir. Partition into temp files vs candidate binaries,
-  // stat'ing each entry at most once.
-  let versionEntries: string[]
-  try {
-    versionEntries = await readdir(dirs.versions)
-  } catch (error) {
-    if (!isENOENT(error)) {
-      logForDebugging(`Failed to readdir versions directory: ${error}`)
-    }
-    return
-  }
-
-  type VersionInfo = {
-    name: string
-    path: string
-    resolvedPath: string
-    mtime: Date
-  }
-  const versionFiles: VersionInfo[] = []
-  let tempFilesCleanedCount = 0
-
-  for (const entry of versionEntries) {
-    const entryPath = join(dirs.versions, entry)
-    if (/\.tmp\.\d+\.\d+$/.test(entry)) {
-      // Orphaned temp install file — pattern: {version}.tmp.{pid}.{timestamp}
-      try {
-        const stats = await stat(entryPath)
-        if (stats.mtime.getTime() < oneHourAgo) {
-          await unlink(entryPath)
-          tempFilesCleanedCount++
-          logForDebugging(`Cleaned up orphaned temp install file: ${entry}`)
-        }
-      } catch {
-        // Ignore individual errors
-      }
-      continue
-    }
-    // Candidate version binary — stat once, reuse for isFile/size/mtime/mode
-    try {
-      const stats = await stat(entryPath)
-      if (!stats.isFile()) continue
-      if (
-        process.platform !== 'win32' &&
-        stats.size > 0 &&
-        (stats.mode & 0o111) === 0
-      ) {
-        // Check executability via mode bits from the existing stat result —
-        // avoids a second syscall (access(X_OK)) and the TOCTOU window between
-        // stat and access. Skip on Windows: libuv only sets execute bits for
-        // .exe/.com/.bat/.cmd, but version files are extensionless semver
-        // strings (e.g. "1.2.3"), so this check would reject all of them.
-        // The previous access(X_OK) passed any readable file on Windows anyway.
-        continue
-      }
-      versionFiles.push({
-        name: entry,
-        path: entryPath,
-        resolvedPath: resolve(entryPath),
-        mtime: stats.mtime,
-      })
-    } catch {
-      // Skip files we can't stat
-    }
-  }
-
-  if (tempFilesCleanedCount > 0) {
-    logForDebugging(
-      `Cleaned up ${tempFilesCleanedCount} orphaned temp install files`,
-    )
-    logEvent('tengu_native_temp_files_cleanup', {
-      cleaned_count: tempFilesCleanedCount,
-    })
-  }
-
-  if (versionFiles.length === 0) {
-    return
-  }
-
-  try {
-    // Identify protected versions
-    const currentBinaryPath = process.execPath
-    const protectedVersions = new Set<string>()
-    if (currentBinaryPath && currentBinaryPath.includes(dirs.versions)) {
-      protectedVersions.add(resolve(currentBinaryPath))
-    }
-
-    const currentSymlinkVersion = await getVersionFromSymlink(dirs.executable)
-    if (currentSymlinkVersion) {
-      protectedVersions.add(currentSymlinkVersion)
-    }
-
-    // Protect versions with active locks (running in other processes)
-    for (const v of versionFiles) {
-      if (protectedVersions.has(v.resolvedPath)) continue
-
-      const lockFilePath = getLockFilePathFromVersionPath(dirs, v.resolvedPath)
-      let hasActiveLock = false
-      if (isPidBasedLockingEnabled()) {
-        hasActiveLock = isLockActive(lockFilePath)
-      } else {
-        try {
-          hasActiveLock = await lockfile.check(v.resolvedPath, {
-            stale: LOCK_STALE_MS,
-            lockfilePath: lockFilePath,
-          })
-        } catch {
-          hasActiveLock = false
-        }
-      }
-      if (hasActiveLock) {
-        protectedVersions.add(v.resolvedPath)
-        logForDebugging(`Protecting locked version from cleanup: ${v.name}`)
-      }
-    }
-
-    // Eligible versions: not protected, sorted newest first (reuse cached mtime)
-    const eligibleVersions = versionFiles
-      .filter(v => !protectedVersions.has(v.resolvedPath))
-      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime())
-
-    const versionsToDelete = eligibleVersions.slice(VERSION_RETENTION_COUNT)
-
-    if (versionsToDelete.length === 0) {
-      logEvent('tengu_native_version_cleanup', {
-        total_count: versionFiles.length,
-        deleted_count: 0,
-        protected_count: protectedVersions.size,
-        retained_count: VERSION_RETENTION_COUNT,
-        lock_failed_count: 0,
-        error_count: 0,
-      })
-      return
-    }
-
-    let deletedCount = 0
-    let lockFailedCount = 0
-    let errorCount = 0
-
-    await Promise.all(
-      versionsToDelete.map(async version => {
-        try {
-          const deleted = await tryWithVersionLock(version.path, async () => {
-            await unlink(version.path)
-          })
-          if (deleted) {
-            deletedCount++
-          } else {
-            lockFailedCount++
-            logForDebugging(
-              `Skipping deletion of ${version.name} - locked by another process`,
-            )
-          }
-        } catch (error) {
-          errorCount++
-          logError(
-            new Error(`Failed to delete version ${version.name}: ${error}`),
-          )
-        }
-      }),
-    )
-
-    logEvent('tengu_native_version_cleanup', {
-      total_count: versionFiles.length,
-      deleted_count: deletedCount,
-      protected_count: protectedVersions.size,
-      retained_count: VERSION_RETENTION_COUNT,
-      lock_failed_count: lockFailedCount,
-      error_count: errorCount,
-    })
-  } catch (error) {
-    if (!isENOENT(error)) {
-      logError(new Error(`Version cleanup failed: ${error}`))
-    }
-  }
+  // Native version cleanup is disabled in UAayzr. The upstream
+  // implementation could delete files that belong to the official
+  // Claude installation.
+  return
 }
 
 /**
@@ -1460,6 +1193,10 @@ async function isNpmSymlink(executablePath: string): Promise<boolean> {
  * Will only remove if it's a native binary symlink, not npm-managed JS files
  */
 export async function removeInstalledSymlink(): Promise<void> {
+  // UAayzr: the native installer is disabled — never touch the executable dir
+  // (which may belong to the official Claude installation).
+  return
+  /* istanbul ignore next -- native installer disabled for UAayzr */
   const dirs = getBaseDirectories()
 
   try {
@@ -1482,41 +1219,11 @@ export async function removeInstalledSymlink(): Promise<void> {
   }
 }
 
-/**
- * Clean up old claude aliases from shell configuration files
- * Only handles alias removal, not PATH setup
- */
 export async function cleanupShellAliases(): Promise<SetupMessage[]> {
-  const messages: SetupMessage[] = []
-  const configMap = getShellConfigPaths()
-
-  for (const [shellType, configFile] of Object.entries(configMap)) {
-    try {
-      const lines = await readFileLines(configFile)
-      if (!lines) continue
-
-      const { filtered, hadAlias } = filterClaudeAliases(lines)
-
-      if (hadAlias) {
-        await writeFileLines(configFile, filtered)
-        messages.push({
-          message: `Removed claude alias from ${configFile}. Run: unalias claude`,
-          userActionRequired: true,
-          type: 'alias',
-        })
-        logForDebugging(`Cleaned up claude alias from ${shellType} config`)
-      }
-    } catch (error) {
-      logError(error)
-      messages.push({
-        message: `Failed to clean up ${configFile}: ${error}`,
-        userActionRequired: false,
-        type: 'error',
-      })
-    }
-  }
-
-  return messages
+  // UAayzr: never rewrite the user's shell rc to remove aliases that may
+  // point at the official Claude installation. The upstream implementation
+  // (removed below) edited shell config files to drop claude aliases.
+  return []
 }
 
 async function manualRemoveNpmPackage(
@@ -1655,51 +1362,6 @@ export async function cleanupNpmInstallations(): Promise<{
   errors: string[]
   warnings: string[]
 }> {
-  const errors: string[] = []
-  const warnings: string[] = []
-  let removed = 0
-
-  // Always attempt to remove @anthropic-ai/claude-code
-  const codePackageResult = await attemptNpmUninstall(
-    '@anthropic-ai/claude-code',
-  )
-  if (codePackageResult.success) {
-    removed++
-    if (codePackageResult.warning) {
-      warnings.push(codePackageResult.warning)
-    }
-  } else if (codePackageResult.error) {
-    errors.push(codePackageResult.error)
-  }
-
-  // Also attempt to remove MACRO.PACKAGE_URL if it's defined and different
-  if (MACRO.PACKAGE_URL && MACRO.PACKAGE_URL !== '@anthropic-ai/claude-code') {
-    const macroPackageResult = await attemptNpmUninstall(MACRO.PACKAGE_URL)
-    if (macroPackageResult.success) {
-      removed++
-      if (macroPackageResult.warning) {
-        warnings.push(macroPackageResult.warning)
-      }
-    } else if (macroPackageResult.error) {
-      errors.push(macroPackageResult.error)
-    }
-  }
-
-  // Check for local installation at ~/.claude/local
-  const localInstallDir = join(homedir(), '.claude', 'local')
-
-  try {
-    await rm(localInstallDir, { recursive: true })
-    removed++
-    logForDebugging(`Removed local installation at ${localInstallDir}`)
-  } catch (error) {
-    if (!isENOENT(error)) {
-      errors.push(`Failed to remove ${localInstallDir}: ${error}`)
-      logForDebugging(`Failed to remove local installation: ${error}`, {
-        level: 'error',
-      })
-    }
-  }
-
-  return { removed, errors, warnings }
+  // Never remove the official Claude package from an UAayzr process.
+  return { removed: 0, errors: [], warnings: [] }
 }

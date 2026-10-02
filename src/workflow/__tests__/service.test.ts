@@ -209,7 +209,7 @@ test('launch inline script → returns scriptPath (persisted to cwdOverride dir)
       stubCanUseTool,
     )
     expect(result.scriptPath).toBe(
-      join(dir, '.claude', 'workflow-runs', 'run-1', 'script.js'),
+      join(dir, '.uaayzr', 'workflow-runs', 'run-1', 'script.js'),
     )
     const { readFile } = await import('node:fs/promises')
     expect(await readFile(result.scriptPath!, 'utf-8')).toBe(

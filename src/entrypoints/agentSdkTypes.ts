@@ -76,7 +76,7 @@ export type {
 // ============================================================================
 
 /**
- * A scheduled task from `<dir>/.claude/scheduled_tasks.json`.
+ * A scheduled task from `<dir>/.uaayzr/scheduled_tasks.json`.
  * @internal
  */
 export type CronTask = {

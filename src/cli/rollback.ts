@@ -1,5 +1,5 @@
 /**
- * `claude rollback [target]` — roll back to a previous Claude Code version.
+ * `uaayzr rollback [target]` — roll back to a previous Claude Code version.
  *
  * ANT-only command (USER_TYPE === "ant").
  *
@@ -15,7 +15,7 @@ export async function rollback(
   if (options?.list) {
     console.log('Recent versions:')
     console.log('  (version listing requires access to the release registry)')
-    console.log('  Use `claude update --list` for available versions.')
+    console.log('  Use `uaayzr update --list` for available versions.')
     return
   }
 
@@ -32,15 +32,15 @@ export async function rollback(
 
   if (!target) {
     console.error(
-      'Usage: claude rollback [target]\n\n' +
+      'Usage: uaayzr rollback [target]\n\n' +
         'Options:\n' +
         '  -l, --list     List recent published versions\n' +
         '  --dry-run      Show what would be installed\n' +
         '  --safe         Roll back to server-pinned safe version\n\n' +
         'Examples:\n' +
-        '  claude rollback 2.1.880\n' +
-        '  claude rollback --list\n' +
-        '  claude rollback --safe',
+        '  uaayzr rollback 2.1.880\n' +
+        '  uaayzr rollback --list\n' +
+        '  uaayzr rollback --safe',
     )
     process.exitCode = 1
     return
@@ -55,11 +55,9 @@ export async function rollback(
 
   // Version rollback via npm/bun
   const { spawnSync } = await import('child_process')
-  const result = spawnSync(
-    'npm',
-    ['install', '-g', `@anthropic-ai/claude-code@${target}`],
-    { stdio: 'inherit' },
-  )
+  const result = spawnSync('npm', ['install', '-g', `uaayzr@${target}`], {
+    stdio: 'inherit',
+  })
 
   if (result.status !== 0) {
     console.error(`Rollback failed with exit code ${result.status}`)

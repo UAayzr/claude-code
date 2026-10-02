@@ -538,13 +538,13 @@ const fileExtension = lazySchema(() =>
  * Schema for MCP server configurations in plugin manifest
  *
  * Allows plugins to provide MCP servers either inline or via external
- * configuration files, supplementing any servers in .mcp.json.
+ * configuration files, supplementing any servers in the plugin's .mcp.json.
  */
 const PluginManifestMcpServerSchema = lazySchema(() =>
   z.object({
     mcpServers: z.union([
       RelativeJSONPath().describe(
-        'MCP servers to include in the plugin (in addition to those in the .mcp.json file, if it exists)',
+        'MCP servers to include in the plugin (in addition to those in the plugin .mcp.json file, if it exists)',
       ),
       McpbPath().describe(
         'Path or URL to MCPB file containing MCP server configuration',
@@ -1442,7 +1442,7 @@ export const SettingsPluginEntrySchema = lazySchema(() =>
  *   "version": "1.2.0",
  *   "installedAt": "2024-01-15T10:30:00Z",
  *   "marketplace": "anthropic-tools",
- *   "installPath": "/home/user/.claude/plugins/installed/anthropic-tools/code-formatter"
+ *   "installPath": "/home/user/.uaayzr/plugins/installed/anthropic-tools/code-formatter"
  * }
  */
 export const InstalledPluginSchema = lazySchema(() =>
@@ -1498,9 +1498,9 @@ export const InstalledPluginsFileSchemaV1 = lazySchema(() =>
  *
  * Plugins can be installed at different scopes:
  * - managed: Enterprise/system-wide (read-only, platform-specific paths)
- * - user: User's global settings (~/.claude/settings.json)
- * - project: Shared project settings ($project/.claude/settings.json)
- * - local: Personal project overrides ($project/.claude/settings.local.json)
+ * - user: User's global settings (~/.uaayzr/settings.json)
+ * - project: Shared project settings ($project/.uaayzr/settings.json)
+ * - local: Personal project overrides ($project/.uaayzr/settings.local.json)
  *
  * Note: 'flag' scope plugins (from --settings) are session-only and
  * are NOT persisted to installed_plugins.json.
@@ -1587,7 +1587,7 @@ export const InstalledPluginsFileSchema = lazySchema(() =>
  * Example entry:
  * {
  *   "source": { "source": "github", "repo": "anthropic/claude-plugins" },
- *   "installLocation": "/home/user/.claude/plugins/cached/marketplaces/anthropic-tools",
+ *   "installLocation": "/home/user/.uaayzr/plugins/cached/marketplaces/anthropic-tools",
  *   "lastUpdated": "2024-01-15T10:30:00Z"
  * }
  */

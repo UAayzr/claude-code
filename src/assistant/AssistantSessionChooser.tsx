@@ -14,7 +14,7 @@ interface Props {
 }
 
 /**
- * Interactive session chooser for `claude assistant` when multiple
+ * Interactive session chooser for `uaayzr assistant` when multiple
  * CCR sessions are discovered. Renders a Dialog with up/down navigation.
  *
  * Session IDs are in `session_*` compat format — passed directly to

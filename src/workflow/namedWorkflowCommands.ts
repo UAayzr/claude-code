@@ -6,7 +6,7 @@ import {
 import type { Command } from '../types/command.js'
 import { getProjectRoot } from '../bootstrap/state.js'
 
-/** Scan *.ts|*.js|*.mjs under .claude/workflows/ and generate a /<name> command for each. */
+/** Scan *.ts|*.js|*.mjs under .uaayzr/workflows/ and generate a /<name> command for each. */
 export async function getWorkflowCommands(
   cwd: string = getProjectRoot(),
 ): Promise<Command[]> {

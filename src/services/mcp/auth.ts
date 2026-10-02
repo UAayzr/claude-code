@@ -248,7 +248,7 @@ function createAuthFetch(): FetchLike {
  *    without implementing RFC 9728. The SDK's own fallback strips the path, so this
  *    preserves the pre-existing path-aware probe for backward compatibility.
  *
- * Note: configuredMetadataUrl is user-controlled via .mcp.json. Project-scoped MCP
+ * Note: configuredMetadataUrl is user-controlled via .uaayzr/mcp.json. Project-scoped MCP
  * servers require user approval before connecting (same trust level as the MCP server
  * URL itself). The HTTPS requirement here is defense-in-depth beyond schema validation
  * — RFC 8414 mandates OAuth metadata retrieval over TLS.

@@ -17,7 +17,7 @@ export interface GitHubActionsMetadata {
 
 /**
  * EnvironmentMetadata contains environment and runtime information
- * See claude-cli-internal/src/services/statsig.ts for the source of these fields
+ * See uaayzr-cli-internal/src/services/statsig.ts for the source of these fields
  */
 export interface EnvironmentMetadata {
   platform?: string | undefined
@@ -74,7 +74,7 @@ export interface SlackContext {
 
 /**
  * ClaudeCodeInternalEvent represents events logged from Claude Code via Statsig
- * This schema matches the structure in claude-cli-internal/src/services/statsig.ts
+ * This schema matches the structure in uaayzr-cli-internal/src/services/statsig.ts
  * Source table: proj-product-data-nhme.raw_statsig_internal_tools.events
  */
 export interface ClaudeCodeInternalEvent {

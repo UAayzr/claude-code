@@ -6,7 +6,10 @@ import { getPlatform } from '../platform.js'
  * Get the path to the managed settings directory based on the current platform.
  */
 export const getManagedFilePath = memoize(function (): string {
-  // Allow override for testing/demos (Ant-only, eliminated from external builds)
+  // Allow override for testing/demos (UAayzr-named, then legacy for ant builds)
+  if (process.env.UAAYZR_MANAGED_SETTINGS_PATH) {
+    return process.env.UAAYZR_MANAGED_SETTINGS_PATH
+  }
   if (
     process.env.USER_TYPE === 'ant' &&
     process.env.CLAUDE_CODE_MANAGED_SETTINGS_PATH
@@ -16,11 +19,11 @@ export const getManagedFilePath = memoize(function (): string {
 
   switch (getPlatform()) {
     case 'macos':
-      return '/Library/Application Support/ClaudeCode'
+      return '/Library/Application Support/UAayzr'
     case 'windows':
-      return 'C:\\Program Files\\ClaudeCode'
+      return 'C:\\Program Files\\UAayzr'
     default:
-      return '/etc/claude-code'
+      return '/etc/uaayzr'
   }
 })
 

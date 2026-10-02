@@ -88,7 +88,7 @@ export async function call(
       const localSettingsPath = getSettingsFilePathForSource('localSettings');
       const relativePath = localSettingsPath
         ? relative(getCwdState(), localSettingsPath)
-        : '.claude/settings.local.json';
+        : '.uaayzr/settings.local.json';
 
       const message = color('success', themeName)(`Added "${cleanPattern}" to excluded commands in ${relativePath}`);
 

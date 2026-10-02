@@ -5,7 +5,6 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs'
-import { homedir } from 'node:os'
 import { join } from 'node:path'
 import type { Command, LocalCommandResult } from '../../types/command.js'
 import {
@@ -351,7 +350,7 @@ const issue: Command = {
         // Fallback: provide URL-encoded browser link.
         // Browsers silently truncate URLs beyond ~8KB so we cap the body at
         // MAX_URL_BODY characters. When the full body is larger we save a draft
-        // to ~/.claude/issue-drafts/ and tell the user where to find it.
+        // to ~/.uaayzr/issue-drafts/ and tell the user where to find it.
         const MAX_URL_BODY = 4096
         const sessionSummary = getTranscriptSummary()
         const fullBodyText = `## Context from Claude Code session\n\n${sessionSummary}`
@@ -363,7 +362,7 @@ const issue: Command = {
             fullBodyText.slice(0, MAX_URL_BODY) +
             '\n\n... (truncated, see CLI for full body)'
           try {
-            const draftsDir = join(homedir(), '.claude', 'issue-drafts')
+            const draftsDir = join(getClaudeConfigHomeDir(), 'issue-drafts')
             mkdirSync(draftsDir, { recursive: true })
             const stamp = new Date().toISOString().replace(/[:.]/g, '-')
             draftPath = join(draftsDir, `issue-${stamp}.md`)

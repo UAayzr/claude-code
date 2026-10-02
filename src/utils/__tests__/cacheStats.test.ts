@@ -65,7 +65,7 @@ const mockedGetClaudeConfigHomeDir: (() => string) & {
   () =>
     useMockForCacheStats
       ? tmpDir
-      : (process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')).normalize(
+      : (process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.uaayzr')).normalize(
           'NFC',
         ),
   {
@@ -116,7 +116,7 @@ mock.module('src/utils/envUtils.js', () => ({
       ? `${tmpDir}/teams`
       : join(
           (
-            process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
+            process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.uaayzr')
           ).normalize('NFC'),
           'teams',
         ),

@@ -37,17 +37,27 @@ const ARC_PREFIX = 'marketplaces/claude-plugins-official/'
  * Fetch the official marketplace from GCS and extract to installLocation.
  * Idempotent — checks a `.gcs-sha` sentinel before downloading the ~3.5MB zip.
  *
+ * UAayzr: disabled by default so the CLI does not talk to Anthropic's
+ * official marketplace CDN. Set UAAYZR_ENABLE_OFFICIAL_MARKETPLACE=1 to
+ * re-enable; callers fall back to their normal failure path otherwise.
+ *
  * @param installLocation where to extract (must be inside marketplacesCacheDir)
  * @param marketplacesCacheDir the plugins marketplace cache root — passed in
  *   by callers (rather than imported from pluginDirectories) to break a
  *   circular-dep edge through marketplaceManager
  * @returns the fetched SHA on success (including no-op), null on any failure
- *   (network, 404, zip parse). Caller decides whether to fall through to git.
+ *   (network, 404, zip parse, disabled). Caller decides whether to fall through to git.
  */
 export async function fetchOfficialMarketplaceFromGcs(
   installLocation: string,
   marketplacesCacheDir: string,
 ): Promise<string | null> {
+  if (process.env.UAAYZR_ENABLE_OFFICIAL_MARKETPLACE !== '1') {
+    logForDebugging(
+      'official marketplace GCS fetch disabled (UAAYZR_ENABLE_OFFICIAL_MARKETPLACE)',
+    )
+    return null
+  }
   // Defense in depth: this function does `rm(installLocation, {recursive})`
   // during the atomic swap. A corrupted known_marketplaces.json (gh-32793 —
   // Windows path read on WSL, literal tilde, manual edit) could point at the

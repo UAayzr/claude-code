@@ -230,9 +230,9 @@ test('abort inside parallel and pipeline remains killed through run_done', async
 test('workflow() nesting (one level) shares counts', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'wf-run-'))
   try {
-    await mkdir(join(dir, '.claude', 'workflows'), { recursive: true })
+    await mkdir(join(dir, '.uaayzr', 'workflows'), { recursive: true })
     await writeFile(
-      join(dir, '.claude', 'workflows', 'child.ts'),
+      join(dir, '.uaayzr', 'workflows', 'child.ts'),
       `return agent('child')\n// child workflow`,
     )
     const ports = portsWith(
@@ -563,8 +563,8 @@ test('maxConcurrency passthrough: parallel agents bounded by run-level concurren
 test('workflow() references a syntactically broken sub-script → failed', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'wf-run-'))
   try {
-    await mkdir(join(dir, '.claude', 'workflows'), { recursive: true })
-    await writeFile(join(dir, '.claude', 'workflows', 'broken.ts'), `return ((`)
+    await mkdir(join(dir, '.uaayzr', 'workflows'), { recursive: true })
+    await writeFile(join(dir, '.uaayzr', 'workflows', 'broken.ts'), `return ((`)
     const ports = portsWith(dir, new Map())
     const result = await runWorkflow({
       script: `return workflow('broken')`,

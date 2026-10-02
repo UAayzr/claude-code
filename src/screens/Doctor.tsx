@@ -60,7 +60,7 @@ type VersionLockInfo = {
 function DistTagsDisplay({ promise }: { promise: Promise<NpmDistTags> }): React.ReactNode {
   const distTags = use(promise);
   if (!distTags.latest) {
-    return <Text dimColor>└ Failed to fetch versions</Text>;
+    return <Text dimColor>└ Version check unavailable (auto-update disabled)</Text>;
   }
   return (
     <>
@@ -132,7 +132,7 @@ export function Doctor({ onDone }: Props): React.ReactNode {
 
     void (async () => {
       const userAgentsDir = join(getClaudeConfigHomeDir(), 'agents');
-      const projectAgentsDir = join(getOriginalCwd(), '.claude', 'agents');
+      const projectAgentsDir = join(getOriginalCwd(), '.uaayzr', 'agents');
 
       const { activeAgents, allAgents, failedFiles } = agentDefinitions;
 
@@ -167,7 +167,7 @@ export function Doctor({ onDone }: Props): React.ReactNode {
 
       // Fetch version lock info if PID-based locking is enabled
       if (isPidBasedLockingEnabled()) {
-        const locksDir = join(getXDGStateHome(), 'claude', 'locks');
+        const locksDir = join(getXDGStateHome(), 'uaayzr', 'locks');
         const staleLocksCleaned = cleanupStaleLocks(locksDir);
         const locks = getAllLockInfo(locksDir);
         setVersionLockInfo({

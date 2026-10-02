@@ -193,10 +193,10 @@ test('writeRunState writes full AgentProgress (no output content, includes label
   }
 })
 
-test('getRunsDir returns <projectRoot>/.claude/workflow-runs shape', () => {
+test('getRunsDir returns <projectRoot>/.uaayzr/workflow-runs shape', () => {
   const dir = getRunsDir()
   // do not hard-code projectRoot (differs across machines), only check suffix structure
-  expect(dir.endsWith(`${join('.claude', 'workflow-runs')}`)).toBe(true)
+  expect(dir.endsWith(`${join('.uaayzr', 'workflow-runs')}`)).toBe(true)
 })
 
 test('listPersistedRuns limit N returns the N newest by updatedAt desc', async () => {

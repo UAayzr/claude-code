@@ -29,9 +29,9 @@ describe('waitForUrlEvent', () => {
   })
 
   test('returns a Claude URL from environment variables', async () => {
-    process.env.CLAUDE_CODE_URL_EVENT = 'claude-cli://prompt?q=hello'
+    process.env.CLAUDE_CODE_URL_EVENT = 'uaayzr-cli://prompt?q=hello'
 
-    await expect(waitForUrlEvent()).resolves.toBe('claude-cli://prompt?q=hello')
+    await expect(waitForUrlEvent()).resolves.toBe('uaayzr-cli://prompt?q=hello')
   })
 
   test('returns a Claude URL from argv', async () => {
@@ -41,7 +41,7 @@ describe('waitForUrlEvent', () => {
   })
 
   test('rejects URLs exceeding the maximum length', async () => {
-    process.env.CLAUDE_CODE_URL_EVENT = `claude-cli://${'x'.repeat(2048)}`
+    process.env.CLAUDE_CODE_URL_EVENT = `uaayzr-cli://${'x'.repeat(2048)}`
 
     await expect(waitForUrlEvent()).resolves.toBeNull()
   })

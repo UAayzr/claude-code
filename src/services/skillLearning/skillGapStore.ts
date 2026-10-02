@@ -249,7 +249,7 @@ async function writeSkillGapDraft(
   const instinct = createGapInstinct(gap, 'pending')
   const draftsRoot = join(
     project.projectRoot ?? project.cwd,
-    '.claude',
+    '.uaayzr',
     'skills',
     '.drafts',
   )

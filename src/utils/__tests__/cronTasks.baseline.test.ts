@@ -62,14 +62,14 @@ describe('cronTasks baseline', () => {
     expect(existsSync(getCronFilePath())).toBe(false)
   })
 
-  test('durable cron tasks are written to .claude/scheduled_tasks.json', async () => {
+  test('durable cron tasks are written to .uaayzr/scheduled_tasks.json', async () => {
     const id = await addCronTask('* * * * *', 'durable prompt', true, true)
 
     const filePath = getCronFilePath()
     const fileTasks = await readCronTasks()
 
     expect(existsSync(filePath)).toBe(true)
-    expect(filePath).toBe(join(tempDir, '.claude', 'scheduled_tasks.json'))
+    expect(filePath).toBe(join(tempDir, '.uaayzr', 'scheduled_tasks.json'))
     expect(fileTasks).toHaveLength(1)
     expect(fileTasks[0]).toMatchObject({
       id,

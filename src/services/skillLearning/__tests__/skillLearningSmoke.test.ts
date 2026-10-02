@@ -98,7 +98,7 @@ describe('skillLearning smoke', () => {
     }
 
     const skillName = 'testing-choosing-between-mock-testing-library'
-    const skillFile = join(root, '.claude', 'skills', skillName, 'SKILL.md')
+    const skillFile = join(root, '.uaayzr', 'skills', skillName, 'SKILL.md')
     expect(existsSync(skillFile)).toBe(true)
     expect(readFileSync(skillFile, 'utf8')).toContain('Prefer testing-library')
 

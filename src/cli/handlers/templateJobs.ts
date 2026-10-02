@@ -73,7 +73,7 @@ function handleList(): void {
 
   if (templates.length === 0) {
     console.log('No templates found.')
-    console.log('Place .md files in .claude/templates/ or ~/.claude/templates/')
+    console.log('Place .md files in .uaayzr/templates/ or ~/.uaayzr/templates/')
     return
   }
 

@@ -12,7 +12,7 @@ mock.module('../parseDeepLink.js', () => ({
   parseDeepLink: mockParseDeepLink,
 }))
 mock.module('../registerProtocol.js', () => ({
-  MACOS_BUNDLE_ID: 'com.anthropic.claude-code-url-handler',
+  MACOS_BUNDLE_ID: 'com.uaayzr.cli-url-handler',
 }))
 mock.module('../terminalLauncher.js', () => ({
   launchInTerminal: mockLaunchInTerminal,
@@ -61,19 +61,19 @@ describe('handleUrlSchemeLaunch', () => {
   })
 
   test('returns null for a matching bundle id when no URL event arrives', async () => {
-    process.env.__CFBundleIdentifier = 'com.anthropic.claude-code-url-handler'
+    process.env.__CFBundleIdentifier = 'com.uaayzr.cli-url-handler'
 
     await expect(handleUrlSchemeLaunch()).resolves.toBeNull()
     expect(mockParseDeepLink).not.toHaveBeenCalled()
   })
 
   test('handles a URL event after waiting for url-handler-napi', async () => {
-    process.env.__CFBundleIdentifier = 'com.anthropic.claude-code-url-handler'
-    process.env.CLAUDE_CODE_URL_EVENT = 'claude-cli://prompt?q=hello'
+    process.env.__CFBundleIdentifier = 'com.uaayzr.cli-url-handler'
+    process.env.CLAUDE_CODE_URL_EVENT = 'uaayzr-cli://prompt?q=hello'
 
     await expect(handleUrlSchemeLaunch()).resolves.toBe(0)
     expect(mockParseDeepLink).toHaveBeenCalledWith(
-      'claude-cli://prompt?q=hello',
+      'uaayzr-cli://prompt?q=hello',
     )
   })
 })
@@ -86,7 +86,7 @@ describe('handleDeepLinkUri', () => {
 
   test('returns 0 when parsing succeeds and terminal launch succeeds', async () => {
     await expect(
-      handleDeepLinkUri('claude-cli://prompt?q=hello'),
+      handleDeepLinkUri('uaayzr-cli://prompt?q=hello'),
     ).resolves.toBe(0)
     expect(mockLaunchInTerminal).toHaveBeenCalled()
   })

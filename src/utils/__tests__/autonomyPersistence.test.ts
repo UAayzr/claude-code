@@ -39,7 +39,7 @@ describe('withAutonomyPersistenceLock', () => {
     )
     await withAutonomyPersistenceLock(tempDir, async () => 'ok')
 
-    const autonomyDir = join(tempDir, '.claude', 'autonomy')
+    const autonomyDir = join(tempDir, '.uaayzr', 'autonomy')
     expect(existsSync(autonomyDir)).toBe(true)
   })
 

@@ -318,6 +318,11 @@ export async function checkGlobalInstallPermissions(): Promise<{
 export async function getLatestVersion(
   channel: ReleaseChannel,
 ): Promise<string | null> {
+  // UAayzr: no package URL is configured, so there is nothing to query.
+  if (!MACRO.PACKAGE_URL) {
+    return null
+  }
+
   const npmTag = channel === 'stable' ? 'stable' : 'latest'
 
   // Run from home directory to avoid reading project-level .npmrc
@@ -352,6 +357,11 @@ export type NpmDistTags = {
  * This is used by the doctor command to show users what versions are available.
  */
 export async function getNpmDistTags(): Promise<NpmDistTags> {
+  // UAayzr: no package URL is configured, so there is nothing to query.
+  if (!MACRO.PACKAGE_URL) {
+    return { latest: null, stable: null }
+  }
+
   // Run from home directory to avoid reading project-level .npmrc
   const result = await execFileNoThrowWithCwd(
     'npm',
@@ -400,6 +410,12 @@ export async function getLatestVersionFromGcs(
  * Fetches both latest and stable channel pointers.
  */
 export async function getGcsDistTags(): Promise<NpmDistTags> {
+  // UAayzr: the native release channel is disabled; do not query the
+  // official Anthropic GCS bucket.
+  if (!MACRO.NATIVE_PACKAGE_URL && !MACRO.PACKAGE_URL) {
+    return { latest: null, stable: null }
+  }
+
   const [latest, stable] = await Promise.all([
     getLatestVersionFromGcs('latest'),
     getLatestVersionFromGcs('stable'),
@@ -425,6 +441,11 @@ export async function getVersionHistory(limit: number): Promise<string[]> {
   // Use native package URL when available to ensure we only show versions
   // that have native binaries (not all JS package versions have native builds)
   const packageUrl = MACRO.NATIVE_PACKAGE_URL ?? MACRO.PACKAGE_URL
+
+  // UAayzr: no package URL is configured, so there is nothing to query.
+  if (!packageUrl) {
+    return []
+  }
 
   // Run from home directory to avoid reading project-level .npmrc
   const result = await execFileNoThrowWithCwd(
@@ -486,7 +507,7 @@ This configuration is not supported for updates.
 To fix this issue:
   1. Install Node.js within your Linux distribution: e.g. sudo apt install nodejs npm
   2. Make sure Linux NPM is in your PATH before the Windows version
-  3. Try updating again with 'claude update'
+  3. Try updating again with 'uaayzr update'
 `)
       return 'install_failed'
     }

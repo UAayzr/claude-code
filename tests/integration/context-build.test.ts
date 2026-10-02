@@ -86,7 +86,7 @@ describe('Context build: CLAUDE.md file system integration', () => {
   test('isMemoryFilePath correctly identifies CLAUDE.md paths', () => {
     expect(isMemoryFilePath('/project/CLAUDE.md')).toBe(true)
     expect(isMemoryFilePath('/project/CLAUDE.local.md')).toBe(true)
-    expect(isMemoryFilePath('/project/.claude/rules/file.md')).toBe(true)
+    expect(isMemoryFilePath('/project/.uaayzr/rules/file.md')).toBe(true)
     expect(isMemoryFilePath('/project/README.md')).toBe(false)
     expect(isMemoryFilePath('/project/src/index.ts')).toBe(false)
   })

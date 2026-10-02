@@ -348,7 +348,7 @@ function InstallGitHubApp(props: { onDone: (message: string) => void }): React.R
           repoWarnings.push({
             title: 'Invalid GitHub URL format',
             message: 'The repository URL format appears to be invalid.',
-            instructions: ['Use format: owner/repo or https://github.com/owner/repo', 'Example: anthropics/claude-cli'],
+            instructions: ['Use format: owner/repo or https://github.com/owner/repo', 'Example: anthropics/uaayzr-cli'],
           });
         } else {
           repoName = match[1]?.replace(/\.git$/, '') || '';
@@ -359,7 +359,7 @@ function InstallGitHubApp(props: { onDone: (message: string) => void }): React.R
         repoWarnings.push({
           title: 'Repository format warning',
           message: 'Repository should be in format "owner/repo"',
-          instructions: ['Use format: owner/repo', 'Example: anthropics/claude-cli'],
+          instructions: ['Use format: owner/repo', 'Example: anthropics/uaayzr-cli'],
         });
       }
 

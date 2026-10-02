@@ -1,8 +1,9 @@
 import type { SettingSource } from 'src/utils/settings/constants.js'
 import type { AgentDefinition } from '@claude-code-best/builtin-tools/tools/AgentTool/loadAgentsDir.js'
+import { UAAYZR_PROJECT_CONFIG_DIR } from 'src/constants/identity.js'
 
 export const AGENT_PATHS = {
-  FOLDER_NAME: '.claude',
+  FOLDER_NAME: UAAYZR_PROJECT_CONFIG_DIR,
   AGENTS_DIR: 'agents',
 } as const
 

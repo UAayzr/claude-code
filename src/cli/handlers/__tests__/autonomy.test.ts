@@ -65,9 +65,9 @@ describe('autonomy CLI handler', () => {
   })
 
   test('prints deep status for CLI status --deep', async () => {
-    await mkdir(join(tempDir, '.claude'), { recursive: true })
+    await mkdir(join(tempDir, '.uaayzr'), { recursive: true })
     await writeFile(
-      join(tempDir, '.claude', 'remote-trigger-audit.jsonl'),
+      join(tempDir, '.uaayzr', 'remote-trigger-audit.jsonl'),
       `${JSON.stringify({
         auditId: 'audit-1',
         createdAt: 1,

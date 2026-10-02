@@ -59,7 +59,11 @@ export function MCPServerApprovalDialog({ serverName, onDone }: Props): React.Re
   }
 
   return (
-    <Dialog title={`New MCP server found in .mcp.json: ${serverName}`} color="warning" onCancel={() => onChange('no')}>
+    <Dialog
+      title={`New MCP server found in .uaayzr/mcp.json: ${serverName}`}
+      color="warning"
+      onCancel={() => onChange('no')}
+    >
       <MCPServerDialogCopy />
 
       <Select

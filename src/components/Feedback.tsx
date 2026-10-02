@@ -40,7 +40,7 @@ import TextInput from './TextInput.js';
 const GITHUB_URL_LIMIT = 7250;
 const GITHUB_ISSUES_REPO_URL =
   process.env.USER_TYPE === 'ant'
-    ? 'https://github.com/anthropics/claude-cli-internal/issues'
+    ? 'https://github.com/anthropics/uaayzr-cli-internal/issues'
     : 'https://github.com/anthropics/claude-code/issues';
 
 type Props = {

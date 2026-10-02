@@ -51,8 +51,8 @@ export type Props = {
   /**
    * When true, skip writing effortLevel to userSettings on selection.
    * Used by the assistant installer wizard where the model choice is
-   * project-scoped (written to the assistant's .claude/settings.json via
-   * install.ts) and should not leak to the user's global ~/.claude/settings.
+   * project-scoped (written to the assistant's .uaayzr/settings.json via
+   * install.ts) and should not leak to the user's global ~/.uaayzr/settings.
    */
   skipSettingsWrite?: boolean;
 };
@@ -199,7 +199,7 @@ export function ModelPicker({
     if (!skipSettingsWrite) {
       // Prior comes from userSettings on disk — NOT merged settings (which
       // includes project/policy layers that must not leak into the user's
-      // global ~/.claude/settings.json), and NOT AppState.effortValue (which
+      // global ~/.uaayzr/settings.json), and NOT AppState.effortValue (which
       // includes session-ephemeral sources like --effort CLI flag).
       // See resolvePickerEffortPersistence JSDoc.
       const effortLevel = resolvePickerEffortPersistence(

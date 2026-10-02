@@ -119,10 +119,10 @@ describe('autonomy lifecycle user-equivalent CLI flow', () => {
     expect(output).toContain('# Autonomy Deep Status')
     expect(output).toContain('Autonomy runs: 0')
     expect(output).toContain('Autonomy flows: 0')
-    expect(existsSync(join(tempDir, '.claude', 'autonomy', 'runs.json'))).toBe(
+    expect(existsSync(join(tempDir, '.uaayzr', 'autonomy', 'runs.json'))).toBe(
       false,
     )
-    expect(existsSync(join(tempDir, '.claude', 'autonomy', 'flows.json'))).toBe(
+    expect(existsSync(join(tempDir, '.uaayzr', 'autonomy', 'flows.json'))).toBe(
       false,
     )
   })

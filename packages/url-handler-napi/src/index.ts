@@ -45,6 +45,8 @@ function isClaudeUrl(value: unknown): value is string {
   return (
     typeof value === 'string' &&
     value.length <= MAX_URL_LENGTH &&
-    (value.startsWith('claude-cli://') || value.startsWith('claude://'))
+    (value.startsWith('uaayzr-cli://') ||
+      value.startsWith('claude-cli://') ||
+      value.startsWith('claude://'))
   )
 }

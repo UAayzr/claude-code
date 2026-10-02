@@ -9,7 +9,6 @@ import { type FsOperations, getFsImplementation } from './fsOperations.js'
 import { cleanupOldImageCaches } from './imageStore.js'
 import * as lockfile from './lockfile.js'
 import { logError } from './log.js'
-import { cleanupOldVersions } from './nativeInstaller/index.js'
 import { cleanupOldPastes } from './pasteStore.js'
 import { getProjectsDir } from './sessionStorage.js'
 import { getSettingsWithAllErrors } from './settings/allErrors.js'
@@ -388,7 +387,7 @@ export async function cleanupOldSessionEnvDirs(): Promise<CleanupResult> {
 }
 
 /**
- * Cleans up old debug log files from ~/.claude/debug/
+ * Cleans up old debug log files from ~/.uaayzr/debug/
  * Preserves the 'latest' symlink which points to the current session's log.
  * Debug logs can grow very large (especially with the infinite logging loop bug)
  * and accumulate indefinitely without this cleanup.
@@ -436,6 +435,9 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
  * Only runs once per day for Ant users.
  */
 export async function cleanupNpmCacheForAnthropicPackages(): Promise<void> {
+  // Disabled in UAayzr: this upstream routine prunes npm cache entries for
+  // Anthropic packages that may be shared with the official Claude install.
+  return
   const markerPath = join(getClaudeConfigHomeDir(), '.npm-cache-cleanup')
 
   try {
@@ -541,35 +543,8 @@ export async function cleanupNpmCacheForAnthropicPackages(): Promise<void> {
  * The regular cleanupOldVersions() should still be used for installer flows.
  */
 export async function cleanupOldVersionsThrottled(): Promise<void> {
-  const markerPath = join(getClaudeConfigHomeDir(), '.version-cleanup')
-
-  try {
-    const stat = await fs.stat(markerPath)
-    if (Date.now() - stat.mtimeMs < ONE_DAY_MS) {
-      logForDebugging('version cleanup: skipping, ran recently')
-      return
-    }
-  } catch {
-    // File doesn't exist, proceed with cleanup
-  }
-
-  try {
-    await lockfile.lock(markerPath, { retries: 0, realpath: false })
-  } catch {
-    logForDebugging('version cleanup: skipping, lock held')
-    return
-  }
-
-  logForDebugging('version cleanup: starting (throttled)')
-
-  try {
-    await cleanupOldVersions()
-    await fs.writeFile(markerPath, new Date().toISOString())
-  } catch (error) {
-    logError(error as Error)
-  } finally {
-    await lockfile.unlock(markerPath, { realpath: false }).catch(() => {})
-  }
+  // Native version cleanup is disabled in UAayzr. The upstream implementation
+  // can remove files belonging to the official Claude installation.
 }
 
 export async function cleanupOldMessageFilesInBackground(): Promise<void> {

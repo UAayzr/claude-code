@@ -12,7 +12,7 @@ export class KeychainUnavailableError extends Error {
   }
 }
 
-const SERVICE_NAME = 'claude-code-local-vault'
+const SERVICE_NAME = 'uaayzr-local-vault'
 
 type KeyringEntry = {
   getPassword: () => string | null

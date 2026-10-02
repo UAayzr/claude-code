@@ -79,7 +79,7 @@ export async function createSSHSession(
     defaultCwd = probe.defaultCwd
 
     // 2. Deploy if binary missing or version mismatch
-    remoteBinaryPath = probe.binaryPath ?? '~/.local/bin/claude'
+    remoteBinaryPath = probe.binaryPath ?? '~/.local/bin/uaayzr'
     if (!probe.hasBinary || probe.remoteVersion !== localVersion) {
       onProgress?.(
         probe.hasBinary
