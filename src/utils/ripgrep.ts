@@ -56,12 +56,23 @@ export const getRipgrepConfig = memoize((): RipgrepConfig => {
   }
 
   const rgRoot = path.resolve(__dirname, 'vendor', 'ripgrep')
-  const command =
-    process.platform === 'win32'
-      ? path.resolve(rgRoot, `${process.arch}-win32`, 'rg.exe')
-      : path.resolve(rgRoot, `${process.arch}-${process.platform}`, 'rg')
+  // Dev mode (bun run dev) resolves distRoot to the project root, and the
+  // vendored rg lives at src/utils/vendor/ripgrep/ (build copies it into
+  // dist/vendor/). Check both layouts so the builtin binary is found in dev.
+  const rgBin = (root: string): string => {
+    const sub =
+      process.platform === 'win32'
+        ? `${process.arch}-win32`
+        : `${process.arch}-${process.platform}`
+    const name = process.platform === 'win32' ? 'rg.exe' : 'rg'
+    return path.resolve(root, sub, name)
+  }
+  const builtinPath =
+    [rgRoot, path.resolve(__dirname, 'src', 'utils', 'vendor', 'ripgrep')]
+      .map(rgBin)
+      .find(existsSync) ?? rgBin(rgRoot)
 
-  return resolveBuiltinWithFallback(command)
+  return resolveBuiltinWithFallback(builtinPath)
 })
 
 /**
