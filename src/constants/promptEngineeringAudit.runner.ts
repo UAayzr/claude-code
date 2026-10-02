@@ -556,10 +556,16 @@ describe('Opus 4.7 Prompt Engineering Audit', () => {
   // #20 风险感知时说得更少 (Say Less When Risky)
   // TXT 来源: {refusal_handling}
   // ------------------------------------------------------------------
-  describe('#20 Say less when risky', () => {
-    test('security-sensitive code should say less about details', async () => {
+  // UAayzr: 已删除企业防泄密子句（"saying less about implementation
+  // details"）——本地自用无泄密场景，保留写安全代码的主体即可。
+  // 反向断言锁定删除事实，防止被重新加回。
+  describe('#20 Say less when risky (removed)', () => {
+    test('security-sensitive code guidance stays; leak-suppression clause removed', async () => {
       const prompt = await getFullPrompt()
-      expect(prompt).toContain('saying less about implementation details')
+      expect(prompt).toContain(
+        'Be careful not to introduce security vulnerabilities',
+      )
+      expect(prompt).not.toContain('saying less about implementation details')
     })
   })
 
