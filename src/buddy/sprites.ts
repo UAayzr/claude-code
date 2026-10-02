@@ -1,10 +1,12 @@
 import type { CompanionBones, Eye, Hat, Species } from './types.js'
+import { stringWidth } from '@anthropic/ink'
 import {
   axolotl,
   blob,
   cactus,
   capybara,
   cat,
+  catgirl,
   chonk,
   dragon,
   duck,
@@ -438,6 +440,39 @@ const BODIES: Record<Species, string[][]> = {
       '  `------´~ ',
     ],
   ],
+  // biome-ignore format: catgirl frames verbatim from 形象.txt (do not pad)
+  [catgirl]: [
+    [
+      ' ／l、',
+      '(`､ 、７',
+      'l、~ ヽ',
+      'じしf_,)ノ',
+    ],
+    [
+      ' ／l、',
+      '(`. 、７',
+      'l、~ ヽ',
+      'じしf_,)ノ',
+    ],
+    [
+      '／l、',
+      '(`､ 、７',
+      'l、~ ヽ',
+      'じしf_,)ノ',
+    ],
+    [
+      '／l、',
+      '(`. 、７',
+      'l、~ ヽ',
+      'じしf_,)ノ',
+    ],
+    [
+      ' ／l、',
+      '(`. o ７',
+      'l、~ ヽ',
+      'じしf_,)ノ',
+    ],
+  ],
 }
 
 const HAT_LINES: Record<Hat, string> = {
@@ -465,7 +500,18 @@ export function renderSprite(bones: CompanionBones, frame = 0): string[] {
   // there's no hat and the frame isn't using it for smoke/antenna/etc.
   // Only safe when ALL frames have blank line 0; otherwise heights oscillate.
   if (!lines[0]!.trim() && frames.every(f => !f[0]!.trim())) lines.shift()
-  return lines
+
+  // Right-pad every line to the widest line. CompanionSprite renders the body
+  // with alignItems:"center" over a fixed column width, so variable-width rows
+  // (e.g. catgirl's verbatim frames) each center on their own column and the
+  // sprite reads as mis-aligned. Equalizing widths gives center alignment one
+  // shared reference — the trailing spaces render invisibly, so the visible
+  // content is unchanged. Early-exit when the frame is already uniform (the
+  // 18 padded species) to keep this hot path (1s tick, per-keystroke) cheap.
+  const first = stringWidth(lines[0]!)
+  if (lines.every(line => stringWidth(line) === first)) return lines
+  const width = Math.max(...lines.map(stringWidth))
+  return lines.map(line => line + ' '.repeat(width - stringWidth(line)))
 }
 
 export function spriteFrameCount(species: Species): number {
@@ -510,5 +556,7 @@ export function renderFace(bones: CompanionBones): string {
       return `|${eye}  ${eye}|`
     case chonk:
       return `(${eye}.${eye})`
+    case catgirl:
+      return '=^•ω•^='
   }
 }

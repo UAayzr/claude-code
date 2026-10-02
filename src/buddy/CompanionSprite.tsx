@@ -10,16 +10,18 @@ import { isFullscreenActive } from '../utils/fullscreen.js';
 import type { Theme } from '../utils/theme.js';
 import { getCompanion } from './companion.js';
 import { renderFace, renderSprite, spriteFrameCount } from './sprites.js';
-import { RARITY_COLORS } from './types.js';
+import { catgirl, RARITY_COLORS } from './types.js';
 
 const TICK_MS = 1000;
 const BUBBLE_SHOW = 10; // ticks → ~10s at 1000ms
 const FADE_WINDOW = 3; // last ~3s the bubble dims so you know it's about to go
 const PET_BURST_MS = 2500; // how long hearts float after /buddy pet
 
-// Idle sequence: mostly rest (frame 0), occasional fidget (frames 1-2), rare blink.
-// Sequence indices map to sprite frames; -1 means "blink on frame 0".
-const IDLE_SEQUENCE = [0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 2, 0, 0, 0];
+// Idle sequence: mostly rest (frame 0), occasional fidget (frames 1-2) —
+// closed/semi-closed eyes only. Catgirl's open-eye frame (index 4, `o`) must
+// NOT show while idle; it only appears during /buddy pet (excited loop cycles
+// tick % frameCount through all frames). No blinking while idle either.
+const IDLE_SEQUENCE = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0];
 
 // Hearts float up-and-out over 5 ticks (~2.5s). Prepended above the sprite.
 const H = figures.heart;
@@ -197,19 +199,22 @@ export function CompanionSprite(): React.ReactNode {
   let spriteFrame: number;
   let blink = false;
   if (reaction || petting) {
-    // Excited: cycle all fidget frames fast
+    // Excited: cycle all fidget frames fast. Reactions keep eyes open; only a
+    // pet's very first tick momentarily closes the eyes (a blink) — idles never.
     spriteFrame = tick % frameCount;
+    if (petting && petAge < 1) blink = true;
   } else {
-    const step = IDLE_SEQUENCE[tick % IDLE_SEQUENCE.length]!;
-    if (step === -1) {
-      spriteFrame = 0;
-      blink = true;
-    } else {
-      spriteFrame = step % frameCount;
-    }
+    spriteFrame = (IDLE_SEQUENCE[tick % IDLE_SEQUENCE.length] ?? 0) % frameCount;
   }
 
-  const body = renderSprite(companion, spriteFrame).map(line => (blink ? line.replaceAll(companion.eye, '-') : line));
+  // Blink closes the eyes: the 18 species do it by replacing their {E}-rendered
+  // eye glyph with '-'. Catgirl's eye glyphs (､/./o) are baked into its frames,
+  // so replaceAll(eye,'-') would miss every frame but the open-eye one — jump
+  // to its closed-eye frame (index 1, `.` eyes) instead.
+  const blinkFrame = blink && companion.species === catgirl ? 1 : spriteFrame;
+  const body = renderSprite(companion, blinkFrame).map(line =>
+    blink && companion.species !== catgirl ? line.replaceAll(companion.eye, '-') : line,
+  );
   const sprite = heartFrame ? [heartFrame, ...body] : body;
 
   // Name row doubles as hint row — unfocused shows dim name + ↓ discovery,

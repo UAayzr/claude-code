@@ -35,6 +35,7 @@ const SPECIES_NAMES: Record<string, string> = {
   rabbit: 'Flops',
   mushroom: 'Spore',
   chonk: 'Chonk',
+  catgirl: 'MiaoMiao',
 }
 
 const SPECIES_PERSONALITY: Record<string, string> = {
@@ -61,6 +62,7 @@ const SPECIES_PERSONALITY: Record<string, string> = {
   mushroom: 'Quietly insightful. Grows on you over time.',
   chonk:
     'Big, warm, and takes up the whole couch. Prioritizes comfort over elegance.',
+  catgirl: '一只可爱的猫猫，喵喵~',
 }
 
 function speciesLabel(species: string): string {

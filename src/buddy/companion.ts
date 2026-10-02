@@ -11,6 +11,7 @@ import {
   SPECIES,
   STAT_NAMES,
   type StatName,
+  catgirl,
 } from './types.js'
 
 // Mulberry32 — tiny seeded PRNG, good enough for picking ducks
@@ -90,14 +91,23 @@ export type Roll = {
 }
 
 function rollFrom(rng: () => number): Roll {
+  // UAayzr: 恒猫娘 —— 物种/稀有度/眼睛/帽子固定，属性与 shiny 仍随ram。
+  // 保留原始 draw 序列（结果用 void 丢弃），确保 revert 回随机 18 物种
+  // 时 PRNG 流逐位一致，一行改动即可恢复。
   const rarity = rollRarity(rng)
+  const species = pick(rng, SPECIES)
+  const eye = pick(rng, EYES)
+  const hat = rarity === 'common' ? 'none' : pick(rng, HATS)
+  void species
+  void eye
+  void hat
   const bones: CompanionBones = {
-    rarity,
-    species: pick(rng, SPECIES),
-    eye: pick(rng, EYES),
-    hat: rarity === 'common' ? 'none' : pick(rng, HATS),
+    rarity: 'legendary',
+    species: catgirl,
+    eye: 'o',
+    hat: 'none',
     shiny: rng() < 0.01,
-    stats: rollStats(rng, rarity),
+    stats: rollStats(rng, 'legendary'),
   }
   return { bones, inspirationSeed: Math.floor(rng() * 1e9) }
 }

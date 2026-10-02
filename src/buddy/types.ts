@@ -50,6 +50,7 @@ export const mushroom = c(
   0x6d,
 ) as 'mushroom'
 export const chonk = c(0x63, 0x68, 0x6f, 0x6e, 0x6b) as 'chonk'
+export const catgirl = c(0x63, 0x61, 0x74, 0x67, 0x69, 0x72, 0x6c) as 'catgirl'
 
 export const SPECIES = [
   duck,
@@ -70,11 +71,12 @@ export const SPECIES = [
   rabbit,
   mushroom,
   chonk,
+  catgirl,
 ] as const
 export type Species = (typeof SPECIES)[number] // biome-ignore format: keep compact
 
 export const EYES = ['·', '✦', '×', '◉', '@', '°'] as const
-export type Eye = (typeof EYES)[number]
+export type Eye = (typeof EYES)[number] | 'o'
 
 export const HATS = [
   'none',
