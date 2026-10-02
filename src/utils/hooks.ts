@@ -10,6 +10,7 @@ import { wrapSpawn } from './ShellCommand.js'
 import { TaskOutput } from './task/TaskOutput.js'
 import { getCwd } from './cwd.js'
 import { randomUUID } from 'crypto'
+import { getEffectiveStatusLine } from './statusLineDefaults.js'
 import { formatShellPrefixCommand } from './bash/shellPrefix.js'
 import {
   getHookEnvFilePath,
@@ -4775,7 +4776,9 @@ export async function executeStatusLineCommand(
   if (shouldAllowManagedHooksOnly()) {
     statusLine = getSettingsForSource('policySettings')?.statusLine
   } else {
-    statusLine = getSettings_DEPRECATED()?.statusLine
+    // UAayzr: built-in HUD default — falls back to the vendored claude-hud
+    // when the user has not configured a custom statusLine command.
+    statusLine = getEffectiveStatusLine(getSettings_DEPRECATED())
   }
 
   if (!statusLine || statusLine.type !== 'command') {

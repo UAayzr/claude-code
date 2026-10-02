@@ -39,6 +39,7 @@ import { createBaseHookInput, executeStatusLineCommand } from '../utils/hooks.js
 import { getLastAssistantMessage } from '../utils/messages.js';
 import { getRuntimeMainLoopModel, type ModelName, renderModelName } from '../utils/model/model.js';
 import { getCurrentSessionTitle } from '../utils/sessionStorage.js';
+import { getEffectiveStatusLine } from '../utils/statusLineDefaults.js';
 import { doesMostRecentAssistantMessageExceed200k, getCurrentUsage } from '../utils/tokens.js';
 import { getCurrentWorktreeSession } from '../utils/worktree.js';
 import { isVimModeEnabled } from './PromptInput/utils.js';
@@ -206,11 +207,10 @@ export function statusLineShouldDisplay(settings: ReadonlySettings): boolean {
   // Assistant mode: statusline fields (model, permission mode, cwd) reflect the
   // REPL/daemon process, not what the agent child is actually running. Hide it.
   if (feature('KAIROS') && getKairosActive()) return false;
-  // Show the status line when explicitly enabled, or when a statusLine command
-  // is configured (backward compatibility for users who set statusLine.command
-  // without toggling statusLineEnabled). Only hide when explicitly disabled.
+  // UAayzr: HUD is built in and shows by default — only an explicit
+  // statusLineEnabled:false hides it.
   if (settings?.statusLineEnabled === false) return false;
-  return settings?.statusLineEnabled === true || !!settings?.statusLine?.command;
+  return true;
 }
 
 function buildStatusLineCommandInput(
@@ -385,10 +385,9 @@ function StatusLineInner({ messagesRef, lastAssistantMessageId, vimMode }: Props
     const logResult = logNextResultRef.current;
     logNextResultRef.current = false;
 
-    // Skip the shell command path entirely when no command is configured.
-    // The top row (BuiltinStatusLine + CachePill) renders unconditionally, so
-    // there's nothing to update here when settings.statusLine is missing.
-    if (!settingsRef.current?.statusLine?.command) {
+    // Skip the shell command path entirely when no effective command exists.
+    // The top row (BuiltinStatusLine + CachePill) renders unconditionally.
+    if (!getEffectiveStatusLine(settingsRef.current)?.command) {
       return;
     }
 
@@ -459,7 +458,7 @@ function StatusLineInner({ messagesRef, lastAssistantMessageId, vimMode }: Props
   }, [lastAssistantMessageId, permissionMode, vimMode, mainLoopModel, scheduleUpdate]);
 
   // When the statusLine command changes (hot reload), log the next result
-  const statusLineCommand = settings?.statusLine?.command;
+  const statusLineCommand = getEffectiveStatusLine(settings)?.command;
   const isFirstSettingsRender = useRef(true);
   useEffect(() => {
     if (isFirstSettingsRender.current) {
@@ -472,7 +471,7 @@ function StatusLineInner({ messagesRef, lastAssistantMessageId, vimMode }: Props
 
   // Separate effect for logging on mount
   useEffect(() => {
-    const statusLine = settings?.statusLine;
+    const statusLine = getEffectiveStatusLine(settings);
     if (statusLine) {
       logEvent('tengu_status_line_mount', {
         command_length: statusLine.command.length,
@@ -512,7 +511,7 @@ function StatusLineInner({ messagesRef, lastAssistantMessageId, vimMode }: Props
   }, []); // Only run once on mount, not when doUpdate changes
 
   // Get padding from settings or default to 0
-  const paddingX = settings?.statusLine?.padding ?? 0;
+  const paddingX = getEffectiveStatusLine(settings)?.padding ?? 0;
 
   // ---- Top row data: feed BuiltinStatusLine (model + ctx + 5h + 7d + cost) ---
   const builtinRuntimeModel = getRuntimeMainLoopModel({
@@ -550,7 +549,7 @@ function StatusLineInner({ messagesRef, lastAssistantMessageId, vimMode }: Props
   // Shell command output: only when a statusLine.command is configured.
   // These are independent — a user can have one, both, or neither.
   const showBuiltin = settings?.statusLineEnabled === true;
-  const hasShellCommand = !!settings?.statusLine?.command;
+  const hasShellCommand = !!getEffectiveStatusLine(settings)?.command;
 
   return (
     <Box flexDirection="column" paddingX={paddingX}>

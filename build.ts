@@ -92,6 +92,24 @@ const ripgrepDir = join(outdir, 'vendor', 'ripgrep')
 await cp('src/utils/vendor/ripgrep', ripgrepDir, { recursive: true })
 console.log(`Copied src/utils/vendor/ripgrep/ → ${ripgrepDir}/`)
 
+// Step 4.5: Compile vendored claude-hud (statusline HUD). Source is TS with
+// zero npm runtime deps; build bundles it into dist/vendor/claude-hud/index.js.
+const hudOut = join(outdir, 'vendor', 'claude-hud')
+const hudResult = await Bun.build({
+  entrypoints: ['vendor/claude-hud/src/index.ts'],
+  outdir: hudOut,
+  target: 'node',
+  format: 'esm',
+})
+if (!hudResult.success) {
+  console.error('claude-hud build failed:')
+  for (const log of hudResult.logs) {
+    console.error(log)
+  }
+  process.exit(1)
+}
+console.log(`Built vendor/claude-hud/ → ${hudOut}/`)
+
 // Step 5: Generate cli-bun and cli-node executable entry points
 const cliBun = join(outdir, 'cli-bun.js')
 const cliNode = join(outdir, 'cli-node.js')
