@@ -12,6 +12,7 @@
 // 「命令安全属性」判定。
 
 import { feature } from 'bun:bundle'
+import { stat } from 'node:fs/promises'
 import { PARSE_ABORTED, parseCommandRaw } from '../bash/parser.js'
 import {
   checkSemantics,
@@ -155,6 +156,16 @@ const EXTRA_READONLY_RULES: ReadonlyArray<
   ['printenv', () => true],
   ['top', args => args.includes('-b')],
   ['env', args => args.every(a => a.startsWith('-'))],
+  // export 纯设值/查询（KEY=value 或 -p 等 flag）：无文件系统副作用。
+  // 带命令的 export 包装器（export VAR && cmd）会被 parser 拆成多条，
+  // export 这条独立 allow，cmd 那条单独判定。值内容任意（env 赋值）。
+  [
+    'export',
+    args =>
+      args.every(
+        a => a.startsWith('-') || /^[A-Za-z_][A-Za-z0-9_]*=(.*)$/.test(a),
+      ),
+  ],
 ]
 
 function extraReadonlyMatch(argv: string[]): boolean {
@@ -162,6 +173,79 @@ function extraReadonlyMatch(argv: string[]): boolean {
   return EXTRA_READONLY_RULES.some(
     ([n, pred]) => n === name && pred(argv.slice(1)),
   )
+}
+
+// ---------------------------------------------------------------------------
+// 项目脚本执行通道（allow）
+// 信任边界（用户确认）：python/python3/py 跑「项目内脚本」本地放行——路径
+// 形态判定在同步核心（可测），文件存在性校验在 async 层（decideBashCommand
+// 对 allow 结果做 stat，不存在 → 降级 unknown 交 AI，防 PATH 劫持/别名塞
+// 假脚本）。只放行 python 系（用户确认不做 node/npx）。脚本内容本身不在
+// 判定范围（python deploy.py 也会放行）——这是有意放宽，普通用户验证脚本
+// 高频操作优先免弹窗。
+// ---------------------------------------------------------------------------
+
+/** 项目脚本放行 reason（async 层据此做存在性校验）。 */
+const PROJECT_SCRIPT_REASON = 'Project-local script execution'
+
+function isPythonCommand(name: string): boolean {
+  return name === 'python' || name === 'python3' || name === 'py'
+}
+
+/** python 跑项目内脚本：argv[1] 是相对脚本路径（非 flag、非 ~、非绝对路径、不含 ..、无 glob）。 */
+function isProjectScriptArgv(argv: string[]): boolean {
+  if (argv.length < 2) return false
+  const script = argv[1]!
+  if (script.startsWith('-') || script.startsWith('~')) return false
+  if (/^[A-Za-z]:[\\/]/.test(script) || script.startsWith('/')) return false
+  if (script.split(/[\\/]/).includes('..')) return false
+  // glob 展开会改变参数结构（python *.py → python a.py b.py，本就不合法）
+  if (/[*?[\]]/.test(script)) return false
+  return true
+}
+
+/** cd 目标校验：只允许纯相对子目录。拒绝 ~（家目录）、绝对路径、含 ..
+ *  段（越出项目）、含 $（变量展开不可静态判定）——否则 `cd ~ && python
+ *  s.py` 可绕过「项目内脚本」信任边界（叠加 stat 基于进程 cwd 的事实，
+ *  外部/家目录脚本可能被 auto-allow）。 */
+function isCdTargetSafe(argv: string[]): boolean {
+  if (argv.length < 2) return false
+  const target = argv[1]!
+  if (target.startsWith('-') || target.startsWith('~')) return false
+  if (/^[A-Za-z]:[\\/]/.test(target) || target.startsWith('/')) return false
+  if (target.split(/[\\/]/).includes('..')) return false
+  if (target.includes('$')) return false
+  return true
+}
+
+/** 命令序列 = 无害前缀（cd 子目录/export/echo/env 查询）∪ python 项目脚本，且至少一条项目脚本。 */
+function isProjectScriptExecution(commands: SimpleCommand[]): boolean {
+  if (commands.some(c => c.redirects.some(isWriteRedirect))) return false
+  let scriptSeen = false
+  for (const c of commands) {
+    const name = commandName(c.argv)
+    if (name === 'cd') {
+      if (!isCdTargetSafe(c.argv)) return false
+      continue
+    }
+    if (name === 'export' || name === 'echo') continue
+    if (name === 'env' && c.argv.every(a => a.startsWith('-'))) continue
+    if (isPythonCommand(name)) {
+      if (!isProjectScriptArgv(c.argv) || scriptSeen) return false
+      scriptSeen = true
+      continue
+    }
+    return false
+  }
+  return scriptSeen
+}
+
+/** 提取项目脚本路径（供 async 层 stat 存在性校验）。 */
+function getProjectScriptPaths(commands: SimpleCommand[]): string[] {
+  return commands
+    .filter(c => isPythonCommand(commandName(c.argv)))
+    .map(c => c.argv[1]!)
+    .filter(p => typeof p === 'string' && p.length > 0)
 }
 
 function commandName(argv: string[]): string {
@@ -276,7 +360,21 @@ export async function decideBashCommand(
     }
     return { kind: 'unknown' }
   }
-  return decideParsedCommand(command, parsed.commands)
+  const verdict = decideParsedCommand(command, parsed.commands)
+  // 项目脚本放行：路径形态判定（同步核心）通过后，async 层校验脚本文件
+  // 真实存在——防 PATH 劫持/命令别名把假脚本塞进项目目录。不存在 →
+  // 降级 unknown（交 AI/弹窗）。注：stat 基于进程 cwd（cd 组合时的实际
+  // 脚本目录可能有偏差，偏差方向是保守降级 unknown，可接受）。
+  if (verdict.kind === 'allow' && verdict.reason === PROJECT_SCRIPT_REASON) {
+    for (const script of getProjectScriptPaths(parsed.commands)) {
+      try {
+        await stat(script)
+      } catch {
+        return { kind: 'unknown' }
+      }
+    }
+  }
+  return verdict
 }
 
 /** 判定核心（纯同步，可测——bun test 下 feature 恒 false，见 disabled.test.ts）。
@@ -294,6 +392,9 @@ export function decideParsedCommand(
   }
   if (isReadOnlyCommand(commands)) {
     return { kind: 'allow', reason: 'Read-only command' }
+  }
+  if (isProjectScriptExecution(commands)) {
+    return { kind: 'allow', reason: PROJECT_SCRIPT_REASON }
   }
   return { kind: 'unknown' }
 }

@@ -361,6 +361,8 @@ export type YoloClassifierResult = {
    * callers may fail open in interactive sessions.
    */
   parseFailure?: boolean
+  /** Number of tool-path retries performed before this result (0 = first attempt) */
+  retryCount?: number
   /** The model used for this classifier call */
   model: string
   /** Token usage from the classifier API call (for overhead telemetry) */
