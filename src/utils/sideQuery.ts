@@ -640,6 +640,7 @@ async function sideQueryViaOpenAICompatible(
     tool_choice,
     max_tokens = 1024,
     temperature,
+    thinking,
     signal,
   } = opts
 
@@ -708,6 +709,10 @@ async function sideQueryViaOpenAICompatible(
       : undefined
   if (promptCacheKey) requestParams.prompt_cache_key = promptCacheKey
   if (temperature !== undefined) requestParams.temperature = temperature
+  // Anthropic 语义的 thinking: false → DeepSeek/OpenAI 兼容端点接受的
+  // { type: 'disabled' }。分类器等内部调用需要禁用思考时用这个开关；
+  // 不传则完全不出现该字段（避免代理挑剔参数）。
+  if (thinking === false) requestParams.thinking = { type: 'disabled' }
   if (openaiTools && openaiTools.length > 0) {
     requestParams.tools = openaiTools
     if (openaiToolChoice) requestParams.tool_choice = openaiToolChoice

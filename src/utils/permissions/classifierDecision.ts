@@ -19,7 +19,6 @@ import { TEAM_CREATE_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/Tea
 import { TEAM_DELETE_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/TeamDeleteTool/constants.js'
 import { TODO_WRITE_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/TodoWriteTool/constants.js'
 import { SEARCH_EXTRA_TOOLS_TOOL_NAME } from '@claude-code-best/builtin-tools/tools/SearchExtraToolsTool/prompt.js'
-import { YOLO_CLASSIFIER_TOOL_NAME } from './yoloClassifier.js'
 
 // Ant-only tool names: conditional require so Bun can DCE these in external builds.
 // Gates mirror tools.ts. Keeps the tool name strings out of cli.js.
@@ -89,8 +88,6 @@ const SAFE_YOLO_ALLOWLISTED_TOOLS = new Set([
   ...(TERMINAL_CAPTURE_TOOL_NAME ? [TERMINAL_CAPTURE_TOOL_NAME] : []),
   ...(OVERFLOW_TEST_TOOL_NAME ? [OVERFLOW_TEST_TOOL_NAME] : []),
   ...(VERIFY_PLAN_EXECUTION_TOOL_NAME ? [VERIFY_PLAN_EXECUTION_TOOL_NAME] : []),
-  // Internal classifier tool
-  YOLO_CLASSIFIER_TOOL_NAME,
 ])
 
 export function isAutoModeAllowlistedTool(toolName: string): boolean {
