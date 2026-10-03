@@ -48,6 +48,7 @@ export const DEFAULT_BUILD_FEATURES = [
   'TOKEN_BUDGET', // Token 预算管理与控制
   // P0: local features
   'AGENT_TRIGGERS', // 本地 Agent 触发器（工具调用时启动子代理）
+  'TREE_SITTER_BASH', // 纯 TS bash 解析器（无 WASM）：本地 auto 安全判定 + Bash 权限 AST 路径共用
   'ULTRATHINK', // 超深度思考模式，增加推理链长度
   'BUILTIN_EXPLORE_PLAN_AGENTS', // 内置 Explore/Plan 子代理类型
   'LODESTONE', // 上下文锚点，优化长对话的相关性检索

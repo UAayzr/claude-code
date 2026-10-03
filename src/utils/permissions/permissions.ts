@@ -103,6 +103,7 @@ import {
   classifyYoloAction,
   formatActionForClassifier,
 } from './yoloClassifier.js'
+import { evaluateLocalSafety } from './localSafetyClassifier.js'
 
 const CLASSIFIER_FAIL_CLOSED_REFRESH_MS = 30 * 60 * 1000 // 30 minutes
 
@@ -684,6 +685,88 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
         }
       }
 
+      // 本地安全判定器：只读命令直接 allow（0 API）、BLOCK ALWAYS 危险
+      // 类别直接 deny（0 API），只有判定不了的疑难命令才落入 AI 分类器。
+      // （分类器在 OpenAI 兼容/DeepSeek 环境请求不稳定，fail-closed 曾导致
+      // 只读命令也被「Denied by auto mode classifier」拦下 —— 见
+      // localSafetyClassifier.ts 头部注释。）
+      if (tool.name !== AGENT_TOOL_NAME && tool.name !== REPL_TOOL_NAME) {
+        const local = await evaluateLocalSafety(
+          tool.name,
+          input,
+          appState.toolPermissionContext,
+        )
+        if (local.kind === 'allow') {
+          const newDenialState = recordSuccess(denialState)
+          persistDenialState(context, newDenialState)
+          logForDebugging(
+            `Skipping auto mode classifier for ${tool.name}: local read-only rule (${local.reason})`,
+          )
+          logEvent('tengu_auto_mode_decision', {
+            decision:
+              'allowed' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            toolName: sanitizeToolNameForAnalytics(tool.name),
+            inProtectedNamespace: isInProtectedNamespace(),
+            agentMsgId: assistantMessage.message
+              .id as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            confidence:
+              'high' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            fastPath:
+              'local' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+          })
+          return {
+            behavior: 'allow',
+            updatedInput: input,
+            decisionReason: {
+              type: 'mode',
+              mode: 'auto',
+            },
+          }
+        }
+        if (local.kind === 'deny') {
+          const newDenialState = recordDenial(denialState)
+          persistDenialState(context, newDenialState)
+          logForDebugging(
+            `Auto mode local rule blocked action: ${local.reason}`,
+            { level: 'warn' },
+          )
+          const denialLimitResult = handleDenialLimitExceeded(
+            newDenialState,
+            appState,
+            local.reason,
+            assistantMessage,
+            tool,
+            result,
+            context,
+          )
+          if (denialLimitResult) {
+            return denialLimitResult
+          }
+          logEvent('tengu_auto_mode_decision', {
+            decision:
+              'blocked' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            toolName: sanitizeToolNameForAnalytics(tool.name),
+            inProtectedNamespace: isInProtectedNamespace(),
+            agentMsgId: assistantMessage.message
+              .id as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            confidence:
+              'high' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+            fastPath:
+              'local' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+          })
+          return {
+            behavior: 'deny',
+            decisionReason: {
+              type: 'classifier',
+              classifier: 'auto-mode',
+              reason: local.reason,
+            },
+            message: buildYoloRejectionMessage(local.reason),
+          }
+        }
+        // local.kind === 'unknown' → 落入分类器流程（下方）
+      }
+
       // Run the auto mode classifier
       const action = formatActionForClassifier(tool.name, input)
       setClassifierChecking(toolUseID)
@@ -843,9 +926,42 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
             },
           }
         }
-        // When classifier is unavailable (API error), behavior depends on
-        // the tengu_iron_gate_closed gate.
-        if (classifierResult.unavailable) {
+        // When classifier is unavailable (API error) or its response failed
+        // to parse (parseFailure), behavior depends on the tengu_iron_gate_closed
+        // gate (ant) — or, for external builds, on whether permission prompts
+        // are available:
+        //   - external + interactive: fail open → 普通权限弹窗，用户亲自批准
+        //   - external + headless:    fail closed → deny（无人可问，安全优先）
+        //   - ant:                    铁门决定（原样保留）
+        if (classifierResult.unavailable || classifierResult.parseFailure) {
+          const classifierDown = classifierResult.unavailable
+            ? 'unavailable'
+            : 'parse failure'
+          if (process.env.USER_TYPE !== 'ant') {
+            if (appState.toolPermissionContext.shouldAvoidPermissionPrompts) {
+              logForDebugging(
+                `Auto mode classifier ${classifierDown}, denying with retry guidance (fail closed)`,
+                { level: 'warn' },
+              )
+              return {
+                behavior: 'deny',
+                decisionReason: {
+                  type: 'classifier',
+                  classifier: 'auto-mode',
+                  reason: 'Classifier unavailable',
+                },
+                message: buildClassifierUnavailableMessage(
+                  tool.name,
+                  classifierResult.model,
+                ),
+              }
+            }
+            logForDebugging(
+              `Auto mode classifier ${classifierDown}, falling back to normal permission handling (fail open)`,
+              { level: 'warn' },
+            )
+            return result
+          }
           if (
             getFeatureValue_CACHED_WITH_REFRESH(
               'tengu_iron_gate_closed',

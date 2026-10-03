@@ -355,6 +355,12 @@ export type YoloClassifierResult = {
    * callers should fall back to normal prompting rather than retry/fail-closed.
    */
   transcriptTooLong?: boolean
+  /**
+   * The classifier API responded, but its text output failed to parse as the
+   * XML block format (<block>yes|no</block>). Not an active security block —
+   * callers may fail open in interactive sessions.
+   */
+  parseFailure?: boolean
   /** The model used for this classifier call */
   model: string
   /** Token usage from the classifier API call (for overhead telemetry) */
