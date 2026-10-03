@@ -47,20 +47,24 @@ export async function processBashCommand(
   });
 
   // ctrl+b to background indicator
-  let jsx: React.ReactNode;
-
-  // Just show initial UI
-  setToolJSX({
-    jsx: <BashModeProgress input={inputString} progress={null} verbose={context.options.verbose} />,
-    shouldHidePromptInput: false,
-  });
+  // 注意：变量名不能叫 jsx —— Bun.build 会把 JSX runtime 绑定和同名局部
+  // 变量都重命名成 jsx2，产物里 JSX 渲染变成对 undefined 的调用，且发生
+  // 在 try 之外 → `!` 命令回车后完全无反应（见 dist/chunk-7cb4h067.js）。
+  let bashModeJSX: React.ReactNode;
 
   try {
+    // Just show initial UI（在 try 内：构建态任何异常都走 catch 出反馈，
+    // 而不是静默冒泡吞掉输入）
+    setToolJSX({
+      jsx: <BashModeProgress input={inputString} progress={null} verbose={context.options.verbose} />,
+      shouldHidePromptInput: false,
+    });
+
     const bashModeContext: ProcessUserInputContext = {
       ...context,
       // TODO: Clean up this hack
       setToolJSX: _ => {
-        jsx = _?.jsx;
+        bashModeJSX = _?.jsx;
       },
     };
 
@@ -70,7 +74,7 @@ export async function processBashCommand(
         jsx: (
           <>
             <BashModeProgress input={inputString!} progress={progress.data} verbose={context.options.verbose} />
-            {jsx}
+            {bashModeJSX}
           </>
         ),
         shouldHidePromptInput: false,
