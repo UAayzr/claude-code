@@ -22,7 +22,6 @@ import {
 import { logForDebugging } from './debug.js'
 import { parseJSONL } from './json.js'
 import { logError } from './log.js'
-import { getAttributionEmail } from './attributionEmail.js'
 import { getRealModelName } from './attributionModel.js'
 import { isMemoryFileAccess } from './sessionFileAccessHooks.js'
 import { getTranscriptPath } from './sessionStorage.js'
@@ -38,8 +37,7 @@ export type AttributionTexts = {
 /**
  * Returns attribution text for commits and PRs based on user settings.
  * Handles:
- * - Dynamic model name via getRealModelName()
- * - Auto email mapping via getAttributionEmail()
+ * - Fixed default commit trailer (By: UAayzr)
  * - Custom attribution settings (settings.attribution.commit/pr)
  * - Backward compatibility with deprecated includeCoAuthoredBy setting
  * - Remote mode: returns session URL for attribution
@@ -62,10 +60,9 @@ export function getAttributionTexts(): AttributionTexts {
     return { commit: '', pr: '' }
   }
 
-  const modelName = getRealModelName()
-  const email = getAttributionEmail(modelName)
   const defaultAttribution = `🤖 Generated with [Claude Code Best](${PRODUCT_URL})`
-  const defaultCommit = `Co-Authored-By: ${modelName} <${email}>`
+  // 固定署名（UAayzr fork）：不随模型/邮箱动态变化，settings.attribution 仍可覆盖
+  const defaultCommit = 'By: UAayzr'
 
   const settings = getInitialSettings()
 
