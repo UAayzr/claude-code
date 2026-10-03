@@ -12,7 +12,6 @@ import { logEvent } from '../../services/analytics/index.js'
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/metadata.js'
 import { getCacheControl } from '../../services/api/claude.js'
 import { parsePromptTooLongTokenCounts } from '../../services/api/errors.js'
-import { getDefaultMaxRetries } from '../../services/api/withRetry.js'
 import type { Tool, ToolPermissionContext, Tools } from '../../Tool.js'
 import type { Message } from '../../types/message.js'
 import type {
@@ -22,18 +21,23 @@ import type {
 import { isDebugMode, logForDebugging } from '../debug.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from '../envUtils.js'
 import { errorMessage } from '../errors.js'
-import { extractTextContent } from '../messages.js'
 import { getDefaultSonnetModel, getMainLoopModel } from '../model/model.js'
 import { isPoorModeActive } from '../../commands/poor/poorMode.js'
 import { getAPIProvider } from '../model/providers.js'
 import { getAutoModeConfig } from '../settings/settings.js'
 import { sideQuery } from '../sideQuery.js'
+import type { SideQueryOptions } from '../sideQuery.js'
 import type { LangfuseSpan } from '../../services/langfuse/index.js'
 import { jsonStringify } from '../slowOperations.js'
 import {
   getBashPromptAllowDescriptions,
   getBashPromptDenyDescriptions,
 } from './bashClassifier.js'
+import {
+  buildClassifierRequest,
+  parseClassifierResult,
+  type ClassifierParsed,
+} from './classifierParse.js'
 import { getClaudeTempDir } from './filesystem.js'
 
 // Dead code elimination: conditional imports for auto mode classifier prompts.
@@ -149,7 +153,8 @@ async function maybeDumpAutoMode(
   timestamp: number,
   suffix?: string,
 ): Promise<void> {
-  if (process.env.USER_TYPE !== 'ant') return
+  // 开关即 CLAUDE_CODE_DUMP_AUTO_MODE=1（不限制 ant 用户——外部构建
+  // 也要能取证分类器请求/响应）
   if (!isEnvTruthy(process.env.CLAUDE_CODE_DUMP_AUTO_MODE)) return
   const base = suffix ? `${timestamp}.${suffix}` : `${timestamp}`
   try {
@@ -464,69 +469,6 @@ export async function buildYoloSystemPrompt(
       (_m, defaults: string) => userEnvironment ?? defaults,
     )
 }
-// ============================================================================
-// 2-Stage XML Classifier
-// ============================================================================
-
-/**
- * Strip thinking content so that <block>/<reason> tags inside
- * the model's chain-of-thought don't get matched by parsers.
- */
-function stripThinking(text: string): string {
-  return text
-    .replace(/<thinking>[\s\S]*?<\/thinking>/g, '')
-    .replace(/<thinking>[\s\S]*$/, '')
-}
-
-/**
- * Parse XML block response: <block>yes/no</block>
- * Strips thinking content first to avoid matching tags inside reasoning.
- * Returns true for "yes" (should block), false for "no", null if unparseable.
- */
-function parseXmlBlock(text: string): boolean | null {
-  const matches = [
-    ...stripThinking(text).matchAll(/<block>(yes|no)\b(<\/block>)?/gi),
-  ]
-  if (matches.length === 0) return null
-  return matches[0]![1]!.toLowerCase() === 'yes'
-}
-
-/**
- * Parse XML reason: <reason>...</reason>
- * Strips thinking content first to avoid matching tags inside reasoning.
- */
-function parseXmlReason(text: string): string | null {
-  const matches = [
-    ...stripThinking(text).matchAll(/<reason>([\s\S]*?)<\/reason>/g),
-  ]
-  if (matches.length === 0) return null
-  return matches[0]![1]!.trim()
-}
-
-/**
- * Parse XML thinking content: <thinking>...</thinking>
- */
-function parseXmlThinking(text: string): string | null {
-  const match = /<thinking>([\s\S]*?)<\/thinking>/.exec(text)
-  return match ? match[1]!.trim() : null
-}
-
-/** 解析分类器 XML 文本响应（<block>yes|no</block><reason>…</reason>）。
- *  null = 解析失败（调用方置 parseFailure）；block=no 时按系统提示不带 reason。 */
-function parseClassifierText(
-  text: string,
-): { block: boolean; reason: string; thinking?: string } | null {
-  const block = parseXmlBlock(text)
-  if (block === null) return null
-  const thinking = parseXmlThinking(text) ?? undefined
-  return {
-    block,
-    reason: block
-      ? (parseXmlReason(text) ?? 'Blocked by classifier')
-      : 'Allowed by classifier',
-    ...(thinking !== undefined && { thinking }),
-  }
-}
 
 /**
  * Extract usage stats from an API response.
@@ -589,10 +531,18 @@ function replaceOutputFormatWithXml(systemPrompt: string): string {
 }
 
 /**
- * AI 分类器审批单次工具调用（极简 XML 文本输出，见 replaceOutputFormatWithXml）。
- * API 错误 → shouldBlock:true + unavailable；响应解析失败 → parseFailure（调用方
- * 交互式 fail-open）。模型经 getClassifierModel() 选择（CLAUDE_CODE_AUTO_MODE_MODEL
- * 可独立配置）。 */
+ * AI 分类器审批单次工具调用。
+ *
+ * 主路径：工具强制（classify_result + tool_choice）——模型被工具 schema 约束
+ * 输出结构化 JSON {thinking, shouldBlock, reason}，无格式漂移空间；Anthropic /
+ * Chat Completions / Gemini 三接口由 sideQuery 统一适配（各自转换为标准工具
+ * 调用格式并统一返回 BetaMessage），分类器零 provider 分支。
+ * 兜底：无有效工具调用时回退 XML 文本解析（逃生通道，实测成功率≈0，不承诺）。
+ * 重试：失败（parse 失败 / API 错误，abort 除外）退避重试最多 5 次，间隔
+ * 10/15/20/25/30 秒递增——针对中转站偶发失败（实测同一请求一次失败一次成功）。
+ * 最终失败：parseFailure → 调用方交互式 fail-open；API 错误 → unavailable。
+ * 模型经 getClassifierModel() 选择（CLAUDE_CODE_AUTO_MODE_MODEL 可独立配置）。
+ */
 export async function classifyYoloAction(
   messages: Message[],
   action: TranscriptEntry,
@@ -614,9 +564,10 @@ export async function classifyYoloAction(
 
   const systemPrompt = await buildYoloSystemPrompt(context)
   const xmlSystemPrompt = replaceOutputFormatWithXml(systemPrompt)
-  // 极简提示：自适应窗口（新→旧）用户消息 + 动作，无历史转录/CLAUDE.md。
-  // 设计：单条 length > 10（UTF-16 码元）即停；累积 >= 300 即停（满点消息
-  // 完整包含、绝不截断）；扫到底兜底全取；输出按从新到旧排列。
+  // 极简窗口：自适应窗口（新→旧）用户消息 + 动作，提供用户意图上下文
+  // （系统提示要求分类器只考虑用户消息；sudo/rm 深路径等灰区命令依赖意图
+  // 判断，纯动作会导致假 block 反弹）。设计：单条 length > 10（UTF-16 码元）
+  // 即停；累积 >= 300 即停（满点消息完整包含、绝不截断）；扫到底兜底全取。
   const userPrompt = buildMinimalClassifierPrompt(messages, actionCompact)
   const promptLengths = {
     systemPrompt: xmlSystemPrompt.length,
@@ -635,38 +586,213 @@ export async function classifyYoloAction(
     )
   }
 
-  try {
-    const start = Date.now()
-    // 请求参数瘦身（见计划 Phase 2）：model + max_tokens(128) + system +
-    // messages + skipSystemPromptPrefix。一律不传 tools/tool_choice/
-    // temperature/thinking/stop_sequences —— 这些在 OpenAI 兼容/DeepSeek
-    // 代理下是 400（reasoning_effort）与格式漂移（工具调用遵循差）的来源。
-    // cache_control 仅首方路径携带（兼容层转换会剥离，带上无意义）。
-    const sideQueryOpts = {
+  // 工具强制主路径 + 退避重试。sideQueryOpts 是循环不变量（system/userPrompt/
+  // signal/parentSpan 不随尝试变化），只建一次。内层 maxRetries 用低值——
+  // 重试职责明确归外层（避免外层 5 次 × 内层默认 10 次的最坏叠加）。
+  const MAX_CLASSIFIER_RETRIES = 5
+  const sideQueryOpts = buildClassifierRequest({
+    model,
+    // system 组装：首方路径带 cache_control（OpenAI/Gemini 兼容层转换会剥离）
+    system: [
+      {
+        type: 'text' as const,
+        text: xmlSystemPrompt,
+        ...(getAPIProvider() === 'firstParty' && {
+          cache_control: getCacheControl({ querySource: 'auto_mode' }),
+        }),
+      },
+    ],
+    userPrompt,
+    signal,
+    parentSpan,
+    maxRetries: 2,
+  })
+  const dumpContext = {
+    systemPrompt: xmlSystemPrompt,
+    userPrompt,
+    promptLengths,
+    actionCompact,
+    messagesCount: messages.length,
+  }
+  let retryCount = 0
+  for (;;) {
+    const attempt = await runClassifierAttempt({
       model,
-      max_tokens: 128,
-      system: [
-        {
-          type: 'text' as const,
-          text: xmlSystemPrompt,
-          ...(getAPIProvider() === 'firstParty' && {
-            cache_control: getCacheControl({ querySource: 'auto_mode' }),
-          }),
-        },
-      ],
-      skipSystemPromptPrefix: true,
-      messages: [{ role: 'user' as const, content: userPrompt }],
-      // 禁用模型思考：DeepSeek 默认思考会吃光 max_tokens 预算导致
-      // content 为空（finish_reason=length → 解析失败）。sideQuery 的
-      // OpenAI 分支把 false 翻译成 { type: 'disabled' }；不传则该字段
-      // 完全不出现（避免代理挑剔）。
-      thinking: false as const,
-      maxRetries: getDefaultMaxRetries(),
+      sideQueryOpts,
       signal,
-      querySource: 'auto_mode' as const,
-      parentSpan,
+      perform: sideQuery,
+      dumpContext,
+    })
+
+    if (attempt.kind === 'success') {
+      logAutoModeOutcome('success', model, {
+        durationMs: attempt.durationMs,
+        classifierType: attempt.viaToolUse ? 'tool_forced' : 'xml_fallback',
+        retryCount,
+      })
+      return {
+        thinking: attempt.parsed.thinking,
+        shouldBlock: attempt.parsed.block,
+        reason: attempt.parsed.reason,
+        model,
+        usage: attempt.usage,
+        durationMs: attempt.durationMs,
+        promptLengths,
+        stage1RequestId: attempt.requestId,
+        stage1MsgId: attempt.msgId,
+        retryCount,
+      }
     }
-    const result = await sideQuery(sideQueryOpts)
+    if (attempt.kind === 'aborted') {
+      logAutoModeOutcome('interrupted', model, { retryCount })
+      return {
+        shouldBlock: true,
+        reason: 'Classifier request aborted',
+        model,
+        unavailable: true,
+        retryCount,
+      }
+    }
+    if (attempt.kind === 'too_long') {
+      logAutoModeOutcome('transcript_too_long', model, {
+        retryCount,
+        transcriptActualTokens: attempt.actualTokens,
+        transcriptLimitTokens: attempt.limitTokens,
+      })
+      return {
+        shouldBlock: true,
+        reason: 'Classifier transcript exceeded context window',
+        model,
+        unavailable: true,
+        transcriptTooLong: true,
+        retryCount,
+      }
+    }
+
+    // parse_failure / api_error：退避重试或重试用尽返回
+    const failureKind =
+      attempt.kind === 'parse_failure' ? attempt.failureKind : 'api_error'
+    if (retryCount >= MAX_CLASSIFIER_RETRIES) {
+      logAutoModeOutcome(
+        failureKind === 'api_error' ? 'error' : 'parse_failure',
+        model,
+        {
+          failureKind,
+          retryCount,
+          // classifierType 仅在畸形工具调用时带（xml_unparseable 时模型没走工具路径）
+          ...(attempt.kind === 'parse_failure' &&
+            attempt.failureKind === 'malformed_tool_use' && {
+              classifierType: 'tool_forced',
+            }),
+        },
+      )
+      if (attempt.kind === 'api_error') {
+        return {
+          shouldBlock: true,
+          reason: 'Classifier unavailable - blocking for safety',
+          model,
+          unavailable: true,
+          retryCount,
+          errorDumpPath: attempt.errorDumpPath,
+        }
+      }
+      return {
+        shouldBlock: true,
+        reason: 'Classifier response unparseable - requiring manual approval',
+        model,
+        usage: attempt.usage,
+        durationMs: attempt.durationMs,
+        promptLengths,
+        stage1RequestId: attempt.requestId,
+        stage1MsgId: attempt.msgId,
+        parseFailure: true,
+        retryCount,
+      }
+    }
+
+    const delay = 10 + 5 * retryCount // 10/15/20/25/30 秒递增
+    logForDebugging(
+      `Auto mode classifier: ${failureKind} (attempt ${retryCount + 1}/${MAX_CLASSIFIER_RETRIES}), retrying in ${delay}s`,
+    )
+    logAutoModeOutcome('retry', model, { failureKind, retryCount })
+    const slept = await sleepWithAbort(delay * 1000, signal)
+    if (!slept) {
+      logAutoModeOutcome('interrupted', model, { retryCount })
+      return {
+        shouldBlock: true,
+        reason: 'Classifier request aborted',
+        model,
+        unavailable: true,
+        retryCount,
+      }
+    }
+    // sleep 成功后递增 → retryCount 恒等于「已完成重试数」（0-based 不变量）
+    retryCount++
+  }
+}
+
+/** 单次分类器请求尝试的结果判别联合。 */
+export type ClassifierAttemptResult =
+  | {
+      kind: 'success'
+      parsed: ClassifierParsed
+      viaToolUse: boolean
+      usage: ClassifierUsage
+      requestId?: string
+      msgId?: string
+      durationMs: number
+    }
+  | {
+      kind: 'parse_failure'
+      failureKind: 'malformed_tool_use' | 'xml_unparseable'
+      usage: ClassifierUsage
+      requestId?: string
+      msgId?: string
+      durationMs: number
+    }
+  | {
+      kind: 'api_error'
+      error: unknown
+      errorDumpPath?: string
+      durationMs: number
+    }
+  | { kind: 'aborted' }
+  | {
+      kind: 'too_long'
+      actualTokens?: number
+      limitTokens?: number
+      durationMs: number
+    }
+
+/**
+ * 单次分类器请求：sideQuery → 解析（工具优先 + XML 兜底）→ 失败分类。
+ * perform 为注入点：生产传 sideQuery，测试传 fake——sideQuery 的 import
+ * 链重（bootstrap/state、analytics、growthbook…），不注入则本函数不可测。
+ */
+export async function runClassifierAttempt(opts: {
+  model: string
+  sideQueryOpts: SideQueryOptions
+  signal: AbortSignal
+  perform: (
+    opts: SideQueryOptions,
+  ) => Promise<Anthropic.Beta.Messages.BetaMessage>
+  /** dumpErrorPrompts 输入（仅 api_error 分支用） */
+  dumpContext: {
+    systemPrompt: string
+    userPrompt: string
+    promptLengths: {
+      systemPrompt: number
+      toolCalls: number
+      userPrompts: number
+    }
+    actionCompact: string
+    messagesCount: number
+  }
+}): Promise<ClassifierAttemptResult> {
+  const { sideQueryOpts, signal, perform, dumpContext } = opts
+  const start = Date.now()
+  try {
+    const result = await perform(sideQueryOpts)
     void maybeDumpAutoMode(sideQueryOpts, result, start)
     setLastClassifierRequests([sideQueryOpts])
     const durationMs = Date.now() - start
@@ -674,85 +800,97 @@ export async function classifyYoloAction(
     const msgId = result.id
     const usage = extractUsage(result)
 
-    const parsed = parseClassifierText(extractTextContent(result.content))
-    if (parsed === null) {
-      logForDebugging('Auto mode classifier: XML block unparseable', {
-        level: 'warn',
-      })
-      logAutoModeOutcome('parse_failure', model, {
-        failureKind: 'xml_unparseable',
-      })
+    const parsedResult = parseClassifierResult(result.content)
+    if (parsedResult.ok) {
       return {
-        shouldBlock: true,
-        reason: 'Classifier response unparseable - requiring manual approval',
-        model,
+        kind: 'success',
+        parsed: parsedResult.parsed,
+        viaToolUse: parsedResult.viaToolUse,
         usage,
+        requestId,
+        msgId,
         durationMs,
-        promptLengths,
-        stage1RequestId: requestId,
-        stage1MsgId: msgId,
-        parseFailure: true,
       }
     }
-    logAutoModeOutcome('success', model, { durationMs })
+    logForDebugging(
+      `Auto mode classifier: response unparseable (${parsedResult.failureKind})`,
+      { level: 'warn' },
+    )
     return {
-      thinking: parsed.thinking,
-      shouldBlock: parsed.block,
-      reason: parsed.reason,
-      model,
+      kind: 'parse_failure',
+      failureKind: parsedResult.failureKind,
       usage,
+      requestId,
+      msgId,
       durationMs,
-      promptLengths,
-      stage1RequestId: requestId,
-      stage1MsgId: msgId,
     }
   } catch (error) {
     if (signal.aborted) {
       logForDebugging('Auto mode classifier: aborted by user')
-      logAutoModeOutcome('interrupted', model)
-      return {
-        shouldBlock: true,
-        reason: 'Classifier request aborted',
-        model,
-        unavailable: true,
-      }
+      return { kind: 'aborted' }
     }
     const tooLong = detectPromptTooLong(error)
     logForDebugging(`Auto mode classifier error: ${errorMessage(error)}`, {
       level: 'warn',
     })
+    if (tooLong) {
+      return {
+        kind: 'too_long',
+        actualTokens: tooLong.actualTokens,
+        limitTokens: tooLong.limitTokens,
+        durationMs: Date.now() - start,
+      }
+    }
+    // API 错误（429/5xx/连接失败等）：dump prompts 取证（/share 诊断），
+    // 由外层退避重试接管
     const errorDumpPath =
-      (await dumpErrorPrompts(xmlSystemPrompt, userPrompt, error, {
-        // 极简 prompt 模式：输入恒定 ~2KB，无转录溢出风险，主循环对比
-        // 诊断字段归零（此前全转录模式的 mainLoopTokens/transcriptEntries
-        // 对比已随去上下文改造移除）。
-        mainLoopTokens: 0,
-        classifierChars: promptLengths.systemPrompt + promptLengths.userPrompts,
-        classifierTokensEst: Math.round(
-          (promptLengths.systemPrompt + promptLengths.userPrompts) / 4,
-        ),
-        transcriptEntries: 0,
-        messages: messages.length,
-        action: actionCompact,
-        model,
-      })) ?? undefined
-    logAutoModeOutcome(tooLong ? 'transcript_too_long' : 'error', model, {
-      ...(tooLong && {
-        transcriptActualTokens: tooLong.actualTokens,
-        transcriptLimitTokens: tooLong.limitTokens,
-      }),
-    })
+      (await dumpErrorPrompts(
+        dumpContext.systemPrompt,
+        dumpContext.userPrompt,
+        error,
+        {
+          // 极简 prompt 模式：输入恒定 ~2KB，无转录溢出风险，诊断字段归零
+          mainLoopTokens: 0,
+          classifierChars:
+            dumpContext.promptLengths.systemPrompt +
+            dumpContext.promptLengths.userPrompts,
+          classifierTokensEst: Math.round(
+            (dumpContext.promptLengths.systemPrompt +
+              dumpContext.promptLengths.userPrompts) /
+              4,
+          ),
+          transcriptEntries: 0,
+          messages: dumpContext.messagesCount,
+          action: dumpContext.actionCompact,
+          model: opts.model,
+        },
+      )) ?? undefined
     return {
-      shouldBlock: true,
-      reason: tooLong
-        ? 'Classifier transcript exceeded context window'
-        : 'Classifier unavailable - blocking for safety',
-      model,
-      unavailable: true,
-      transcriptTooLong: Boolean(tooLong),
+      kind: 'api_error',
+      error,
       errorDumpPath,
+      durationMs: Date.now() - start,
     }
   }
+}
+
+/** 可中断睡眠：abort 时立即返回 false（调用方返回 abort 结果）。 */
+export function sleepWithAbort(
+  ms: number,
+  signal: AbortSignal,
+): Promise<boolean> {
+  if (signal.aborted) return Promise.resolve(false)
+  return new Promise(resolve => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve(true)
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(timer)
+      resolve(false)
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
 }
 
 /** 提取用户消息文本（含 ! 命令排队的 queued_command 输入），按时间顺序。 */
@@ -886,6 +1024,7 @@ type AutoModeOutcome =
   | 'interrupted'
   | 'error'
   | 'transcript_too_long'
+  | 'retry'
 
 /**
  * Telemetry helper for tengu_auto_mode_outcome. All string fields are
@@ -898,6 +1037,7 @@ function logAutoModeOutcome(
   extra?: {
     classifierType?: string
     failureKind?: string
+    retryCount?: number
     durationMs?: number
     mainLoopTokens?: number
     classifierInputTokens?: number

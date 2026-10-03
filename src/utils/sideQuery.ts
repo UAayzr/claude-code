@@ -742,11 +742,21 @@ async function sideQueryViaOpenAICompatible(
       if (tc.type === 'function' && 'function' in tc) {
         const fn = (tc as { function: { name: string; arguments: string } })
           .function
+        let input: unknown
+        try {
+          input = JSON.parse(fn.arguments || '{}')
+        } catch {
+          // 工具响应被截断（finish_reason='length' 时 arguments 是半截 JSON）
+          // 或畸形时，降级为空对象而非抛 SyntaxError——与流式路径
+          // collectAnthropicStreamToBetaMessage 的行为一致，调用方按
+          // 解析失败处理（而非误报 API 错误）。
+          input = {}
+        }
         contentBlocks.push({
           type: 'tool_use',
           id: tc.id ?? `toolu_${Date.now()}`,
           name: fn.name,
-          input: JSON.parse(fn.arguments || '{}'),
+          input,
         })
       }
     }
