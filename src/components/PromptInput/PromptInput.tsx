@@ -2114,7 +2114,9 @@ function PromptInput({
   const companionReactionState = useAppState(s => s.companionReaction);
   const companionSpeaking = feature('BUDDY') ? companionReactionState !== undefined : false;
   const { columns, rows } = useTerminalSize();
-  const textInputColumns = columns - 3 - companionReservedColumns(columns, companionSpeaking);
+  // 口径：mode indicator（❯+空格）实占 2 列，border 左右为 0；光标列已由
+  // Cursor.fromText 内部减 1 处理。宠物占宽与渲染同源（companionReservedColumns）。
+  const textInputColumns = columns - 2 - companionReservedColumns(columns, companionSpeaking);
 
   // POC: click-to-position-cursor. Mouse tracking is only enabled inside
   // <AlternateScreen>, so this is dormant in the normal main-screen REPL.
@@ -2471,7 +2473,13 @@ function PromptInput({
           <Text color={swarmBanner.bgColor}>
             {swarmBanner.text ? (
               <>
-                {'─'.repeat(Math.max(0, columns - stringWidth(swarmBanner.text) - 4))}
+                {/* 横幅线按实际可用宽度（窗口宽 − 宠物占宽）生成：宠物并排时超宽会硬折行，横幅断行变形（与 textInputColumns 同口径）。 */}
+                {'─'.repeat(
+                  Math.max(
+                    0,
+                    columns - stringWidth(swarmBanner.text) - 4 - companionReservedColumns(columns, companionSpeaking),
+                  ),
+                )}
                 <Text backgroundColor={swarmBanner.bgColor} color="inverseText">
                   {' '}
                   {swarmBanner.text}{' '}
@@ -2493,7 +2501,10 @@ function PromptInput({
               {textInputElement}
             </Box>
           </Box>
-          <Text color={swarmBanner.bgColor}>{'─'.repeat(columns)}</Text>
+          {/* 底线同横幅：按实际可用宽度生成，宠物并排时不折行。 */}
+          <Text color={swarmBanner.bgColor}>
+            {'─'.repeat(Math.max(0, columns - companionReservedColumns(columns, companionSpeaking)))}
+          </Text>
         </>
       ) : (
         <Box

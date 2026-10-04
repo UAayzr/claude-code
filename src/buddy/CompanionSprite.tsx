@@ -94,7 +94,7 @@ export const MIN_COLS_FOR_FULL_SPRITE = 100;
 const SPRITE_BODY_WIDTH = 12;
 const NAME_ROW_PAD = 2; // focused state wraps name in spaces: ` name `
 const SPRITE_PADDING_X = 2;
-const BUBBLE_WIDTH = 36; // SpeechBubble box (34) + tail column
+const BUBBLE_WIDTH = 35; // SpeechBubble box (34) + tail column (1) = 35
 const NARROW_QUIP_CAP = 24;
 
 function spriteColWidth(nameWidth: number): number {
