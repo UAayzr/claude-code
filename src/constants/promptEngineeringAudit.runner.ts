@@ -585,9 +585,9 @@ describe('Opus 4.7 Prompt Engineering Audit', () => {
   // TXT 来源: {product_information}
   // ------------------------------------------------------------------
   describe('#13 Product information', () => {
-    test('env info contains Claude Code product description', async () => {
+    test('env info contains UAayzr Code product description', async () => {
       const envInfo = await computeSimpleEnvInfo('claude-opus-4-7')
-      expect(envInfo).toContain('Claude Code')
+      expect(envInfo).toContain('UAayzr Code')
       expect(envInfo).toContain('CLI')
     })
 
@@ -603,11 +603,12 @@ describe('Opus 4.7 Prompt Engineering Audit', () => {
       expect(envInfo).toContain('claude-haiku-4-5')
     })
 
-    test('mentions Chrome/Excel/Cowork products', async () => {
+    test('does not claim web/Chrome/Excel/Cowork products', async () => {
       const envInfo = await computeSimpleEnvInfo('claude-opus-4-7')
-      expect(envInfo).toContain('Chrome')
-      expect(envInfo).toContain('Excel')
-      expect(envInfo).toContain('Cowork')
+      expect(envInfo).not.toContain('claude.ai/code')
+      expect(envInfo).not.toContain('Chrome')
+      expect(envInfo).not.toContain('Excel')
+      expect(envInfo).not.toContain('Cowork')
     })
   })
 
