@@ -245,6 +245,36 @@ export const CUSTOMIZATION_SURFACES = [
   'mcp',
 ] as const
 
+/**
+ * Zod schema for the autoMode settings object. Single source of truth shared
+ * between SettingsSchema (validation) and settings.ts mergeAutoModeConfigs
+ * (runtime merge). `deny` is unconditional here — its ant-only folding into
+ * soft_deny happens at the consumer (settings.ts merge), not in the schema.
+ */
+export const autoModeSchema = z.object({
+  allow: z
+    .array(z.string())
+    .optional()
+    .describe('Rules for the auto mode classifier allow section'),
+  soft_deny: z
+    .array(z.string())
+    .optional()
+    .describe('Rules for the auto mode classifier deny section'),
+  // Back-compat alias for ant users; external users use soft_deny
+  deny: z.array(z.string()).optional(),
+  environment: z
+    .array(z.string())
+    .optional()
+    .describe('Entries for the auto mode classifier environment section'),
+  model: z
+    .string()
+    .optional()
+    .describe(
+      'Model used by the auto mode classifier to approve tool calls. ' +
+        'Alias (sonnet/opus/haiku) or full model id; omit to follow the main loop model.',
+    ),
+})
+
 export const SettingsSchema = lazySchema(() =>
   z
     .object({
@@ -1048,29 +1078,7 @@ export const SettingsSchema = lazySchema(() =>
               .describe(
                 'Whether plan mode uses auto mode semantics when auto mode is available (default: true)',
               ),
-            autoMode: z
-              .object({
-                allow: z
-                  .array(z.string())
-                  .optional()
-                  .describe('Rules for the auto mode classifier allow section'),
-                soft_deny: z
-                  .array(z.string())
-                  .optional()
-                  .describe('Rules for the auto mode classifier deny section'),
-                ...(process.env.USER_TYPE === 'ant'
-                  ? {
-                      // Back-compat alias for ant users; external users use soft_deny
-                      deny: z.array(z.string()).optional(),
-                    }
-                  : {}),
-                environment: z
-                  .array(z.string())
-                  .optional()
-                  .describe(
-                    'Entries for the auto mode classifier environment section',
-                  ),
-              })
+            autoMode: autoModeSchema
               .optional()
               .describe('Auto mode classifier prompt customization'),
           }

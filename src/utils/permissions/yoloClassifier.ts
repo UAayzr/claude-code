@@ -21,7 +21,11 @@ import type {
 import { isDebugMode, logForDebugging } from '../debug.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from '../envUtils.js'
 import { errorMessage } from '../errors.js'
-import { getDefaultSonnetModel, getMainLoopModel } from '../model/model.js'
+import {
+  getDefaultSonnetModel,
+  getMainLoopModel,
+  parseUserSpecifiedModel,
+} from '../model/model.js'
 import { isPoorModeActive } from '../../commands/poor/poorMode.js'
 import { getAPIProvider } from '../model/providers.js'
 import { getAutoModeConfig } from '../settings/settings.js'
@@ -965,23 +969,64 @@ type AutoModeConfig = {
   jsonlTranscript?: boolean
 }
 
+export type ResolveClassifierModelInput = {
+  /** CLAUDE_CODE_AUTO_MODE_MODEL — documented temp override, highest priority */
+  envModel: string | undefined
+  /** settings autoMode.model — user's persistent choice (configured via /login) */
+  settingsModel: string | undefined
+  /** GrowthBook tengu_auto_mode_config.model — service-side default */
+  remoteModel: string | undefined
+  /** /poor budget mode — force-downgrade classifier to Sonnet */
+  isPoorModeActive: boolean
+  /** Resolves the settings value (alias → family default; unknown id passes through) */
+  resolveSettingsModel: (model: string) => string
+  defaultSonnetModel: string
+  mainLoopModel: string
+}
+
+/**
+ * Pure model-resolution cascade for the auto mode classifier.
+ * Priority: env override > settings autoMode.model (alias-resolved) >
+ * GrowthBook remote > poor mode → Sonnet > main loop model.
+ *
+ * env/remote values are returned verbatim (existing behavior preserved);
+ * only the settings value is alias-resolved via parseUserSpecifiedModel.
+ *
+ * Exported for testing (pure, no feature gate).
+ */
+export function resolveClassifierModel(
+  input: ResolveClassifierModelInput,
+): string {
+  if (input.envModel) return input.envModel
+  if (
+    input.settingsModel &&
+    input.settingsModel.trim().toLowerCase() !== 'default'
+  ) {
+    return input.resolveSettingsModel(input.settingsModel)
+  }
+  if (input.remoteModel) return input.remoteModel
+  // Poor mode: downgrade classifier to Sonnet to reduce cost
+  if (input.isPoorModeActive) {
+    return input.defaultSonnetModel
+  }
+  return input.mainLoopModel
+}
+
 function getClassifierModel(): string {
   // 所有环境（含外部构建）都认 CLAUDE_CODE_AUTO_MODE_MODEL —— 分类器模型
   // 与主循环解耦，用户可为分类器单独配置便宜/稳定的模型。
-  const envModel = process.env.CLAUDE_CODE_AUTO_MODE_MODEL
-  if (envModel) return envModel
-  const config = getFeatureValue_CACHED_MAY_BE_STALE(
-    'tengu_auto_mode_config',
-    {} as AutoModeConfig,
-  )
-  if (config?.model) {
-    return config.model
-  }
-  // Poor mode: downgrade classifier to Sonnet to reduce cost
-  if (isPoorModeActive()) {
-    return getDefaultSonnetModel()
-  }
-  return getMainLoopModel()
+  return resolveClassifierModel({
+    envModel: process.env.CLAUDE_CODE_AUTO_MODE_MODEL,
+    settingsModel: getAutoModeConfig()?.model,
+    remoteModel: getFeatureValue_CACHED_MAY_BE_STALE(
+      'tengu_auto_mode_config',
+      {} as AutoModeConfig,
+    )?.model,
+    isPoorModeActive: isPoorModeActive(),
+    resolveSettingsModel: parseUserSpecifiedModel,
+    defaultSonnetModel: getDefaultSonnetModel(),
+    mainLoopModel: getMainLoopModel(),
+  })
 }
 
 function isJsonlTranscriptEnabled(): boolean {

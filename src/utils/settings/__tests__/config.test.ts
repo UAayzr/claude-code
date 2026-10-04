@@ -39,6 +39,30 @@ describe('SettingsSchema', () => {
     expect(result.success).toBe(true)
   })
 
+  test('accepts autoMode with model id', () => {
+    const result = SettingsSchema().safeParse({
+      autoMode: { model: 'claude-sonnet-4-6' },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('accepts autoMode with model alias', () => {
+    const result = SettingsSchema().safeParse({
+      autoMode: { model: 'haiku' },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('accepts autoMode combining model with allow rules', () => {
+    const result = SettingsSchema().safeParse({
+      autoMode: {
+        model: 'claude-haiku-4-5',
+        allow: ['Bash(npm run build)'],
+      },
+    })
+    expect(result.success).toBe(true)
+  })
+
   test('accepts permissions block with allow rules', () => {
     const result = SettingsSchema().safeParse({
       permissions: { allow: ['Bash(npm install)'] },

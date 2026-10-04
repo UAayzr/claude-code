@@ -1,7 +1,6 @@
 import { feature } from 'bun:bundle'
 import mergeWith from 'lodash-es/mergeWith.js'
 import { dirname, join, resolve } from 'path'
-import { z } from 'zod/v4'
 import {
   getFlagSettingsInline,
   getFlagSettingsPath,
@@ -44,7 +43,7 @@ import {
   setCachedSettingsForSource,
   setSessionSettingsCache,
 } from './settingsCache.js'
-import { type SettingsJson, SettingsSchema } from './types.js'
+import { type SettingsJson, SettingsSchema, autoModeSchema } from './types.js'
 import {
   filterInvalidPermissionRules,
   formatZodError,
@@ -915,56 +914,94 @@ export function getUseAutoModeDuringPlan(): boolean {
   return true
 }
 
+export type MergedAutoModeConfig = {
+  allow?: string[]
+  soft_deny?: string[]
+  environment?: string[]
+  model?: string
+}
+
+/** 'default' (any casing/spacing) written by hand means "unset" — treat it as such. */
+function normalizeModelValue(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  return trimmed.toLowerCase() === 'default' ? '' : value
+}
+
+/**
+ * Merge raw autoMode values from multiple settings sources (order = source
+ * priority, userSettings first). List fields (allow/soft_deny/environment)
+ * concatenate across sources; `model` is a scalar and first non-undefined
+ * wins (user's explicit local config outranks later sources). A literal
+ * 'default' is treated as unset so it can't shadow a real model from a later
+ * source. Returns undefined only when every field is empty/absent — a
+ * model-only config still returns a non-undefined result.
+ *
+ * Exported for testing (pure, no feature gate — `feature()` is a compile-time
+ * constant that is false under `bun test`).
+ */
+export function mergeAutoModeConfigs(
+  autoModeValues: ReadonlyArray<unknown>,
+): MergedAutoModeConfig | undefined {
+  const allow: string[] = []
+  const soft_deny: string[] = []
+  const environment: string[] = []
+  let model: string | undefined
+  for (const raw of autoModeValues) {
+    const result = autoModeSchema.safeParse(raw)
+    if (!result.success) continue
+    if (result.data.allow) allow.push(...result.data.allow)
+    if (result.data.soft_deny) soft_deny.push(...result.data.soft_deny)
+    if (process.env.USER_TYPE === 'ant') {
+      if (result.data.deny) soft_deny.push(...result.data.deny)
+    }
+    if (result.data.environment) environment.push(...result.data.environment)
+    if (model === undefined && result.data.model) {
+      const normalized = normalizeModelValue(result.data.model)
+      if (normalized) model = normalized
+    }
+  }
+  if (
+    allow.length > 0 ||
+    soft_deny.length > 0 ||
+    environment.length > 0 ||
+    model !== undefined
+  ) {
+    return {
+      ...(allow.length > 0 && { allow }),
+      ...(soft_deny.length > 0 && { soft_deny }),
+      ...(environment.length > 0 && { environment }),
+      ...(model !== undefined && { model }),
+    }
+  }
+  return undefined
+}
+
+/**
+ * Trusted settings sources for autoMode merging (projectSettings intentionally
+ * excluded — a malicious project could otherwise inject classifier rules).
+ */
+const AUTO_MODE_SETTING_SOURCES = [
+  'userSettings',
+  'localSettings',
+  'flagSettings',
+  'policySettings',
+] as const
+
 /**
  * Returns the merged autoMode config from trusted settings sources.
  * Only available when TRANSCRIPT_CLASSIFIER is active; returns undefined otherwise.
  * projectSettings is intentionally excluded — a malicious project could
  * otherwise inject classifier allow/deny rules (RCE risk).
  */
-export function getAutoModeConfig():
-  | { allow?: string[]; soft_deny?: string[]; environment?: string[] }
-  | undefined {
+export function getAutoModeConfig(): MergedAutoModeConfig | undefined {
   if (feature('TRANSCRIPT_CLASSIFIER')) {
-    const schema = z.object({
-      allow: z.array(z.string()).optional(),
-      soft_deny: z.array(z.string()).optional(),
-      deny: z.array(z.string()).optional(),
-      environment: z.array(z.string()).optional(),
-    })
-
-    const allow: string[] = []
-    const soft_deny: string[] = []
-    const environment: string[] = []
-
-    for (const source of [
-      'userSettings',
-      'localSettings',
-      'flagSettings',
-      'policySettings',
-    ] as const) {
-      const settings = getSettingsForSource(source)
-      if (!settings) continue
-      const result = schema.safeParse(
-        (settings as Record<string, unknown>).autoMode,
-      )
-      if (result.success) {
-        if (result.data.allow) allow.push(...result.data.allow)
-        if (result.data.soft_deny) soft_deny.push(...result.data.soft_deny)
-        if (process.env.USER_TYPE === 'ant') {
-          if (result.data.deny) soft_deny.push(...result.data.deny)
-        }
-        if (result.data.environment)
-          environment.push(...result.data.environment)
-      }
-    }
-
-    if (allow.length > 0 || soft_deny.length > 0 || environment.length > 0) {
-      return {
-        ...(allow.length > 0 && { allow }),
-        ...(soft_deny.length > 0 && { soft_deny }),
-        ...(environment.length > 0 && { environment }),
-      }
-    }
+    return mergeAutoModeConfigs(
+      AUTO_MODE_SETTING_SOURCES.map(source => {
+        const settings = getSettingsForSource(source)
+        return settings?.autoMode
+      }),
+    )
   }
   return undefined
 }

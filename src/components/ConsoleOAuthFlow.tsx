@@ -20,7 +20,12 @@ import { OAuthService } from '../services/oauth/index.js';
 import { getOauthAccountInfo, validateForceLoginOrg } from '../utils/auth.js';
 import { openBrowser } from '../utils/browser.js';
 import { logError } from '../utils/log.js';
-import { getSettings_DEPRECATED, updateSettingsForSource } from '../utils/settings/settings.js';
+import {
+  getSettings_DEPRECATED,
+  getSettingsForSource,
+  updateSettingsForSource,
+  type MergedAutoModeConfig,
+} from '../utils/settings/settings.js';
 import { CHINA_LLM_PROVIDERS, type ProviderPreset, resolveChinaProviderBaseURL } from 'src/utils/chinaLlmProviders.js';
 import { Select } from './CustomSelect/select.js';
 import { Spinner } from './Spinner.js';
@@ -43,7 +48,8 @@ type OAuthStatus =
       haikuModel: string;
       sonnetModel: string;
       opusModel: string;
-      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
+      autoModeModel: string;
+      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
     } // Custom platform: configure API endpoint and model names
   | {
       state: 'openai_chat_api';
@@ -52,7 +58,8 @@ type OAuthStatus =
       haikuModel: string;
       sonnetModel: string;
       opusModel: string;
-      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
+      autoModeModel: string;
+      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
     } // OpenAI Chat Completions API platform
   | {
       state: 'chatgpt_subscription';
@@ -66,7 +73,8 @@ type OAuthStatus =
       haikuModel: string;
       sonnetModel: string;
       opusModel: string;
-      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
+      autoModeModel: string;
+      activeField: 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
     } // Gemini Generate Content API platform
   | { state: 'china_provider_select'; activeIndex: number } // China LLM: pick provider
   | { state: 'china_mode_select'; provider: ProviderPreset; activeIndex: number } // China LLM: pick access mode
@@ -84,6 +92,30 @@ type OAuthStatus =
     };
 
 const PASTE_HERE_MSG = 'Paste code here if prompted > ';
+
+// Reads/writes of the autoMode settings object go through MergedAutoModeConfig
+// (exported from settings.ts): SettingsJson infers the autoMode key as {}
+// (feature-gated conditional spread), so these casts keep the shape explicit.
+
+function getAutoModeModelFromSettings(): string | undefined {
+  return (getSettingsForSource('userSettings') as { autoMode?: MergedAutoModeConfig } | null)?.autoMode?.model;
+}
+
+/**
+ * Build the autoMode settings slice for the auto approval model. Empty
+ * removes the key: only `model` when other autoMode fields exist, else the
+ * whole autoMode object (avoid leaving an empty `autoMode: {}` on disk).
+ * Spread into the same updateSettingsForSource call as the env write.
+ */
+function buildAutoModeSettings(model: string): { autoMode?: MergedAutoModeConfig } {
+  if (model !== '') {
+    return { autoMode: { model } };
+  }
+  const rawAutoMode = (getSettingsForSource('userSettings') as { autoMode?: MergedAutoModeConfig } | null)?.autoMode;
+  const hasOtherFields = !!rawAutoMode && Object.keys(rawAutoMode).some(k => k !== 'model');
+  return hasOtherFields ? { autoMode: { model: undefined } } : { autoMode: undefined };
+}
+
 export function ConsoleOAuthFlow({
   onDone,
   startingMessage,
@@ -539,6 +571,7 @@ function OAuthStatusMessage({
                     haikuModel: process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL ?? '',
                     sonnetModel: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL ?? '',
                     opusModel: process.env.ANTHROPIC_DEFAULT_OPUS_MODEL ?? '',
+                    autoModeModel: getAutoModeModelFromSettings() ?? '',
                     activeField: 'base_url',
                   });
                 } else if (value === 'openai_chat_api') {
@@ -550,6 +583,7 @@ function OAuthStatusMessage({
                     haikuModel: process.env.OPENAI_DEFAULT_HAIKU_MODEL ?? '',
                     sonnetModel: process.env.OPENAI_DEFAULT_SONNET_MODEL ?? '',
                     opusModel: process.env.OPENAI_DEFAULT_OPUS_MODEL ?? '',
+                    autoModeModel: getAutoModeModelFromSettings() ?? '',
                     activeField: 'base_url',
                   });
                 } else if (value === 'china_providers') {
@@ -570,6 +604,7 @@ function OAuthStatusMessage({
                     haikuModel: process.env.GEMINI_DEFAULT_HAIKU_MODEL ?? '',
                     sonnetModel: process.env.GEMINI_DEFAULT_SONNET_MODEL ?? '',
                     opusModel: process.env.GEMINI_DEFAULT_OPUS_MODEL ?? '',
+                    autoModeModel: getAutoModeModelFromSettings() ?? '',
                     activeField: 'base_url',
                   });
                 } else if (value === 'platform') {
@@ -592,8 +627,8 @@ function OAuthStatusMessage({
       );
 
     case 'custom_platform': {
-      type Field = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
-      const FIELDS: Field[] = ['base_url', 'api_key', 'haiku_model', 'sonnet_model', 'opus_model'];
+      type Field = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
+      const FIELDS: Field[] = ['base_url', 'api_key', 'haiku_model', 'sonnet_model', 'opus_model', 'auto_mode_model'];
       const cp = oauthStatus as {
         state: 'custom_platform';
         activeField: Field;
@@ -602,14 +637,16 @@ function OAuthStatusMessage({
         haikuModel: string;
         sonnetModel: string;
         opusModel: string;
+        autoModeModel: string;
       };
-      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel } = cp;
+      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel } = cp;
       const displayValues: Record<Field, string> = {
         base_url: baseUrl,
         api_key: apiKey,
         haiku_model: haikuModel,
         sonnet_model: sonnetModel,
         opus_model: opusModel,
+        auto_mode_model: autoModeModel,
       };
 
       const [inputValue, setInputValue] = useState(() => displayValues[activeField]);
@@ -625,6 +662,7 @@ function OAuthStatusMessage({
             haikuModel,
             sonnetModel,
             opusModel,
+            autoModeModel,
           };
           switch (field) {
             case 'base_url':
@@ -637,9 +675,11 @@ function OAuthStatusMessage({
               return { ...s, sonnetModel: value };
             case 'opus_model':
               return { ...s, opusModel: value };
+            case 'auto_mode_model':
+              return { ...s, autoModeModel: value };
           }
         },
-        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel],
+        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel],
       );
 
       const _switchTo = useCallback(
@@ -670,6 +710,7 @@ function OAuthStatusMessage({
                 haikuModel: '',
                 sonnetModel: '',
                 opusModel: '',
+                autoModeModel: '',
                 activeField: 'base_url',
               },
             });
@@ -685,6 +726,7 @@ function OAuthStatusMessage({
         const { error } = updateSettingsForSource('userSettings', {
           modelType: 'anthropic',
           env,
+          ...buildAutoModeSettings(finalVals.auto_mode_model),
         } as unknown as Parameters<typeof updateSettingsForSource>[1]);
         if (error) {
           setOAuthStatus({
@@ -697,6 +739,7 @@ function OAuthStatusMessage({
               haikuModel: finalVals.haiku_model ?? '',
               sonnetModel: finalVals.sonnet_model ?? '',
               opusModel: finalVals.opus_model ?? '',
+              autoModeModel: finalVals.auto_mode_model ?? '',
               activeField: 'base_url',
             },
           });
@@ -792,6 +835,7 @@ function OAuthStatusMessage({
             {renderRow('haiku_model', 'Haiku    ')}
             {renderRow('sonnet_model', 'Sonnet   ')}
             {renderRow('opus_model', 'Opus     ')}
+            {renderRow('auto_mode_model', 'AutoMode ')}
           </Box>
           <Text dimColor>↑↓/Tab to switch · Enter on last field to save · Esc to go back</Text>
         </Box>
@@ -799,8 +843,15 @@ function OAuthStatusMessage({
     }
 
     case 'openai_chat_api': {
-      type OpenAIField = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
-      const OPENAI_FIELDS: OpenAIField[] = ['base_url', 'api_key', 'haiku_model', 'sonnet_model', 'opus_model'];
+      type OpenAIField = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
+      const OPENAI_FIELDS: OpenAIField[] = [
+        'base_url',
+        'api_key',
+        'haiku_model',
+        'sonnet_model',
+        'opus_model',
+        'auto_mode_model',
+      ];
       const op = oauthStatus as {
         state: 'openai_chat_api';
         activeField: OpenAIField;
@@ -809,14 +860,16 @@ function OAuthStatusMessage({
         haikuModel: string;
         sonnetModel: string;
         opusModel: string;
+        autoModeModel: string;
       };
-      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel } = op;
+      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel } = op;
       const openaiDisplayValues: Record<OpenAIField, string> = {
         base_url: baseUrl,
         api_key: apiKey,
         haiku_model: haikuModel,
         sonnet_model: sonnetModel,
         opus_model: opusModel,
+        auto_mode_model: autoModeModel,
       };
 
       const [openaiInputValue, setOpenaiInputValue] = useState(() => openaiDisplayValues[activeField]);
@@ -834,6 +887,7 @@ function OAuthStatusMessage({
             haikuModel,
             sonnetModel,
             opusModel,
+            autoModeModel,
           };
           switch (field) {
             case 'base_url':
@@ -846,9 +900,11 @@ function OAuthStatusMessage({
               return { ...s, sonnetModel: value };
             case 'opus_model':
               return { ...s, opusModel: value };
+            case 'auto_mode_model':
+              return { ...s, autoModeModel: value };
           }
         },
-        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel],
+        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel],
       );
 
       const doOpenAISave = useCallback(() => {
@@ -872,6 +928,7 @@ function OAuthStatusMessage({
                 haikuModel: '',
                 sonnetModel: '',
                 opusModel: '',
+                autoModeModel: '',
                 activeField: 'base_url',
               },
             });
@@ -887,6 +944,7 @@ function OAuthStatusMessage({
         const settingsUpdate: Parameters<typeof updateSettingsForSource>[1] = {
           modelType: 'openai',
           env: env as unknown as Record<string, string>,
+          ...buildAutoModeSettings(finalVals.auto_mode_model),
         };
         const { error } = updateSettingsForSource('userSettings', settingsUpdate);
         if (error) {
@@ -900,6 +958,7 @@ function OAuthStatusMessage({
               haikuModel: finalVals.haiku_model ?? '',
               sonnetModel: finalVals.sonnet_model ?? '',
               opusModel: finalVals.opus_model ?? '',
+              autoModeModel: finalVals.auto_mode_model ?? '',
               activeField: 'base_url',
             },
           });
@@ -1007,6 +1066,7 @@ function OAuthStatusMessage({
             {renderOpenAIRow('haiku_model', 'Haiku    ')}
             {renderOpenAIRow('sonnet_model', 'Sonnet   ')}
             {renderOpenAIRow('opus_model', 'Opus     ')}
+            {renderOpenAIRow('auto_mode_model', 'AutoMode ')}
           </Box>
           <Text dimColor>↑↓/Tab to switch · Enter on last field to save · Esc to go back</Text>
         </Box>
@@ -1106,8 +1166,15 @@ function OAuthStatusMessage({
     }
 
     case 'gemini_api': {
-      type GeminiField = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model';
-      const GEMINI_FIELDS: GeminiField[] = ['base_url', 'api_key', 'haiku_model', 'sonnet_model', 'opus_model'];
+      type GeminiField = 'base_url' | 'api_key' | 'haiku_model' | 'sonnet_model' | 'opus_model' | 'auto_mode_model';
+      const GEMINI_FIELDS: GeminiField[] = [
+        'base_url',
+        'api_key',
+        'haiku_model',
+        'sonnet_model',
+        'opus_model',
+        'auto_mode_model',
+      ];
       const gp = oauthStatus as {
         state: 'gemini_api';
         activeField: GeminiField;
@@ -1116,14 +1183,16 @@ function OAuthStatusMessage({
         haikuModel: string;
         sonnetModel: string;
         opusModel: string;
+        autoModeModel: string;
       };
-      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel } = gp;
+      const { activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel } = gp;
       const geminiDisplayValues: Record<GeminiField, string> = {
         base_url: baseUrl,
         api_key: apiKey,
         haiku_model: haikuModel,
         sonnet_model: sonnetModel,
         opus_model: opusModel,
+        auto_mode_model: autoModeModel,
       };
 
       const [geminiInputValue, setGeminiInputValue] = useState(() => geminiDisplayValues[activeField]);
@@ -1141,6 +1210,7 @@ function OAuthStatusMessage({
             haikuModel,
             sonnetModel,
             opusModel,
+            autoModeModel,
           };
           switch (field) {
             case 'base_url':
@@ -1153,9 +1223,11 @@ function OAuthStatusMessage({
               return { ...s, sonnetModel: value };
             case 'opus_model':
               return { ...s, opusModel: value };
+            case 'auto_mode_model':
+              return { ...s, autoModeModel: value };
           }
         },
-        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel],
+        [activeField, baseUrl, apiKey, haikuModel, sonnetModel, opusModel, autoModeModel],
       );
 
       const doGeminiSave = useCallback(() => {
@@ -1171,6 +1243,7 @@ function OAuthStatusMessage({
               haikuModel: finalVals.haiku_model,
               sonnetModel: finalVals.sonnet_model,
               opusModel: finalVals.opus_model,
+              autoModeModel: finalVals.auto_mode_model,
               activeField,
             },
           });
@@ -1186,6 +1259,7 @@ function OAuthStatusMessage({
         const { error } = updateSettingsForSource('userSettings', {
           modelType: 'gemini',
           env,
+          ...buildAutoModeSettings(finalVals.auto_mode_model),
         } as unknown as Parameters<typeof updateSettingsForSource>[1]);
         if (error) {
           setOAuthStatus({
@@ -1198,6 +1272,7 @@ function OAuthStatusMessage({
               haikuModel: '',
               sonnetModel: '',
               opusModel: '',
+              autoModeModel: '',
               activeField: 'base_url',
             },
           });
@@ -1297,6 +1372,7 @@ function OAuthStatusMessage({
             {renderGeminiRow('haiku_model', 'Haiku    ')}
             {renderGeminiRow('sonnet_model', 'Sonnet   ')}
             {renderGeminiRow('opus_model', 'Opus     ')}
+            {renderGeminiRow('auto_mode_model', 'AutoMode ')}
           </Box>
           <Text dimColor>↑↓/Tab to switch · Enter on last field to save · Esc to go back</Text>
         </Box>
@@ -1464,6 +1540,9 @@ function OAuthStatusMessage({
         const settingsUpdate: Parameters<typeof updateSettingsForSource>[1] = {
           modelType: 'openai',
           env: env as unknown as Record<string, string>,
+          // Same model id forwards to the auto approval model (matches the
+          // three-tier same-id convention above).
+          autoMode: { model: modelId },
         };
         const { error } = updateSettingsForSource('userSettings', settingsUpdate);
         if (error) {
