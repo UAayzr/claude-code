@@ -568,6 +568,13 @@ export async function* queryModelOpenAI(
       }
     }
   } catch (error) {
+    if (signal.aborted) {
+      // User cancellation (Esc) is normal, not an API error — debug level,
+      // and don't surface an assistant error message for aborts (matches the
+      // first-party path; the interruption message is handled in query.ts).
+      logForDebugging('[OpenAI] Streaming aborted by user')
+      return
+    }
     const errorMessage = error instanceof Error ? error.message : String(error)
     logForDebugging(`[OpenAI] Error: ${errorMessage}`, { level: 'error' })
     yield createAssistantAPIErrorMessage({

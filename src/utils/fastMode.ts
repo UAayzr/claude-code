@@ -69,6 +69,17 @@ function getDisabledReasonMessage(
   }
 }
 
+// Log the unavailable reason once per session — getFastModeUnavailableReason
+// runs on hot UI render paths (ModelPicker, /model, print) and each call
+// used to emit a log line, flooding the debug log (same once-pattern as
+// hasLoggedCooldownExpiry below). The REASON is still returned for UI display.
+let hasLoggedFastModeUnavailable = false
+function logFastModeUnavailableOnce(reason: string): void {
+  if (hasLoggedFastModeUnavailable) return
+  hasLoggedFastModeUnavailable = true
+  logForDebugging(`Fast mode unavailable: ${reason}`)
+}
+
 export function getFastModeUnavailableReason(): string | null {
   if (!isFastModeEnabled()) {
     return 'Fast mode is not available'
@@ -80,7 +91,7 @@ export function getFastModeUnavailableReason(): string | null {
   )
   // Statsig reason has priority over other reasons.
   if (statigReason !== null) {
-    logForDebugging(`Fast mode unavailable: ${statigReason}`)
+    logFastModeUnavailableOnce(statigReason)
     return statigReason
   }
 
@@ -104,7 +115,7 @@ export function getFastModeUnavailableReason(): string | null {
     const flagFastMode = getSettingsForSource('flagSettings')?.fastMode
     if (!flagFastMode) {
       const reason = 'Fast mode is not available in the Agent SDK'
-      logForDebugging(`Fast mode unavailable: ${reason}`)
+      logFastModeUnavailableOnce(reason)
       return reason
     }
   }
@@ -112,7 +123,7 @@ export function getFastModeUnavailableReason(): string | null {
   // Only available for 1P (not Bedrock/Vertex/Foundry)
   if (getAPIProvider() !== 'firstParty') {
     const reason = 'Fast mode is not available on Bedrock, Vertex, or Foundry'
-    logForDebugging(`Fast mode unavailable: ${reason}`)
+    logFastModeUnavailableOnce(reason)
     return reason
   }
 
@@ -132,7 +143,7 @@ export function getFastModeUnavailableReason(): string | null {
     const authType: AuthType =
       getClaudeAIOAuthTokens() !== null ? 'oauth' : 'api-key'
     const reason = getDisabledReasonMessage(orgStatus.reason, authType)
-    logForDebugging(`Fast mode unavailable: ${reason}`)
+    logFastModeUnavailableOnce(reason)
     return reason
   }
 

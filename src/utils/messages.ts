@@ -5940,10 +5940,11 @@ export function ensureToolResultPairing(
         '; ',
       ) as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
     })
-    logError(
-      new Error(
-        `ensureToolResultPairing: repaired missing tool_result blocks (${messages.length} -> ${result.length} messages). Message structure: ${messageTypes.join('; ')}`,
-      ),
+    // Successful self-heal — debug level only (not logError: repaired state
+    // is not an error and must not reach the error list / errors.jsonl /
+    // Sentry). Telemetry above still tracks the repair.
+    logForDebugging(
+      `ensureToolResultPairing: repaired missing tool_result blocks (${messages.length} -> ${result.length} messages). Message structure: ${messageTypes.join('; ')}`,
     )
   }
 
