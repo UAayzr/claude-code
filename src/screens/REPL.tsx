@@ -3756,6 +3756,18 @@ export function REPL({
 
           await mrOnTurnComplete(messagesRef.current, abortController.signal.aborted);
 
+          // Reply-complete notification: the guard-end block is the single
+          // authority for "a turn finished" — resumed sessions never pass
+          // through it, so no restore edge can ever fire this. Aborted turns
+          // (Esc/background) stay silent, matching the turn-duration filter
+          // below; a turn parked on a pending approval is the approval
+          // reminder's moment, not a completed reply.
+          if (!abortController.signal.aborted) {
+            if (!toolUseConfirmQueue[0] && !sandboxPermissionRequestQueue[0]) {
+              void sendNotification({ message: 'UAayzr Code 回复完成', notificationType: 'turn_complete' }, terminal);
+            }
+          }
+
           if (feature('UDS_INBOX') && !pipeReturnHadErrorRef.current) {
             relayPipeMessage({
               type: 'done',
@@ -4869,23 +4881,6 @@ export function REPL({
   });
 
   // We'll use the global lastInteractionTime from state.ts
-
-  // ── Turn-complete notification ─────────────────────────────────────────
-  // Fires once per completed turn (isLoading falling edge) so the user knows
-  // a reply finished even when away from the terminal. Uses the falling edge
-  // rather than lastQueryCompletionTime so restoring a historical session
-  // never fires a stale "reply done" sound.
-  const turnCompletePrevLoadingRef = React.useRef(isLoading);
-  useEffect(() => {
-    const wasLoading = turnCompletePrevLoadingRef.current;
-    turnCompletePrevLoadingRef.current = isLoading;
-    if (!wasLoading || isLoading) return;
-    // A turn that ends in a pending approval request is silent here — the
-    // approval reminder (3s idle) is the right sound for that moment, and
-    // "reply done" would be misleading while the turn is paused.
-    if (toolUseConfirmQueue[0] || sandboxPermissionRequestQueue[0]) return;
-    void sendNotification({ message: 'UAayzr Code 回复完成', notificationType: 'turn_complete' }, terminal);
-  }, [isLoading, terminal]);
 
   // Update last interaction time when input changes.
   // Must be immediate because useEffect runs after the Ink render cycle flush.
