@@ -41,5 +41,5 @@ export const zhHans: Messages = {
   // Init
   "init.initializing": "[claude-hud] 正在初始化...",
   "init.macosNote":
-    "[claude-hud] 注意：在 macOS 上，您可能需要重启 Claude Code 才能显示 HUD。",
+    "[claude-hud] 注意：在 macOS 上，您可能需要重启 UAayzr Code 才能显示 HUD。",
 };

@@ -41,5 +41,5 @@ export const en: Messages = {
   // Init
   "init.initializing": "[claude-hud] Initializing...",
   "init.macosNote":
-    "[claude-hud] Note: On macOS, you may need to restart Claude Code for the HUD to appear.",
+    "[claude-hud] Note: On macOS, you may need to restart UAayzr Code for the HUD to appear.",
 };
