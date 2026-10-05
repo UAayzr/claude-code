@@ -368,6 +368,6 @@ export async function mcpResetChoicesHandler(): Promise<void> {
   }));
   cliOk(
     'All project-scoped (.uaayzr/mcp.json) server approvals and rejections have been reset.\n' +
-      'You will be prompted for approval next time you start Claude Code.',
+      'You will be prompted for approval next time you start UAayzr Code.',
   );
 }

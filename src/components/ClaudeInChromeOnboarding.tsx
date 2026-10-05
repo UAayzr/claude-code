@@ -34,7 +34,7 @@ export function ClaudeInChromeOnboarding({ onDone }: Props): React.ReactNode {
     <Dialog title="Claude in Chrome (Beta)" onCancel={onDone} color="chromeYellow">
       <Box flexDirection="column" gap={1}>
         <Text>
-          Claude in Chrome works with the Chrome extension to let you control your browser directly from Claude Code.
+          Claude in Chrome works with the Chrome extension to let you control your browser directly from UAayzr Code.
           You can navigate websites, fill forms, capture screenshots, record GIFs, and debug with console logs and
           network requests.
           {!isExtensionInstalled && (

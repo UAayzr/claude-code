@@ -90,7 +90,7 @@ export function Stats({ onClose }: Props): React.ReactNode {
       fallback={
         <Box marginTop={1}>
           <Spinner />
-          <Text> Loading your Claude Code stats…</Text>
+          <Text> Loading your UAayzr Code stats…</Text>
         </Box>
       }
     >
@@ -195,7 +195,7 @@ function StatsContent({ allTimePromise, onClose }: StatsContentProps): React.Rea
   if (allTimeResult.type === 'empty') {
     return (
       <Box marginTop={1}>
-        <Text color="warning">No stats available yet. Start using Claude Code!</Text>
+        <Text color="warning">No stats available yet. Start using UAayzr Code!</Text>
       </Box>
     );
   }

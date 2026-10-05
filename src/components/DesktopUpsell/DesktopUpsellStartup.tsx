@@ -86,7 +86,7 @@ export function DesktopUpsellStartup({ onDone }: Props): React.ReactNode {
     <PermissionDialog title="Try Claude Code Desktop">
       <Box flexDirection="column" paddingX={2} paddingY={1}>
         <Box marginBottom={1}>
-          <Text>Same Claude Code with visual diffs, live app preview, parallel sessions, and more.</Text>
+          <Text>Same UAayzr Code with visual diffs, live app preview, parallel sessions, and more.</Text>
         </Box>
         <Select options={options} onChange={handleSelect} onCancel={() => handleSelect('not-now')} />
       </Box>

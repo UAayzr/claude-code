@@ -398,7 +398,7 @@ export function Feedback({
           </Box>
           <Box marginTop={1}>
             <Text wrap="wrap" dimColor>
-              We will use your feedback to debug related issues or to improve Claude Code&apos;s functionality (eg. to
+              We will use your feedback to debug related issues or to improve UAayzr Code&apos;s functionality (eg. to
               reduce the risk of bugs occurring in the future).
             </Text>
           </Box>

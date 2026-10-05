@@ -42,14 +42,14 @@ describe('Resume error messages', () => {
 describe('Cost command subscriber messages', () => {
   test('overage message mentions the key behavior', () => {
     const msg =
-      'You are currently using your overages to power your Claude Code usage. We will automatically switch you back to your subscription rate limits when they reset'
+      'You are currently using your overages to power your UAayzr Code usage. We will automatically switch you back to your subscription rate limits when they reset'
     expect(msg).toContain('overages')
     expect(msg).toContain('automatically switch')
   })
 
   test('subscription message is concise', () => {
     const msg =
-      'You are currently using your subscription to power your Claude Code usage'
+      'You are currently using your subscription to power your UAayzr Code usage'
     expect(msg.length).toBeLessThan(100)
   })
 })

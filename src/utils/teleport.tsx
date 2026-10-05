@@ -694,7 +694,7 @@ export async function teleportFromSessionsAPI(
       });
       throw new TeleportOperationError(
         `${sessionId} not found.`,
-        `${sessionId} not found.\n${chalk.dim('Run /status in Claude Code to check your account.')}`,
+        `${sessionId} not found.\n${chalk.dim('Run /status in UAayzr Code to check your account.')}`,
       );
     }
 
