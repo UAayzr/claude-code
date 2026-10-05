@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, Dialog } from '@anthropic/ink';
 import { saveGlobalConfig } from '../utils/config.js';
+import { useNotifyAfterTimeout } from '../hooks/useNotifyAfterTimeout.js';
 import { Select } from './CustomSelect/index.js';
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function ApproveApiKey({ customApiKeyTruncated, onDone }: Props): React.ReactNode {
+  useNotifyAfterTimeout('UAayzr Code 需要你批准使用此 API 密钥', 'permission_prompt');
   function onChange(value: 'yes' | 'no') {
     switch (value) {
       case 'yes': {
@@ -37,12 +39,12 @@ export function ApproveApiKey({ customApiKeyTruncated, onDone }: Props): React.R
   }
 
   return (
-    <Dialog title="Detected a custom API key in your environment" color="warning" onCancel={() => onChange('no')}>
+    <Dialog title="检测到环境中存在自定义 API 密钥" color="warning" onCancel={() => onChange('no')}>
       <Text>
         <Text bold>ANTHROPIC_API_KEY</Text>
         <Text>: sk-ant-...{customApiKeyTruncated}</Text>
       </Text>
-      <Text>Do you want to use this API key?</Text>
+      <Text>你想使用此 API 密钥吗？</Text>
       <Select
         defaultValue="no"
         defaultFocusValue="no"

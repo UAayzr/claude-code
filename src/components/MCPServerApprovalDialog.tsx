@@ -4,6 +4,7 @@ import {
   logEvent,
 } from 'src/services/analytics/index.js';
 import { getSettings_DEPRECATED, updateSettingsForSource } from '../utils/settings/settings.js';
+import { useNotifyAfterTimeout } from '../hooks/useNotifyAfterTimeout.js';
 import { Select } from './CustomSelect/index.js';
 import { Dialog } from '@anthropic/ink';
 import { MCPServerDialogCopy } from './MCPServerDialogCopy.js';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function MCPServerApprovalDialog({ serverName, onDone }: Props): React.ReactNode {
+  useNotifyAfterTimeout(`UAayzr Code 需要你批准启用 MCP 服务器 ${serverName}`, 'permission_prompt');
   function onChange(value: 'yes' | 'yes_all' | 'no') {
     logEvent('tengu_mcp_dialog_choice', {
       choice: value as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
@@ -60,7 +62,7 @@ export function MCPServerApprovalDialog({ serverName, onDone }: Props): React.Re
 
   return (
     <Dialog
-      title={`New MCP server found in .uaayzr/mcp.json: ${serverName}`}
+      title={`在 .uaayzr/mcp.json 中发现新的 MCP 服务器：${serverName}`}
       color="warning"
       onCancel={() => onChange('no')}
     >

@@ -2,7 +2,6 @@ import { feature } from 'bun:bundle';
 import * as React from 'react';
 import { EnterPlanModeTool } from '@claude-code-best/builtin-tools/tools/EnterPlanModeTool/EnterPlanModeTool.js';
 import { ExitPlanModeV2Tool } from '@claude-code-best/builtin-tools/tools/ExitPlanModeTool/ExitPlanModeV2Tool.js';
-import { useNotifyAfterTimeout } from '../../hooks/useNotifyAfterTimeout.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
 import type { AnyObject, Tool, ToolUseContext } from '../../Tool.js';
 import { AskUserQuestionTool } from '@claude-code-best/builtin-tools/tools/AskUserQuestionTool/AskUserQuestionTool.js';
@@ -161,28 +160,6 @@ export type ToolUseConfirm<Input extends AnyObject = AnyObject> = {
   recheckPermission(): Promise<void>;
 };
 
-function getNotificationMessage(toolUseConfirm: ToolUseConfirm): string {
-  const toolName = toolUseConfirm.tool.userFacingName(toolUseConfirm.input as never);
-
-  if (toolUseConfirm.tool === ExitPlanModeV2Tool) {
-    return 'UAayzr Code needs your approval for the plan';
-  }
-
-  if (toolUseConfirm.tool === EnterPlanModeTool) {
-    return 'UAayzr Code wants to enter plan mode';
-  }
-
-  if (feature('REVIEW_ARTIFACT') && toolUseConfirm.tool === ReviewArtifactTool) {
-    return 'Claude needs your approval for a review artifact';
-  }
-
-  if (!toolName || toolName.trim() === '') {
-    return 'UAayzr Code needs your attention';
-  }
-
-  return `Claude needs your permission to use ${toolName}`;
-}
-
 // TODO: Move this to Tool.renderPermissionRequest
 export function PermissionRequest({
   toolUseConfirm,
@@ -203,9 +180,6 @@ export function PermissionRequest({
     },
     { context: 'Confirmation' },
   );
-
-  const notificationMessage = getNotificationMessage(toolUseConfirm);
-  useNotifyAfterTimeout(notificationMessage, 'permission_prompt');
 
   const PermissionComponent = permissionComponentForTool(toolUseConfirm.tool);
 

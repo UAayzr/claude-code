@@ -42,7 +42,7 @@ export function ReviewArtifactPermissionRequest({
   return (
     <PermissionDialog color="permission" title="Review artifact?" workerBadge={workerBadge}>
       <Box flexDirection="column" marginTop={1} paddingX={1}>
-        <Text>Claude wants to review{title ? `: ${title}` : ' an artifact'}.</Text>
+        <Text>UAayzr Code 想要审查{title ? `：${title}` : '一个制品'}。</Text>
 
         <Box marginTop={1} flexDirection="column">
           <Text dimColor>

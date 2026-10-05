@@ -79,7 +79,7 @@ export async function cleanupComputerUseAfterTurn(
 
   if (await releaseComputerUseLock()) {
     ctx.sendOSNotification?.({
-      message: 'Claude is done using your computer',
+      message: 'UAayzr Code 已完成对电脑的操作',
       notificationType: 'computer_use_exit',
     })
   }

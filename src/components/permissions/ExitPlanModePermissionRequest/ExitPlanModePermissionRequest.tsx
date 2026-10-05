@@ -692,7 +692,7 @@ export function ExitPlanModePermissionRequest({
     return (
       <PermissionDialog color="planMode" title="Exit plan mode?" workerBadge={workerBadge}>
         <Box flexDirection="column" paddingX={1} marginTop={1}>
-          <Text>Claude wants to exit plan mode</Text>
+          <Text>UAayzr Code 想要退出计划模式</Text>
           <Box marginTop={1}>
             <Select
               options={[

@@ -6,6 +6,7 @@ import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { Box, Text } from '@anthropic/ink';
 import { execFileNoThrow } from '../../../utils/execFileNoThrow.js';
+import { useNotifyAfterTimeout } from '../../../hooks/useNotifyAfterTimeout.js';
 import { plural } from '../../../utils/stringUtils.js';
 import type { OptionWithDescription } from '../../CustomSelect/select.js';
 import { Select } from '../../CustomSelect/select.js';
@@ -29,6 +30,7 @@ const DENY_ALL_RESPONSE: CuPermissionResponse = {
  * app allowlist + grant-flags panel.
  */
 export function ComputerUseApproval({ request, onDone }: ComputerUseApprovalProps): React.ReactNode {
+  useNotifyAfterTimeout('UAayzr Code 需要你批准电脑使用权限', 'permission_prompt');
   return request.tccState ? (
     <ComputerUseTccPanel tccState={request.tccState} onDone={() => onDone(DENY_ALL_RESPONSE)} />
   ) : (

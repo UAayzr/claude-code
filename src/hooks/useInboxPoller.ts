@@ -355,7 +355,7 @@ export function useInboxPoller({
       if (firstParsed && !isLoading && !focusedInputDialog) {
         void sendNotification(
           {
-            message: `${firstParsed.agent_id} needs permission for ${firstParsed.tool_name}`,
+            message: `${firstParsed.agent_id} 需要批准使用 ${firstParsed.tool_name}`,
             notificationType: 'worker_permission_prompt',
           },
           terminal,
@@ -453,7 +453,7 @@ export function useInboxPoller({
         if (firstRequest && !isLoading && !focusedInputDialog) {
           void sendNotification(
             {
-              message: `${firstRequest.workerName} needs network access to ${firstRequest.host}`,
+              message: `${firstRequest.workerName} 需要批准访问网络 ${firstRequest.host}`,
               notificationType: 'worker_permission_prompt',
             },
             terminal,

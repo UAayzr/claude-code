@@ -3,6 +3,7 @@ import { logEvent } from 'src/services/analytics/index.js';
 import { Box, Dialog, Link, Text } from '@anthropic/ink';
 import type { ExternalClaudeMdInclude } from '../utils/claudemd.js';
 import { saveCurrentProjectConfig } from '../utils/config.js';
+import { useNotifyAfterTimeout } from '../hooks/useNotifyAfterTimeout.js';
 import { Select } from './CustomSelect/index.js';
 
 type Props = {
@@ -16,6 +17,7 @@ export function ClaudeMdExternalIncludesDialog({
   isStandaloneDialog,
   externalIncludes,
 }: Props): React.ReactNode {
+  useNotifyAfterTimeout('UAayzr Code 需要你批准外部 CLAUDE.md 导入', 'permission_prompt');
   React.useEffect(() => {
     // Log when dialog is shown
     logEvent('tengu_claude_md_includes_dialog_shown', {});

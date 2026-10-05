@@ -92,6 +92,10 @@ const ripgrepDir = join(outdir, 'vendor', 'ripgrep')
 await cp('src/utils/vendor/ripgrep', ripgrepDir, { recursive: true })
 console.log(`Copied src/utils/vendor/ripgrep/ → ${ripgrepDir}/`)
 
+const soundsDir = join(outdir, 'vendor', 'sounds')
+await cp('src/utils/vendor/sounds', soundsDir, { recursive: true })
+console.log(`Copied src/utils/vendor/sounds/ → ${soundsDir}/`)
+
 // Step 4.5: Compile vendored claude-hud (statusline HUD). Source is TS with
 // zero npm runtime deps; build bundles it into dist/vendor/claude-hud/index.js.
 const hudOut = join(outdir, 'vendor', 'claude-hud')

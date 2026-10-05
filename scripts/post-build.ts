@@ -68,6 +68,10 @@ async function postBuild() {
   await cp('src/utils/vendor/ripgrep', ripgrepDir, { recursive: true } as never)
   console.log(`Copied src/utils/vendor/ripgrep/ → ${ripgrepDir}/`)
 
+  const soundsDir = join(outdir, 'vendor', 'sounds')
+  await cp('src/utils/vendor/sounds', soundsDir, { recursive: true } as never)
+  console.log(`Copied src/utils/vendor/sounds/ → ${soundsDir}/`)
+
   // Step 3: Generate dual entry points
   const cliBun = join(outdir, 'cli-bun.js')
   const cliNode = join(outdir, 'cli-node.js')

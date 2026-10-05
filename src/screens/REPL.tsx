@@ -127,6 +127,7 @@ import {
 } from '../components/MessageSelector.js';
 import { useIdeLogging } from '../hooks/useIdeLogging.js';
 import { PermissionRequest, type ToolUseConfirm } from '../components/permissions/PermissionRequest.js';
+import { useApprovalNotification } from '../hooks/useApprovalNotification.js';
 import { ElicitationDialog } from '../components/mcp/ElicitationDialog.js';
 import { PromptDialog } from '../components/hooks/PromptDialog.js';
 import type { PromptRequest, PromptResponse } from '../types/hooks.js';
@@ -169,6 +170,10 @@ import { errorMessage, toError } from '../utils/errors.js';
 import { isHumanTurn } from '../utils/messagePredicates.js';
 import { logError } from '../utils/log.js';
 import { getCwd } from '../utils/cwd.js';
+// Approval dialogs that warrant a sound + notification reminder — mirrors the
+// approval subset of getFocusedInputDialog (cost/message-selector excluded).
+const APPROVAL_DIALOG_IDS: readonly string[] = ['sandbox-permission', 'tool-permission', 'prompt', 'elicitation'];
+
 // Dead code elimination: conditional imports
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const useVoiceIntegration: typeof import('../hooks/useVoiceIntegration.js').useVoiceIntegration = feature('VOICE_MODE')
@@ -2508,6 +2513,29 @@ export function REPL({
   // Keep ref in sync so timer callbacks can read the current value
   focusedInputDialogRef.current = focusedInputDialog;
 
+  // ── Approval-needed notifications ────────────────────────────────────────
+  // Fires a sound + notification (handled by useApprovalNotification) when an
+  // approval dialog appears or is suppressed by typing. Dialogs blocked by a
+  // non-animated toolJSX overlay or the message selector intentionally don't
+  // remind — the user is engaged in another modal there (unless the request
+  // is suppressed while typing, which still reminds after idle).
+  const approvalPending = !!(
+    (focusedInputDialog !== undefined && APPROVAL_DIALOG_IDS.includes(focusedInputDialog)) ||
+    hasSuppressedDialogs
+  );
+  // hasSuppressedDialogs also covers showingCostDialog — getPendingApprovalInfo
+  // returns null for it, so the cost dialog never reminds.
+  useApprovalNotification({
+    approvalPending,
+    queues: {
+      sandbox: sandboxPermissionRequestQueue[0] ?? null,
+      tool: toolUseConfirmQueue[0] ?? null,
+      prompt: promptQueue[0] ?? null,
+      elicitation: elicitation.queue[0] ?? null,
+    },
+    terminal,
+  });
+
   // Immediately capture pause/resume when focusedInputDialog changes
   // This ensures accurate timing even under high system load, rather than
   // relying on the 100ms polling interval to detect state changes
@@ -4842,6 +4870,23 @@ export function REPL({
 
   // We'll use the global lastInteractionTime from state.ts
 
+  // ── Turn-complete notification ─────────────────────────────────────────
+  // Fires once per completed turn (isLoading falling edge) so the user knows
+  // a reply finished even when away from the terminal. Uses the falling edge
+  // rather than lastQueryCompletionTime so restoring a historical session
+  // never fires a stale "reply done" sound.
+  const turnCompletePrevLoadingRef = React.useRef(isLoading);
+  useEffect(() => {
+    const wasLoading = turnCompletePrevLoadingRef.current;
+    turnCompletePrevLoadingRef.current = isLoading;
+    if (!wasLoading || isLoading) return;
+    // A turn that ends in a pending approval request is silent here — the
+    // approval reminder (3s idle) is the right sound for that moment, and
+    // "reply done" would be misleading while the turn is paused.
+    if (toolUseConfirmQueue[0] || sandboxPermissionRequestQueue[0]) return;
+    void sendNotification({ message: 'UAayzr Code 回复完成', notificationType: 'turn_complete' }, terminal);
+  }, [isLoading, terminal]);
+
   // Update last interaction time when input changes.
   // Must be immediate because useEffect runs after the Ink render cycle flush.
   useEffect(() => {
@@ -4888,7 +4933,7 @@ export function REPL({
         ) {
           void sendNotification(
             {
-              message: 'Claude is waiting for your input',
+              message: 'UAayzr Code 正在等待你的输入',
               notificationType: 'idle_prompt',
             },
             terminal,

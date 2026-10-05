@@ -252,8 +252,8 @@ export function buildSessionContext(): ComputerUseSessionContext {
         });
         tuc().sendOSNotification?.({
           message: escRegistered
-            ? 'Claude is using your computer · press Esc to stop'
-            : 'Claude is using your computer · press Ctrl+C to stop',
+            ? 'UAayzr Code 正在使用你的电脑 · 按 Esc 停止'
+            : 'UAayzr Code 正在使用你的电脑 · 按 Ctrl+C 停止',
           notificationType: 'computer_use_enter',
         });
       }

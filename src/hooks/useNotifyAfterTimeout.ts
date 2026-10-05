@@ -5,8 +5,8 @@ import {
 } from '../bootstrap/state.js'
 import { useTerminalNotification } from '@anthropic/ink'
 import { sendNotification } from '../services/notifier.js'
-// The time threshold in milliseconds for considering an interaction "recent" (6 seconds)
-export const DEFAULT_INTERACTION_THRESHOLD_MS = 6000
+// The time threshold in milliseconds for considering an interaction "recent" (3 seconds)
+export const DEFAULT_INTERACTION_THRESHOLD_MS = 3000
 
 function getTimeSinceLastInteraction(): number {
   return Date.now() - getLastInteractionTime()
@@ -16,8 +16,13 @@ function hasRecentInteraction(threshold: number): boolean {
   return getTimeSinceLastInteraction() < threshold
 }
 
-function shouldNotify(threshold: number): boolean {
-  return process.env.NODE_ENV !== 'test' && !hasRecentInteraction(threshold)
+/**
+ * Whether enough time has passed without user interaction to fire a
+ * notification. Never fires in tests — the dev environment itself is win32
+ * and a pending dialog would otherwise spawn a real powershell balloon.
+ */
+export function shouldNotifyAfterIdle(thresholdMs: number): boolean {
+  return process.env.NODE_ENV !== 'test' && !hasRecentInteraction(thresholdMs)
 }
 
 // NOTE: User interaction tracking is now done in App.tsx's processKeysInBatch
@@ -29,15 +34,17 @@ function shouldNotify(threshold: number): boolean {
  * Hook that manages desktop notifications after a timeout period.
  *
  * Shows a notification in two cases:
- * 1. Immediately if the app has been idle for longer than the threshold
+ * 1. Within one poll (~1s) if the app has already been idle longer than the threshold
  * 2. After the specified timeout if the user doesn't interact within that time
  *
  * @param message - The notification message to display
- * @param timeout - The timeout in milliseconds (defaults to 6000ms)
+ * @param notificationType - The notification type for hooks/analytics
+ * @param thresholdMs - Idle threshold in milliseconds (defaults to 3000ms)
  */
 export function useNotifyAfterTimeout(
   message: string,
   notificationType: string,
+  thresholdMs: number = DEFAULT_INTERACTION_THRESHOLD_MS,
 ): void {
   const terminal = useTerminalNotification()
 
@@ -52,14 +59,16 @@ export function useNotifyAfterTimeout(
 
   useEffect(() => {
     let hasNotified = false
+    // Poll at 1s granularity so the notification arrives within ~1s of the
+    // idle threshold being crossed (the old 6s threshold polled at 6s).
     const timer = setInterval(() => {
-      if (shouldNotify(DEFAULT_INTERACTION_THRESHOLD_MS) && !hasNotified) {
+      if (shouldNotifyAfterIdle(thresholdMs) && !hasNotified) {
         hasNotified = true
         clearInterval(timer)
         void sendNotification({ message, notificationType }, terminal)
       }
-    }, DEFAULT_INTERACTION_THRESHOLD_MS)
+    }, 1000)
 
     return () => clearInterval(timer)
-  }, [message, notificationType, terminal])
+  }, [message, notificationType, terminal, thresholdMs])
 }

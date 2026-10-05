@@ -3,6 +3,7 @@ import React, { useCallback } from 'react';
 import { logEvent } from 'src/services/analytics/index.js';
 import { Box, Text } from '@anthropic/ink';
 import { getSettings_DEPRECATED, updateSettingsForSource } from '../utils/settings/settings.js';
+import { useNotifyAfterTimeout } from '../hooks/useNotifyAfterTimeout.js';
 import { ConfigurableShortcutHint } from './ConfigurableShortcutHint.js';
 import { SelectMulti } from './CustomSelect/SelectMulti.js';
 import { Byline, Dialog, KeyboardShortcutHint } from '@anthropic/ink';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function MCPServerMultiselectDialog({ serverNames, onDone }: Props): React.ReactNode {
+  useNotifyAfterTimeout(`UAayzr Code 需要你批准启用 ${serverNames.length} 个新的 MCP 服务器`, 'permission_prompt');
   function onSubmit(selectedServers: string[]) {
     const currentSettings = getSettings_DEPRECATED() || {};
     const enabledServers = currentSettings.enabledMcpjsonServers || [];
@@ -63,8 +65,8 @@ export function MCPServerMultiselectDialog({ serverNames, onDone }: Props): Reac
   return (
     <>
       <Dialog
-        title={`${serverNames.length} new MCP servers found in .uaayzr/mcp.json`}
-        subtitle="Select any you wish to enable."
+        title={`在 .uaayzr/mcp.json 中发现 ${serverNames.length} 个新的 MCP 服务器`}
+        subtitle="选择你要启用的服务器。"
         color="warning"
         onCancel={handleEscRejectAll}
         hideInputGuide

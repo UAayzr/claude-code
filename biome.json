@@ -12,7 +12,8 @@
       "!!**/dist-stable",
       "!!**/.claude/workflows",
       "!!**/*.workflow.mjs",
-      "!!vendor/claude-hud"
+      "!!vendor/claude-hud",
+      "!!agent-notifications"
     ]
   },
   "formatter": {

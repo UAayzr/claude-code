@@ -45,7 +45,7 @@ export function getPillLabel(tasks: BackgroundTaskState[]): string {
             case 'plan_ready':
               return `${DIAMOND_FILLED} ultraplan ready`
             case 'needs_input':
-              return `${DIAMOND_OPEN} ultraplan needs your input`
+              return `${DIAMOND_OPEN} ultraplan 需要你的输入`
             default:
               return `${DIAMOND_OPEN} ultraplan`
           }

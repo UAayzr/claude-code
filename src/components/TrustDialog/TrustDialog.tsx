@@ -4,6 +4,7 @@ import { logEvent } from 'src/services/analytics/index.js';
 import { setSessionTrustAccepted } from '../../bootstrap/state.js';
 import type { Command } from '../../commands.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
+import { useNotifyAfterTimeout } from '../../hooks/useNotifyAfterTimeout.js';
 import { Box, Link, Text } from '@anthropic/ink';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
 import { getMcpConfigsByScope } from '../../services/mcp/config.js';
@@ -30,6 +31,7 @@ type Props = {
 };
 
 export function TrustDialog({ onDone, commands }: Props): React.ReactNode {
+  useNotifyAfterTimeout('UAayzr Code 需要你的信任才能访问此工作区', 'permission_prompt');
   const { servers: projectServers } = getMcpConfigsByScope('project');
 
   // In all cases, we generally check only the project-level and

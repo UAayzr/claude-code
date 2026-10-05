@@ -1,0 +1,2 @@
+# Protect binary assets from CRLF normalization on Windows checkouts
+*.mp3 binary
