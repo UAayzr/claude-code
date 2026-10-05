@@ -130,9 +130,10 @@ const SOUND_FILES: Record<string, string> = {
   elicitation_url_dialog: 'question.mp3',
   idle_prompt: 'question.mp3',
   computer_use_enter: 'question.mp3',
-  computer_use_exit: 'task-complete.mp3',
-  auth_success: 'task-complete.mp3',
-  turn_complete: 'task-complete.mp3',
+  computer_use_exit: 'review-complete.mp3',
+  auth_success: 'review-complete.mp3',
+  turn_complete: 'review-complete.mp3',
+  plan_ready: 'plan-ready.mp3',
 }
 
 export function resolveSoundFileName(notificationType: string): string {

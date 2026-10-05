@@ -131,10 +131,13 @@ describe('resolveSoundFileName', () => {
     }
   })
 
-  test('maps completion types to task-complete.mp3', () => {
-    expect(resolveSoundFileName('computer_use_exit')).toBe('task-complete.mp3')
-    expect(resolveSoundFileName('auth_success')).toBe('task-complete.mp3')
-    expect(resolveSoundFileName('turn_complete')).toBe('task-complete.mp3')
+  test('maps completion types to review-complete.mp3', () => {
+    expect(resolveSoundFileName('computer_use_exit')).toBe(
+      'review-complete.mp3',
+    )
+    expect(resolveSoundFileName('auth_success')).toBe('review-complete.mp3')
+    expect(resolveSoundFileName('turn_complete')).toBe('review-complete.mp3')
+    expect(resolveSoundFileName('plan_ready')).toBe('plan-ready.mp3')
   })
 
   test('unknown types fall back to question.mp3', () => {

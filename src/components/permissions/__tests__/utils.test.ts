@@ -145,6 +145,11 @@ describe('getPendingApprovalInfo', () => {
       notificationType: 'permission_prompt',
     })
 
+    const plan = getPendingApprovalInfo({
+      tool: makeToolUseConfirm('ExitPlanMode', ExitPlanModeV2Tool, true),
+    })
+    expect(plan!.notificationType).toBe('plan_ready')
+
     const prompt = getPendingApprovalInfo({
       prompt: { request: { prompt: 'req-1', message: 'Pick', options: [] } },
     })

@@ -127,7 +127,12 @@ export function getPendingApprovalInfo(
     return {
       key: `tool:${queues.tool.toolUseID}`,
       message: getToolPermissionNotificationMessage(queues.tool),
-      notificationType: 'permission_prompt',
+      // Plan approval is "plan design done" — a distinct sound from general
+      // permission prompts.
+      notificationType:
+        queues.tool.tool === ExitPlanModeV2Tool
+          ? 'plan_ready'
+          : 'permission_prompt',
     }
   }
   if (queues.prompt) {
