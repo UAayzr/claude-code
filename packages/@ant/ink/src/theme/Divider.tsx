@@ -73,7 +73,11 @@ export function Divider({ width, color, char = '─', padding = 0, title }: Divi
     const leftWidth = Math.floor(sideWidth / 2);
     const rightWidth = sideWidth - leftWidth;
     return (
-      <Text color={color} dimColor={!color}>
+      // wrap="truncate-end": the divider's Text reports its full intrinsic
+      // width (─ × terminal width) to Yoga, so inside a narrowed container
+      // (e.g. next to the buddy column) it would wrap onto a second line.
+      // Truncate instead — the line just stops at the container edge.
+      <Text color={color} dimColor={!color} wrap="truncate-end">
         {char.repeat(leftWidth)}{' '}
         <Text dimColor>
           <Ansi>{title}</Ansi>
@@ -84,7 +88,7 @@ export function Divider({ width, color, char = '─', padding = 0, title }: Divi
   }
 
   return (
-    <Text color={color} dimColor={!color}>
+    <Text color={color} dimColor={!color} wrap="truncate-end">
       {char.repeat(effectiveWidth)}
     </Text>
   );

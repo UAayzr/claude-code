@@ -35,7 +35,16 @@ import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { usePromptSuggestion } from '../../hooks/usePromptSuggestion.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
 import { useTypeahead } from '../../hooks/useTypeahead.js';
-import { Box, type BorderTextOptions, type ClickEvent, type Key, stringWidth, Text, useInput } from '@anthropic/ink';
+import {
+  Box,
+  type BorderTextOptions,
+  type ClickEvent,
+  instances,
+  type Key,
+  stringWidth,
+  Text,
+  useInput,
+} from '@anthropic/ink';
 import { useOptionalKeybindingContext } from '../../keybindings/KeybindingContext.js';
 import { getShortcutDisplay } from '../../keybindings/shortcutFormat.js';
 import { useKeybinding, useKeybindings } from '../../keybindings/useKeybinding.js';
@@ -462,6 +471,22 @@ function PromptInput({
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [showFastModePicker, setShowFastModePicker] = useState(false);
   const [showThinkingToggle, setShowThinkingToggle] = useState(false);
+
+  // ThinkingToggle replaces the input box (1 row → Pane ~7 rows, width
+  // demand 24 → ~124). The incremental diff's clear sequence then hits the
+  // last column, whose wrap-boundary behavior on real terminals (ConPTY)
+  // differs from Ink's virtual cursor — residue chars get mixed into the
+  // option rows (screenshot evidence: "Cltude will think beforeBresponding
+  // 6"). Full repaint skips the incremental clear entirely; toggling the
+  // panel is a low-frequency event, so one flash is acceptable (same level
+  // as ctrl+L).
+  const prevThinkingToggleRef = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (prevThinkingToggleRef.current !== undefined && prevThinkingToggleRef.current !== showThinkingToggle) {
+      instances.get(process.stdout)?.forceRedraw();
+    }
+    prevThinkingToggleRef.current = showThinkingToggle;
+  }, [showThinkingToggle]);
 
   // Check if cursor is on the first line of input
   const isCursorOnFirstLine = useMemo(() => {
