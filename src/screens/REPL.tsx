@@ -1141,6 +1141,12 @@ export function REPL({
   const abortControllerRef = useRef<AbortController | null>(null);
   abortControllerRef.current = abortController;
 
+  // True while the prompt input holds text restored from a rewind/compact
+  // (auto-restore, MessageSelector restore, compact-from). The next submit
+  // resumes the previous exchange rather than starting a fresh conversation,
+  // so the reply-complete notification stays silent for that turn.
+  const resubmitRef = useRef(false);
+
   // Timestamp (ms) of the most recent local-jsx panel dismissal (e.g. ESC on
   // /workflows). Used by onCancel's grace-period guard: the ESC that closes
   // a local-jsx panel (or any quick follow-up ESC within the grace window)
@@ -2625,6 +2631,10 @@ export function REPL({
     queryGuard.forceEnd();
     skipIdleCheckRef.current = false;
 
+    // An interrupt consumes the pending-restore intent — auto-restore
+    // re-arms it in the finally block when it actually restores the prompt.
+    resubmitRef.current = false;
+
     // Preserve partially-streamed text so the user can read what was
     // generated before pressing Esc. Pushed before resetLoadingState clears
     // streamingText, and before query.ts yields the async interrupt marker,
@@ -3756,6 +3766,14 @@ export function REPL({
 
           await mrOnTurnComplete(messagesRef.current, abortController.signal.aborted);
 
+          // Consume the resubmit marker: a turn started from a restored
+          // (rewound/compact-from) prompt is a revision of the previous
+          // exchange, not a fresh conversation — keep the reply-complete
+          // notification silent for it. Consumed unconditionally so a
+          // backgrounded turn can't leave a stale marker behind.
+          const isResubmit = resubmitRef.current;
+          resubmitRef.current = false;
+
           // Reply-complete notification: the guard-end block is the single
           // authority for "a turn finished" — resumed sessions never pass
           // through it, so no restore edge can ever fire this. Aborted turns
@@ -3763,7 +3781,7 @@ export function REPL({
           // below; a turn parked on a pending approval is the approval
           // reminder's moment, not a completed reply.
           if (!abortController.signal.aborted) {
-            if (!toolUseConfirmQueue[0] && !sandboxPermissionRequestQueue[0]) {
+            if (!isResubmit && !toolUseConfirmQueue[0] && !sandboxPermissionRequestQueue[0]) {
               void sendNotification({ message: 'UAayzr Code 回复完成', notificationType: 'turn_complete' }, terminal);
             }
           }
@@ -4675,6 +4693,9 @@ export function REPL({
       if (r) {
         setInputValue(r.text);
         setInputMode(r.mode);
+        // The restored prompt will be resubmitted as a revision of this
+        // exchange — the reply-complete notification stays silent for it.
+        resubmitRef.current = true;
       }
 
       // Restore pasted images
@@ -6687,6 +6708,9 @@ export function REPL({
                         if (r) {
                           setInputValue(r.text);
                           setInputMode(r.mode);
+                          // compact-from restores the prompt for resubmission —
+                          // same silent-turn semantics as a rewind restore.
+                          resubmitRef.current = true;
                         }
                       }
 
