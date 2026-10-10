@@ -570,7 +570,7 @@ export async function classifyYoloAction(
   const xmlSystemPrompt = replaceOutputFormatWithXml(systemPrompt)
   // 极简窗口：自适应窗口（新→旧）用户消息 + 动作，提供用户意图上下文
   // （系统提示要求分类器只考虑用户消息；sudo/rm 深路径等灰区命令依赖意图
-  // 判断，纯动作会导致假 block 反弹）。设计：单条 length > 10（UTF-16 码元）
+  // 判断，纯动作会导致假 block 反弹）。设计：单条 length > 20（UTF-16 码元）
   // 即停；累积 >= 300 即停（满点消息完整包含、绝不截断）；扫到底兜底全取。
   const userPrompt = buildMinimalClassifierPrompt(messages, actionCompact)
   const promptLengths = {
@@ -934,7 +934,7 @@ function extractUserMessageTexts(messages: Message[]): string[] {
   return texts
 }
 
-/** 自适应窗口（新→旧）用户消息 + 动作：单条 >10 字符（UTF-16 码元）够长即停；
+/** 自适应窗口（新→旧）用户消息 + 动作：单条 >20 字符（UTF-16 码元）够长即停；
  *  累积 ≥300 即停（满点消息完整包含、不截断）；扫到底兜底全取。
  *  输出最近的在最前（贴近被审批的动作）。reasoning-blind：不含 assistant
  *  工具调用/输出与 CLAUDE.md。 */
@@ -949,7 +949,7 @@ function buildMinimalClassifierPrompt(
     const t = userTexts[i]!
     window.push(t)
     accumulated += t.length
-    if (t.length > 10 || accumulated >= 300) break
+    if (t.length > 20 || accumulated >= 300) break
   }
   const userPart = window.join('\n\n')
   return userPart ? `${userPart}\n\n${actionCompact}` : actionCompact
