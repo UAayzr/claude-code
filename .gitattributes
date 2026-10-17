@@ -1,2 +1,6 @@
+# 仓库文本行尾统一为 LF(与 biome formatter.lineEnding="lf" 对齐)。
+# 消除 autocrlf=true 与 biome 重写之间的 stat 假象(git status 显示 M 但无实际 diff)。
+* text=auto eol=lf
+
 # Protect binary assets from CRLF normalization on Windows checkouts
 *.mp3 binary
