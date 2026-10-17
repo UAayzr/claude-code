@@ -13,7 +13,8 @@
       "!!**/.claude/workflows",
       "!!**/*.workflow.mjs",
       "!!vendor/claude-hud",
-      "!!agent-notifications"
+      "!!agent-notifications",
+      "!!dsh-purge"
     ]
   },
   "formatter": {

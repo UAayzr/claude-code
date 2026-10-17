@@ -59,3 +59,6 @@ credentials.json
 .squash-tmp/
 .git.*-backup
 agent-notifications/
+
+# VCR 测试录制副产物(运行时生成,勿提交)
+fixtures/
