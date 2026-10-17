@@ -90,6 +90,7 @@ export const DEFAULT_BUILD_FEATURES = [
   // 'SKILL_LEARNING',
   // P3: poor mode
   'POOR', // 穷鬼模式，跳过 extract_memories/prompt_suggestion 减少消耗
+  'DRILL', // /drill 命令：CYBER_RISK_INSTRUCTION 默认提示词开关（settings.cyberRisk.enabled / CLAUDE_CODE_CYBER_RISK）
   // Team Memory
   // 'TEAMMEM',                  // 已禁用：依赖 COORDINATOR_MODE，邮箱文件无限增长
   // SSH Remote
