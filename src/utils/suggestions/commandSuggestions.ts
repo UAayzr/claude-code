@@ -283,7 +283,7 @@ function createCommandSuggestionItem(
   const fullDescription =
     (isWorkflow ? cmd.description : formatDescriptionWithSource(cmd)) +
     (cmd.type === 'prompt' && cmd.argNames?.length
-      ? ` (arguments: ${cmd.argNames.join(', ')})`
+      ? ` (参数: ${cmd.argNames.join(', ')})`
       : '')
 
   return {

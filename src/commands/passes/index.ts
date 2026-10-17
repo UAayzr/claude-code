@@ -10,9 +10,9 @@ export default {
   get description() {
     const reward = getCachedReferrerReward()
     if (reward) {
-      return 'Share a free week of UAayzr Code with friends and earn extra usage'
+      return '和朋友分享,获赠 UAayzr Code 一周免费并赚取额外用量'
     }
-    return 'Share a free week of UAayzr Code with friends'
+    return '和朋友分享,获赠 UAayzr Code 一周免费'
   },
   get isHidden() {
     const { eligible, hasCache } = checkCachedPassesEligibility()

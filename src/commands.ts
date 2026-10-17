@@ -266,7 +266,10 @@ const usageReport: Command = {
 }
 import oauthRefresh from './commands/oauth-refresh/index.js'
 import debugToolCall from './commands/debug-tool-call/index.js'
-import { getSettingSourceName } from './utils/settings/constants.js'
+import {
+  getCommandDescriptionZh,
+  getSourceSuffixZh,
+} from './constants/commandDescriptionsZh.js'
 import {
   type Command,
   getCommandName,
@@ -832,29 +835,18 @@ export function getCommand(commandName: string, commands: Command[]): Command {
  * For model-facing prompts (like SkillTool), use cmd.description directly.
  */
 export function formatDescriptionWithSource(cmd: Command): string {
+  // 中文翻译表优先;不在表中的命令(插件/用户自定义等)保持原文
+  const description = getCommandDescriptionZh(cmd) ?? cmd.description
+
   if (cmd.type !== 'prompt') {
-    return cmd.description
+    return description
   }
 
-  if (cmd.kind === 'workflow') {
-    return `${cmd.description} (workflow)`
+  // 插件命令带插件名前缀(前缀置于描述之前);其余来源后缀统一走
+  // getSourceSuffixZh 的中文本地化,与英文版分支语义完全一致
+  if (cmd.source === 'plugin' && cmd.pluginInfo?.pluginManifest.name) {
+    return `(${cmd.pluginInfo.pluginManifest.name}) ${description}`
   }
 
-  if (cmd.source === 'plugin') {
-    const pluginName = cmd.pluginInfo?.pluginManifest.name
-    if (pluginName) {
-      return `(${pluginName}) ${cmd.description}`
-    }
-    return `${cmd.description} (plugin)`
-  }
-
-  if (cmd.source === 'builtin' || cmd.source === 'mcp') {
-    return cmd.description
-  }
-
-  if (cmd.source === 'bundled') {
-    return `${cmd.description} (bundled)`
-  }
-
-  return `${cmd.description} (${getSettingSourceName(cmd.source)})`
+  return `${description}${getSourceSuffixZh(cmd)}`
 }

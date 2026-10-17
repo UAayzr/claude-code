@@ -62,7 +62,7 @@ describe('tui command metadata', () => {
     const cmd = mod.default
     expect(cmd.name).toBe('tui')
     expect(cmd.type).toBe('local-jsx')
-    expect(cmd.description).toContain('flicker')
+    expect(cmd.description).toContain('无闪烁')
   })
 
   test('interactive and noninteractive entries are mutually gated', async () => {

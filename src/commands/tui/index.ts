@@ -155,7 +155,7 @@ const tuiCommand: Command = {
   type: 'local-jsx',
   name: 'tui',
   description:
-    'Manage flicker-free TUI mode. Open actions or run: status, on, off, toggle',
+    '管理无闪烁 TUI 模式。打开操作面板或运行:status, on, off, toggle',
   isHidden: false,
   isEnabled: () => !getIsNonInteractiveSession(),
   argumentHint: '[status|on|off|toggle]',
@@ -170,8 +170,7 @@ const tuiCommand: Command = {
 export const tuiNonInteractive: Command = {
   type: 'local',
   name: 'tui',
-  description:
-    'Toggle flicker-free TUI mode (alternate screen buffer). Subcommands: on, off, status',
+  description: '切换无闪烁 TUI 模式(备用屏幕缓冲区)。子命令:on, off, status',
   isHidden: false,
   isEnabled: () => getIsNonInteractiveSession(),
   supportsNonInteractive: true,

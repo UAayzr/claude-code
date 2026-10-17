@@ -6,7 +6,7 @@ export default {
   type: 'local-jsx',
   name: 'model',
   get description() {
-    return `Set the AI model for UAayzr Code (currently ${renderModelName(getMainLoopModel())})`
+    return `设置 UAayzr Code 使用的 AI 模型(当前 ${renderModelName(getMainLoopModel())})`
   },
   argumentHint: '[model]',
   get immediate() {
