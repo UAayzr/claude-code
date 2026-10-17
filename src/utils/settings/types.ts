@@ -1083,6 +1083,16 @@ export const SettingsSchema = lazySchema(() =>
               .describe('Auto mode classifier prompt customization'),
           }
         : {}),
+      cyberRisk: z
+        .object({
+          enabled: z
+            .boolean()
+            .optional()
+            .describe(
+              'Inject CYBER_RISK_INSTRUCTION (UAayzr default prompt). Default: true.',
+            ),
+        })
+        .optional(),
       disableAutoMode: z
         .enum(['disable'])
         .optional()
