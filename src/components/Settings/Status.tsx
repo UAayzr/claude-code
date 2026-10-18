@@ -33,13 +33,13 @@ type Props = {
 function buildPrimarySection(): Property[] {
   const sessionId = getSessionId();
   const customTitle = getCurrentSessionTitle(sessionId);
-  const nameValue = customTitle ?? <Text dimColor>/rename to add a name</Text>;
+  const nameValue = customTitle ?? <Text dimColor>/rename 以添加名称</Text>;
 
   return [
-    { label: 'Version', value: MACRO.VERSION },
-    { label: 'Session name', value: nameValue },
-    { label: 'Session ID', value: sessionId },
-    { label: 'cwd', value: getCwd() },
+    { label: '版本', value: MACRO.VERSION },
+    { label: '会话名称', value: nameValue },
+    { label: '会话 ID', value: sessionId },
+    { label: '工作目录', value: getCwd() },
     ...buildAccountProperties(),
     ...buildAPIProviderProperties(),
   ];
@@ -59,7 +59,7 @@ function buildSecondarySection({
   const modelLabel = getModelDisplayLabel(mainLoopModel);
 
   return [
-    { label: 'Model', value: modelLabel },
+    { label: '模型', value: modelLabel },
     ...buildIDEProperties(mcp.clients, context.options.ideInstallationStatus, theme),
     ...buildMcpProperties(mcp.clients, theme),
     ...buildSandboxProperties(),
@@ -142,7 +142,7 @@ export function Status({ context, diagnosticsPromise }: Props): React.ReactNode 
         </Suspense>
       </Box>
       <Text dimColor>
-        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="取消" />
       </Text>
     </Box>
   );
@@ -153,7 +153,7 @@ function Diagnostics({ promise }: { promise: Promise<Diagnostic[]> }): React.Rea
   if (diagnostics.length === 0) return null;
   return (
     <Box flexDirection="column" paddingBottom={1}>
-      <Text bold>System Diagnostics</Text>
+      <Text bold>系统诊断</Text>
       {diagnostics.map((diagnostic, i) => (
         <Box key={i} flexDirection="row" gap={1} paddingX={1}>
           <Text color="error">{figures.warning}</Text>

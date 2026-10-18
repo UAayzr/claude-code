@@ -29,11 +29,11 @@ function LimitBar({ title, limit, maxWidth, showTimeInReset = true, extraSubtext
   }
 
   // Calculate usage percentage
-  const usedText = `${Math.floor(utilization)}% used`;
+  const usedText = `${Math.floor(utilization)}% 已用`;
 
   let subtext: string | undefined;
   if (resets_at) {
-    subtext = `Resets ${formatResetText(resets_at, true, showTimeInReset)}`;
+    subtext = `重置于 ${formatResetText(resets_at, true, showTimeInReset)}`;
   }
 
   if (extraSubtext) {
@@ -105,7 +105,7 @@ export function Usage(): React.ReactNode {
       logError(err as Error);
       const axiosError = err as { response?: { data?: unknown } };
       const responseBody = axiosError.response?.data ? jsonStringify(axiosError.response.data) : undefined;
-      setError(responseBody ? `Failed to load usage data: ${responseBody}` : 'Failed to load usage data');
+      setError(responseBody ? `加载用量数据失败: ${responseBody}` : '加载用量数据失败');
     } finally {
       setIsLoading(false);
     }
@@ -129,8 +129,8 @@ export function Usage(): React.ReactNode {
         <Text color="error">Error: {error}</Text>
         <Text dimColor>
           <Byline>
-            <ConfigurableShortcutHint action="settings:retry" context="Settings" fallback="r" description="retry" />
-            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+            <ConfigurableShortcutHint action="settings:retry" context="Settings" fallback="r" description="重试" />
+            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="取消" />
           </Byline>
         </Text>
       </Box>
@@ -140,9 +140,9 @@ export function Usage(): React.ReactNode {
   if (!utilization) {
     return (
       <Box flexDirection="column" gap={1}>
-        <Text dimColor>Loading usage data…</Text>
+        <Text dimColor>正在加载用量数据…</Text>
         <Text dimColor>
-          <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+          <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="取消" />
         </Text>
       </Box>
     );
@@ -157,17 +157,17 @@ export function Usage(): React.ReactNode {
 
   const limits = [
     {
-      title: 'Current session',
+      title: '当前会话',
       limit: utilization.five_hour,
     },
     {
-      title: 'Current week (all models)',
+      title: '本周(全部模型)',
       limit: utilization.seven_day,
     },
     ...(showSonnetBar
       ? [
           {
-            title: 'Current week (Sonnet only)',
+            title: '本周(仅 Sonnet)',
             limit: utilization.seven_day_sonnet,
           },
         ]
@@ -176,7 +176,7 @@ export function Usage(): React.ReactNode {
 
   return (
     <Box flexDirection="column" gap={1} width="100%">
-      {limits.some(({ limit }) => limit) || <Text dimColor>/usage is only available for subscription plans.</Text>}
+      {limits.some(({ limit }) => limit) || <Text dimColor>/usage 仅对订阅计划可用。</Text>}
 
       {limits.map(
         ({ title, limit }) => limit && <LimitBar key={title} title={title} limit={limit} maxWidth={maxWidth} />,
@@ -187,7 +187,7 @@ export function Usage(): React.ReactNode {
       {isEligibleForOverageCreditGrant() && <OverageCreditUpsell maxWidth={maxWidth} />}
 
       <Text dimColor>
-        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="取消" />
       </Text>
     </Box>
   );
@@ -198,7 +198,7 @@ type ExtraUsageSectionProps = {
   maxWidth: number;
 };
 
-const EXTRA_USAGE_SECTION_TITLE = 'Extra usage';
+const EXTRA_USAGE_SECTION_TITLE = '额外用量';
 
 function ExtraUsageSection({ extraUsage, maxWidth }: ExtraUsageSectionProps): React.ReactNode {
   const subscriptionType = getSubscriptionType();
@@ -213,7 +213,7 @@ function ExtraUsageSection({ extraUsage, maxWidth }: ExtraUsageSectionProps): Re
       return (
         <Box flexDirection="column">
           <Text bold>{EXTRA_USAGE_SECTION_TITLE}</Text>
-          <Text dimColor>Extra usage not enabled · /extra-usage to enable</Text>
+          <Text dimColor>额外用量未启用 · 使用 /extra-usage 启用</Text>
         </Box>
       );
     }
@@ -225,7 +225,7 @@ function ExtraUsageSection({ extraUsage, maxWidth }: ExtraUsageSectionProps): Re
     return (
       <Box flexDirection="column">
         <Text bold>{EXTRA_USAGE_SECTION_TITLE}</Text>
-        <Text dimColor>Unlimited</Text>
+        <Text dimColor>无限</Text>
       </Box>
     );
   }
@@ -248,7 +248,7 @@ function ExtraUsageSection({ extraUsage, maxWidth }: ExtraUsageSectionProps): Re
         resets_at: oneMonthReset.toISOString(),
       }}
       showTimeInReset={false}
-      extraSubtext={`${formattedUsedCredits} / ${formattedMonthlyLimit} spent`}
+      extraSubtext={`${formattedUsedCredits} / ${formattedMonthlyLimit} 已用`}
       maxWidth={maxWidth}
     />
   );

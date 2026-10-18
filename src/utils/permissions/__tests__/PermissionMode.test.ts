@@ -85,11 +85,11 @@ describe('permissionModeTitle', () => {
 
 describe('permissionModeShortTitle', () => {
   test('returns short title for known modes', () => {
-    expect(permissionModeShortTitle('default')).toBe('Default')
-    expect(permissionModeShortTitle('plan')).toBe('Plan')
-    expect(permissionModeShortTitle('bypassPermissions')).toBe('Bypass')
-    expect(permissionModeShortTitle('dontAsk')).toBe('DontAsk')
-    expect(permissionModeShortTitle('acceptEdits')).toBe('Accept')
+    expect(permissionModeShortTitle('default')).toBe('默认')
+    expect(permissionModeShortTitle('plan')).toBe('计划')
+    expect(permissionModeShortTitle('bypassPermissions')).toBe('绕过')
+    expect(permissionModeShortTitle('dontAsk')).toBe('不询问')
+    expect(permissionModeShortTitle('acceptEdits')).toBe('接受')
   })
 })
 

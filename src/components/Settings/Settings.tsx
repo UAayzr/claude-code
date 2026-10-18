@@ -50,7 +50,7 @@ export function Settings({ onClose, context, defaultTab }: Props): React.ReactNo
       return;
     }
     // TODO: Update to "Settings" dialog once we define '/settings'.
-    onClose('Status dialog dismissed', { display: 'system' });
+    onClose('设置面板已关闭', { display: 'system' });
   };
 
   // Disable when submenu is open so the submenu's Dialog can handle ESC,
@@ -62,10 +62,10 @@ export function Settings({ onClose, context, defaultTab }: Props): React.ReactNo
   });
 
   const tabs = [
-    <Tab key="status" title="Status">
+    <Tab key="status" id="Status" title="状态">
       <Status context={context} diagnosticsPromise={diagnosticsPromise} />
     </Tab>,
-    <Tab key="config" title="Config">
+    <Tab key="config" id="Config" title="配置">
       <Suspense fallback={null}>
         <Config
           context={context}
@@ -76,7 +76,7 @@ export function Settings({ onClose, context, defaultTab }: Props): React.ReactNo
         />
       </Suspense>
     </Tab>,
-    <Tab key="usage" title="Usage">
+    <Tab key="usage" id="Usage" title="用量">
       <Usage />
     </Tab>,
   ];
