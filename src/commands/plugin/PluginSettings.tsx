@@ -47,7 +47,7 @@ function MarketplaceList({ onComplete }: { onComplete: (result?: string) => void
     void loadList();
   }, [onComplete]);
 
-  return <Text>Loading marketplaces...</Text>;
+  return <Text>正在加载市场...</Text>;
 }
 
 function McpRedirectBanner(): React.ReactNode {
@@ -541,12 +541,7 @@ function ErrorsTabContent({
           <Byline>
             <ConfigurableShortcutHint action="select:previous" context="Select" fallback="↑" description="navigate" />
             {hasAction && (
-              <ConfigurableShortcutHint
-                action="select:accept"
-                context="Select"
-                fallback="Enter"
-                description="resolve"
-              />
+              <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="修复" />
             )}
             <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
           </Byline>
@@ -661,7 +656,7 @@ export function PluginSettings({ onComplete, args, showMcpRedirectMessage }: Plu
     }
     return count;
   });
-  const errorsTabTitle = pluginErrorCount > 0 ? `Errors (${pluginErrorCount})` : 'Errors';
+  const errorsTabTitle = pluginErrorCount > 0 ? `错误 (${pluginErrorCount})` : '错误';
 
   const exitState = useExitOnCtrlCDWithKeybindings();
 
@@ -827,14 +822,14 @@ export function PluginSettings({ onComplete, args, showMcpRedirectMessage }: Plu
   return (
     <Pane color="suggestion">
       <Tabs
-        title="Plugins"
+        title="插件"
         selectedTab={activeTab}
         onTabChange={handleTabChange}
         color="suggestion"
         disableNavigation={childSearchActive}
         banner={showMcpRedirectMessage && activeTab === 'installed' ? <McpRedirectBanner /> : undefined}
       >
-        <Tab id="discover" title="Discover">
+        <Tab id="discover" title="发现">
           {viewState.type === 'browse-marketplace' ? (
             <BrowseMarketplace
               error={error}
@@ -859,7 +854,7 @@ export function PluginSettings({ onComplete, args, showMcpRedirectMessage }: Plu
             />
           )}
         </Tab>
-        <Tab id="installed" title="Installed">
+        <Tab id="installed" title="已安装">
           <ManagePlugins
             setViewState={setViewState}
             setResult={setResult}
@@ -870,7 +865,7 @@ export function PluginSettings({ onComplete, args, showMcpRedirectMessage }: Plu
             action={viewState.type === 'manage-plugins' ? viewState.action : undefined}
           />
         </Tab>
-        <Tab id="marketplaces" title="Marketplaces">
+        <Tab id="marketplaces" title="市场">
           <ManageMarketplaces
             setViewState={setViewState}
             error={error}

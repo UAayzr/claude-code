@@ -132,7 +132,7 @@ export function AddMarketplace({
           <Text bold>Add Marketplace</Text>
         </Box>
         <Box flexDirection="column">
-          <Text>Enter marketplace source:</Text>
+          <Text>输入市场地址:</Text>
           <Text dimColor>Examples:</Text>
           <Text dimColor> · owner/repo (GitHub)</Text>
           <Text dimColor> · git@github.com:owner/repo.git (SSH)</Text>
@@ -171,8 +171,8 @@ export function AddMarketplace({
       <Box marginLeft={3}>
         <Text dimColor italic>
           <Byline>
-            <KeyboardShortcutHint shortcut="Enter" action="add" />
-            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+            <KeyboardShortcutHint shortcut="Enter" action="添加" />
+            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="取消" />
           </Byline>
         </Text>
       </Box>

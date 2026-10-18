@@ -550,7 +550,7 @@ export function ManagePlugins({
       // User can configure later via the Configure options menu if they want.
       setViewState('plugin-list');
       setSelectedPlugin(null);
-      setResult('Plugin enabled. Configuration skipped — run /reload-plugins to apply.');
+      setResult('插件已启用。配置已跳过 — 运行 /reload-plugins 以应用。');
       if (onManageComplete) {
         void onManageComplete();
       }
@@ -566,7 +566,7 @@ export function ManagePlugins({
       setViewState({ type: 'mcp-tools', client: viewState.client });
     } else {
       if (pendingToggles.size > 0) {
-        setResult('Run /reload-plugins to apply plugin changes.');
+        setResult('运行 /reload-plugins 以应用插件更改。');
         return;
       }
       setParentViewState({ type: 'menu' });
@@ -1075,7 +1075,7 @@ export function ManagePlugins({
       // plain navigation (/plugin manage) should still just show the list.
       if (!hasAutoNavigated.current && action) {
         hasAutoNavigated.current = true;
-        setResult(`Plugin "${targetPlugin}" is not installed in this project`);
+        setResult(`插件“${targetPlugin}”未安装到此项目`);
       }
     }
   }, [targetPlugin, targetMarketplace, marketplaces, loading, unifiedItems, action, setResult]);
@@ -1089,13 +1089,13 @@ export function ManagePlugins({
 
     // Built-in plugins can only be enabled/disabled, not updated/uninstalled.
     if (isBuiltin && (operation === 'update' || operation === 'uninstall')) {
-      setProcessError('Built-in plugins cannot be updated or uninstalled.');
+      setProcessError('内置插件无法更新或卸载。');
       return;
     }
 
     // Managed scope plugins can only be updated, not enabled/disabled/uninstalled
     if (!isBuiltin && !isInstallableScope(pluginScope) && operation !== 'update') {
-      setProcessError('This plugin is managed by your organization. Contact your admin to disable it.');
+      setProcessError('此插件由你的组织管理。请联系管理员禁用它。');
       return;
     }
 
@@ -1168,7 +1168,7 @@ export function ManagePlugins({
           }
           // If already up to date, show message and exit
           if (result.alreadyUpToDate) {
-            setResult(`${selectedPlugin.plugin.name} is already at the latest version (${result.newVersion}).`);
+            setResult(`${selectedPlugin.plugin.name} 已是最新版本(${result.newVersion})。`);
             if (onManageComplete) {
               await onManageComplete();
             }
@@ -1200,12 +1200,12 @@ export function ManagePlugins({
 
       const operationName =
         operation === 'enable'
-          ? 'Enabled'
+          ? '已启用'
           : operation === 'disable'
-            ? 'Disabled'
+            ? '已禁用'
             : operation === 'update'
-              ? 'Updated'
-              : 'Uninstalled';
+              ? '已更新'
+              : '已卸载';
 
       // Single-line warning — notification timeout is ~8s, multi-line would scroll off.
       // The persistent record is in the Errors tab (dependency-unsatisfied after reload).
@@ -1222,7 +1222,7 @@ export function ManagePlugins({
     } catch (error) {
       setIsProcessing(false);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setProcessError(`Failed to ${operation}: ${errorMessage}`);
+      setProcessError(`操作失败(${operation}): ${errorMessage}`);
       logError(toError(error));
     }
   };
@@ -1396,14 +1396,14 @@ export function ManagePlugins({
     const menuItems: Array<{ label: string; action: () => void }> = [];
 
     menuItems.push({
-      label: isEnabled ? 'Disable plugin' : 'Enable plugin',
+      label: isEnabled ? '禁用插件' : '启用插件',
       action: () => void handleSingleOperation(isEnabled ? 'disable' : 'enable'),
     });
 
     // Update/Uninstall options — not available for built-in plugins
     if (!isBuiltin) {
       menuItems.push({
-        label: selectedPlugin.pendingUpdate ? 'Unmark for update' : 'Mark for update',
+        label: selectedPlugin.pendingUpdate ? '取消标记更新' : '标记更新',
         action: async () => {
           try {
             const localError = await checkIfLocalPlugin(selectedPlugin.plugin.name, selectedPlugin.marketplace);
@@ -1433,7 +1433,7 @@ export function ManagePlugins({
 
       if (selectedPluginHasMcpb) {
         menuItems.push({
-          label: 'Configure',
+          label: '配置',
           action: async () => {
             setIsLoadingConfig(true);
             try {
@@ -1452,7 +1452,7 @@ export function ManagePlugins({
               }
 
               if (!mcpbPath) {
-                setProcessError('No MCPB file found in plugin');
+                setProcessError('插件中未找到 MCPB 文件');
                 setIsLoadingConfig(false);
                 return;
               }
@@ -1471,11 +1471,11 @@ export function ManagePlugins({
                 setConfigNeeded(result);
                 setViewState('configuring');
               } else {
-                setProcessError('Failed to load MCPB for configuration');
+                setProcessError('加载 MCPB 以配置失败');
               }
             } catch (err) {
               const errorMsg = errorMessage(err);
-              setProcessError(`Failed to load configuration: ${errorMsg}`);
+              setProcessError(`加载配置失败: ${errorMsg}`);
             } finally {
               setIsLoadingConfig(false);
             }
@@ -1488,7 +1488,7 @@ export function ManagePlugins({
         Object.keys(selectedPlugin.plugin.manifest.userConfig).length > 0
       ) {
         menuItems.push({
-          label: 'Configure options',
+          label: '配置选项',
           action: () => {
             setViewState({
               type: 'configuring-options',
@@ -1499,19 +1499,19 @@ export function ManagePlugins({
       }
 
       menuItems.push({
-        label: 'Update now',
+        label: '立即更新',
         action: () => void handleSingleOperation('update'),
       });
 
       menuItems.push({
-        label: 'Uninstall',
+        label: '卸载',
         action: () => void handleSingleOperation('uninstall'),
       });
     }
 
     if (selectedPlugin.plugin.manifest.homepage) {
       menuItems.push({
-        label: 'Open homepage',
+        label: '打开主页',
         action: () => void openBrowser(selectedPlugin.plugin.manifest.homepage!),
       });
     }
@@ -1521,13 +1521,13 @@ export function ManagePlugins({
         // Generic label — manifest.repository can be GitLab, Bitbucket,
         // Azure DevOps, etc. (gh-31598). pluginDetailsHelpers.tsx:74 keeps
         // 'View on GitHub' because that path has an explicit isGitHub check.
-        label: 'View repository',
+        label: '查看仓库',
         action: () => void openBrowser(selectedPlugin.plugin.manifest.repository!),
       });
     }
 
     menuItems.push({
-      label: 'Back to plugin list',
+      label: '返回插件列表',
       action: () => {
         setViewState('plugin-list');
         setSelectedPlugin(null);
@@ -1646,7 +1646,7 @@ export function ManagePlugins({
         });
         if (error) {
           setIsProcessing(false);
-          setProcessError(`Failed to write settings: ${error.message}`);
+          setProcessError(`写入设置失败: ${error.message}`);
           return;
         }
         clearAllCaches();
@@ -1752,7 +1752,7 @@ export function ManagePlugins({
 
   // Loading state
   if (loading) {
-    return <Text>Loading installed plugins…</Text>;
+    return <Text>正在加载已安装的插件…</Text>;
   }
 
   // No plugins or MCPs installed
@@ -1760,11 +1760,11 @@ export function ManagePlugins({
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text bold>Manage plugins</Text>
+          <Text bold>管理插件</Text>
         </Box>
-        <Text>No plugins or MCP servers installed.</Text>
+        <Text>尚未安装插件或 MCP 服务器。</Text>
         <Box marginTop={1}>
-          <Text dimColor>Esc to go back</Text>
+          <Text dimColor>Esc 返回</Text>
         </Box>
       </Box>
     );
@@ -1816,9 +1816,9 @@ export function ManagePlugins({
           try {
             savePluginOptions(pluginId, values, viewState.schema);
             clearAllCaches();
-            setResult('Configuration saved. Run /reload-plugins for changes to take effect.');
+            setResult('配置已保存。运行 /reload-plugins 使更改生效。');
           } catch (err) {
-            setProcessError(`Failed to save configuration: ${errorMessage(err)}`);
+            setProcessError(`保存配置失败: ${errorMessage(err)}`);
           }
           setViewState('plugin-details');
         }}
@@ -1851,7 +1851,7 @@ export function ManagePlugins({
         }
 
         if (!mcpbPath) {
-          setProcessError('No MCPB file found');
+          setProcessError('未找到 MCPB 文件');
           setViewState('plugin-details');
           return;
         }
@@ -1863,10 +1863,10 @@ export function ManagePlugins({
         setProcessError(null);
         setConfigNeeded(null);
         setViewState('plugin-details');
-        setResult('Configuration saved. Run /reload-plugins for changes to take effect.');
+        setResult('配置已保存。运行 /reload-plugins 使更改生效。');
       } catch (err) {
         const errorMsg = errorMessage(err);
-        setProcessError(`Failed to save configuration: ${errorMsg}`);
+        setProcessError(`保存配置失败: ${errorMsg}`);
         setViewState('plugin-details');
       }
     }
@@ -1900,7 +1900,7 @@ export function ManagePlugins({
         </Box>
 
         <Box marginBottom={1}>
-          <Text dimColor>Status: </Text>
+          <Text dimColor>状态: </Text>
           <Text color="error">Removed</Text>
         </Box>
 
@@ -1918,8 +1918,8 @@ export function ManagePlugins({
         </Box>
 
         <Byline>
-          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="dismiss" />
-          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="关闭" />
+          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
         </Byline>
       </Box>
     );
@@ -1934,7 +1934,7 @@ export function ManagePlugins({
           {selectedPlugin.plugin.name} is enabled in .uaayzr/settings.json (shared with your team)
         </Text>
         <Box marginTop={1} flexDirection="column">
-          <Text>Disable it just for you in .uaayzr/settings.local.json?</Text>
+          <Text>仅为你在 .uaayzr/settings.local.json 中禁用它?</Text>
           <Text dimColor>This has the same effect as uninstalling, without affecting other contributors.</Text>
         </Box>
         {processError && (
@@ -1947,18 +1947,8 @@ export function ManagePlugins({
             <Text dimColor>Disabling…</Text>
           ) : (
             <Byline>
-              <ConfigurableShortcutHint
-                action="confirm:yes"
-                context="Confirmation"
-                fallback="y"
-                description="disable"
-              />
-              <ConfigurableShortcutHint
-                action="confirm:no"
-                context="Confirmation"
-                fallback="Esc"
-                description="cancel"
-              />
+              <ConfigurableShortcutHint action="confirm:yes" context="Confirmation" fallback="y" description="禁用" />
+              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="取消" />
             </Byline>
           )}
         </Box>
@@ -1974,7 +1964,7 @@ export function ManagePlugins({
           {selectedPlugin.plugin.name} has {viewState.size.human} of persistent data
         </Text>
         <Box marginTop={1} flexDirection="column">
-          <Text>Delete it along with the plugin?</Text>
+          <Text>连同插件一起删除?</Text>
           <Text dimColor>{pluginDataDirPath(`${selectedPlugin.plugin.name}@${selectedPlugin.marketplace}`)}</Text>
         </Box>
         {processError && (
@@ -2012,7 +2002,7 @@ export function ManagePlugins({
       filteredPluginErrors.length === 0 ? null : (
         <Box flexDirection="column" marginBottom={1}>
           <Text bold color="error">
-            {filteredPluginErrors.length} {plural(filteredPluginErrors.length, 'error')}:
+            {filteredPluginErrors.length} 个错误:
           </Text>
           {filteredPluginErrors.map((error, i) => {
             const guidance = getErrorGuidance(error);
@@ -2040,14 +2030,14 @@ export function ManagePlugins({
 
         {/* Scope */}
         <Box>
-          <Text dimColor>Scope: </Text>
+          <Text dimColor>作用域: </Text>
           <Text>{selectedPlugin.scope || 'user'}</Text>
         </Box>
 
         {/* Plugin details */}
         {selectedPlugin.plugin.manifest.version && (
           <Box>
-            <Text dimColor>Version: </Text>
+            <Text dimColor>版本: </Text>
             <Text>{selectedPlugin.plugin.manifest.version}</Text>
           </Box>
         )}
@@ -2060,16 +2050,16 @@ export function ManagePlugins({
 
         {selectedPlugin.plugin.manifest.author && (
           <Box>
-            <Text dimColor>Author: </Text>
+            <Text dimColor>作者: </Text>
             <Text>{selectedPlugin.plugin.manifest.author.name}</Text>
           </Box>
         )}
 
         {/* Current status */}
         <Box marginBottom={1}>
-          <Text dimColor>Status: </Text>
-          <Text color={isEnabled ? 'success' : 'warning'}>{isEnabled ? 'Enabled' : 'Disabled'}</Text>
-          {selectedPlugin.pendingUpdate && <Text color="suggestion"> · Marked for update</Text>}
+          <Text dimColor>状态: </Text>
+          <Text color={isEnabled ? 'success' : 'warning'}>{isEnabled ? '已启用' : '已禁用'}</Text>
+          {selectedPlugin.pendingUpdate && <Text color="suggestion"> · 已标记更新</Text>}
         </Box>
 
         {/* Installed components */}
@@ -2089,13 +2079,7 @@ export function ManagePlugins({
                 {!isSelected && <Text>{'  '}</Text>}
                 <Text
                   bold={isSelected}
-                  color={
-                    item.label.includes('Uninstall')
-                      ? 'error'
-                      : item.label.includes('Update')
-                        ? 'suggestion'
-                        : undefined
-                  }
+                  color={item.label.includes('卸载') ? 'error' : item.label.includes('更新') ? 'suggestion' : undefined}
                 >
                   {item.label}
                 </Text>
@@ -2107,7 +2091,7 @@ export function ManagePlugins({
         {/* Processing state */}
         {isProcessing && (
           <Box marginTop={1}>
-            <Text>Processing…</Text>
+            <Text>处理中…</Text>
           </Box>
         )}
 
@@ -2121,9 +2105,9 @@ export function ManagePlugins({
         <Box marginTop={1}>
           <Text dimColor italic>
             <Byline>
-              <ConfigurableShortcutHint action="select:previous" context="Select" fallback="↑" description="navigate" />
-              <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="select" />
-              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+              <ConfigurableShortcutHint action="select:previous" context="Select" fallback="↑" description="导航" />
+              <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="选择" />
+              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
             </Byline>
           </Text>
         </Box>
@@ -2158,21 +2142,16 @@ export function ManagePlugins({
           </Box>
         )}
 
-        {isProcessing && <Text>Processing…</Text>}
+        {isProcessing && <Text>处理中…</Text>}
         {processError && <Text color="error">{processError}</Text>}
 
         <Box marginTop={1}>
           <Text dimColor italic>
             <Byline>
               {failedPlugin.scope !== 'managed' && (
-                <ConfigurableShortcutHint
-                  action="select:accept"
-                  context="Select"
-                  fallback="Enter"
-                  description="remove"
-                />
+                <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="移除" />
               )}
-              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
             </Byline>
           </Text>
         </Box>
@@ -2410,14 +2389,14 @@ export function ManagePlugins({
       {/* No search results */}
       {filteredItems.length === 0 && searchQuery && (
         <Box marginBottom={1}>
-          <Text dimColor>No items match &quot;{searchQuery}&quot;</Text>
+          <Text dimColor>没有匹配“{searchQuery}”的项</Text>
         </Box>
       )}
 
       {/* Scroll up indicator */}
       {pagination.scrollPosition.canScrollUp && (
         <Box>
-          <Text dimColor> {figures.arrowUp} more above</Text>
+          <Text dimColor> {figures.arrowUp} 上方还有内容</Text>
         </Box>
       )}
 
@@ -2434,21 +2413,21 @@ export function ManagePlugins({
         const getScopeLabel = (scope: string): string => {
           switch (scope) {
             case 'flagged':
-              return 'Flagged';
+              return '标记';
             case 'project':
-              return 'Project';
+              return '项目';
             case 'local':
-              return 'Local';
+              return '本地';
             case 'user':
-              return 'User';
+              return '用户';
             case 'enterprise':
-              return 'Enterprise';
+              return '企业';
             case 'managed':
-              return 'Managed';
+              return '托管';
             case 'builtin':
-              return 'Built-in';
+              return '内置';
             case 'dynamic':
-              return 'Built-in';
+              return '内置';
             default:
               return scope;
           }
@@ -2475,7 +2454,7 @@ export function ManagePlugins({
       {/* Scroll down indicator */}
       {pagination.scrollPosition.canScrollDown && (
         <Box>
-          <Text dimColor> {figures.arrowDown} more below</Text>
+          <Text dimColor> {figures.arrowDown} 下方还有内容</Text>
         </Box>
       )}
 
@@ -2483,10 +2462,10 @@ export function ManagePlugins({
       <Box marginTop={1} marginLeft={1}>
         <Text dimColor italic>
           <Byline>
-            <Text>type to search</Text>
-            <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="toggle" />
-            <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="details" />
-            <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+            <Text>输入以搜索</Text>
+            <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="切换" />
+            <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="详情" />
+            <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
           </Byline>
         </Text>
       </Box>
@@ -2495,7 +2474,7 @@ export function ManagePlugins({
       {pendingToggles.size > 0 && (
         <Box marginLeft={1}>
           <Text dimColor italic>
-            Run /reload-plugins to apply changes
+            运行 /reload-plugins 以应用更改
           </Text>
         </Box>
       )}

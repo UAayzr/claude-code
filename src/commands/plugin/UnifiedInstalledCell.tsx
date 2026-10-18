@@ -20,16 +20,16 @@ export function UnifiedInstalledCell({ item, isSelected }: Props): React.ReactNo
     // Show pending toggle status if set, otherwise show current status
     if (item.pendingToggle) {
       statusIcon = color('suggestion', theme)(figures.arrowRight);
-      statusText = item.pendingToggle === 'will-enable' ? 'will enable' : 'will disable';
+      statusText = item.pendingToggle === 'will-enable' ? '将启用' : '将禁用';
     } else if (item.errorCount > 0) {
       statusIcon = color('error', theme)(figures.cross);
-      statusText = `${item.errorCount} ${plural(item.errorCount, 'error')}`;
+      statusText = `${item.errorCount} 个错误`;
     } else if (!item.isEnabled) {
       statusIcon = color('inactive', theme)(figures.radioOff);
-      statusText = 'disabled';
+      statusText = '已禁用';
     } else {
       statusIcon = color('success', theme)(figures.tick);
-      statusText = 'enabled';
+      statusText = '已启用';
     }
 
     return (
@@ -38,7 +38,7 @@ export function UnifiedInstalledCell({ item, isSelected }: Props): React.ReactNo
         <Text color={isSelected ? 'suggestion' : undefined}>{item.name}</Text>
         <Text dimColor={!isSelected}>
           {' '}
-          <Text backgroundColor="userMessageBackground">Plugin</Text>
+          <Text backgroundColor="userMessageBackground">插件</Text>
         </Text>
         <Text dimColor> · {item.marketplace}</Text>
         <Text dimColor={!isSelected}> · {statusIcon} </Text>
@@ -56,18 +56,18 @@ export function UnifiedInstalledCell({ item, isSelected }: Props): React.ReactNo
         <Text color={isSelected ? 'suggestion' : undefined}>{item.name}</Text>
         <Text dimColor={!isSelected}>
           {' '}
-          <Text backgroundColor="userMessageBackground">Plugin</Text>
+          <Text backgroundColor="userMessageBackground">插件</Text>
         </Text>
         <Text dimColor> · {item.marketplace}</Text>
         <Text dimColor={!isSelected}> · {statusIcon} </Text>
-        <Text dimColor={!isSelected}>removed</Text>
+        <Text dimColor={!isSelected}>已移除</Text>
       </Box>
     );
   }
 
   if (item.type === 'failed-plugin') {
     const statusIcon = color('error', theme)(figures.cross);
-    const statusText = `failed to load · ${item.errorCount} ${plural(item.errorCount, 'error')}`;
+    const statusText = `加载失败 · ${item.errorCount} 个错误`;
 
     return (
       <Box>
@@ -75,7 +75,7 @@ export function UnifiedInstalledCell({ item, isSelected }: Props): React.ReactNo
         <Text color={isSelected ? 'suggestion' : undefined}>{item.name}</Text>
         <Text dimColor={!isSelected}>
           {' '}
-          <Text backgroundColor="userMessageBackground">Plugin</Text>
+          <Text backgroundColor="userMessageBackground">插件</Text>
         </Text>
         <Text dimColor> · {item.marketplace}</Text>
         <Text dimColor={!isSelected}> · {statusIcon} </Text>
@@ -90,19 +90,19 @@ export function UnifiedInstalledCell({ item, isSelected }: Props): React.ReactNo
 
   if (item.status === 'connected') {
     statusIcon = color('success', theme)(figures.tick);
-    statusText = 'connected';
+    statusText = '已连接';
   } else if (item.status === 'disabled') {
     statusIcon = color('inactive', theme)(figures.radioOff);
-    statusText = 'disabled';
+    statusText = '已禁用';
   } else if (item.status === 'pending') {
     statusIcon = color('inactive', theme)(figures.radioOff);
-    statusText = 'connecting…';
+    statusText = '连接中…';
   } else if (item.status === 'needs-auth') {
     statusIcon = color('warning', theme)(figures.triangleUpOutline);
-    statusText = 'Enter to auth';
+    statusText = '按 Enter 授权';
   } else {
     statusIcon = color('error', theme)(figures.cross);
-    statusText = 'failed';
+    statusText = '失败';
   }
 
   // Indented MCPs (child of a plugin)

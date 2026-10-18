@@ -52,23 +52,23 @@ export function buildPluginDetailsMenuOptions(
   githubRepo: string | null,
 ): PluginDetailsMenuOption[] {
   const options: PluginDetailsMenuOption[] = [
-    { label: 'Install for you (user scope)', action: 'install-user' },
+    { label: '为你安装(用户级)', action: 'install-user' },
     {
-      label: 'Install for all collaborators on this repository (project scope)',
+      label: '为仓库所有协作者安装(项目级)',
       action: 'install-project',
     },
     {
-      label: 'Install for you, in this repo only (local scope)',
+      label: '仅在本仓库为你安装(本地级)',
       action: 'install-local',
     },
   ];
   if (hasHomepage) {
-    options.push({ label: 'Open homepage', action: 'homepage' });
+    options.push({ label: '打开主页', action: 'homepage' });
   }
   if (githubRepo) {
-    options.push({ label: 'View on GitHub', action: 'github' });
+    options.push({ label: '在 GitHub 上查看', action: 'github' });
   }
-  options.push({ label: 'Back to plugin list', action: 'back' });
+  options.push({ label: '返回插件列表', action: 'back' });
   return options;
 }
 
@@ -81,17 +81,11 @@ export function PluginSelectionKeyHint({ hasSelection }: { hasSelection: boolean
       <Text dimColor italic>
         <Byline>
           {hasSelection && (
-            <ConfigurableShortcutHint
-              action="plugin:install"
-              context="Plugin"
-              fallback="i"
-              description="install"
-              bold
-            />
+            <ConfigurableShortcutHint action="plugin:install" context="Plugin" fallback="i" description="安装" bold />
           )}
-          <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="toggle" />
-          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="details" />
-          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+          <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="切换" />
+          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="详情" />
+          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
         </Byline>
       </Text>
     </Box>

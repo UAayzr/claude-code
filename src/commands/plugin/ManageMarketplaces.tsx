@@ -552,7 +552,7 @@ export function ManageMarketplaces({
   );
 
   if (loading) {
-    return <Text>Loading marketplaces…</Text>;
+    return <Text>正在加载市场…</Text>;
   }
 
   if (marketplaceStates.length === 0) {
@@ -576,17 +576,12 @@ export function ManageMarketplaces({
               <>Press {exitState.keyName} again to go back</>
             ) : (
               <Byline>
-                <ConfigurableShortcutHint
-                  action="select:accept"
-                  context="Select"
-                  fallback="Enter"
-                  description="select"
-                />
+                <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="选择" />
                 <ConfigurableShortcutHint
                   action="confirm:no"
                   context="Confirmation"
                   fallback="Esc"
-                  description="go back"
+                  description="返回"
                 />
               </Byline>
             )}
@@ -725,17 +720,12 @@ export function ManageMarketplaces({
               <>Please wait…</>
             ) : (
               <Byline>
-                <ConfigurableShortcutHint
-                  action="select:accept"
-                  context="Select"
-                  fallback="Enter"
-                  description="select"
-                />
+                <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="选择" />
                 <ConfigurableShortcutHint
                   action="confirm:no"
                   context="Confirmation"
                   fallback="Esc"
-                  description="go back"
+                  description="返回"
                 />
               </Byline>
             )}
@@ -864,18 +854,13 @@ function ManageMarketplacesKeyHints({
       <Text dimColor italic>
         <Byline>
           {hasPendingActions && (
-            <ConfigurableShortcutHint
-              action="select:accept"
-              context="Select"
-              fallback="Enter"
-              description="apply changes"
-            />
+            <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="应用更改" />
           )}
           {!hasPendingActions && (
-            <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="select" />
+            <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="选择" />
           )}
-          {!hasPendingActions && <KeyboardShortcutHint shortcut="u" action="update" />}
-          {!hasPendingActions && <KeyboardShortcutHint shortcut="r" action="remove" />}
+          {!hasPendingActions && <KeyboardShortcutHint shortcut="u" action="更新" />}
+          {!hasPendingActions && <KeyboardShortcutHint shortcut="r" action="移除" />}
           <ConfigurableShortcutHint
             action="confirm:no"
             context="Confirmation"

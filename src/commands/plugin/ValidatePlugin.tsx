@@ -95,7 +95,7 @@ export function ValidatePlugin({ onComplete, path }: Props): React.ReactNode {
 
   return (
     <Box flexDirection="column">
-      <Text>Running validation...</Text>
+      <Text>正在校验...</Text>
     </Box>
   );
 }

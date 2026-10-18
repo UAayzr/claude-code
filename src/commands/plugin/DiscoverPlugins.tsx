@@ -536,7 +536,7 @@ export function DiscoverPlugins({
 
   // Loading state
   if (loading) {
-    return <Text>Loading…</Text>;
+    return <Text>加载中…</Text>;
   }
 
   // Error state
@@ -601,8 +601,8 @@ export function DiscoverPlugins({
         <Box marginTop={1}>
           <Text dimColor>
             <Byline>
-              <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="select" />
-              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+              <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="选择" />
+              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
             </Byline>
           </Text>
         </Box>
@@ -645,6 +645,7 @@ export function DiscoverPlugins({
       {/* Search box */}
       <Box marginBottom={1}>
         <SearchBox
+          placeholder="搜索…"
           query={searchQuery}
           isFocused={isSearchMode}
           isTerminalFocused={isTerminalFocused}
@@ -752,20 +753,14 @@ function DiscoverPluginsKeyHint({
       <Text dimColor italic>
         <Byline>
           {hasSelection && (
-            <ConfigurableShortcutHint
-              action="plugin:install"
-              context="Plugin"
-              fallback="i"
-              description="install"
-              bold
-            />
+            <ConfigurableShortcutHint action="plugin:install" context="Plugin" fallback="i" description="安装" bold />
           )}
           <Text>type to search</Text>
           {canToggle && (
-            <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="toggle" />
+            <ConfigurableShortcutHint action="plugin:toggle" context="Plugin" fallback="Space" description="切换" />
           )}
-          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="details" />
-          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+          <ConfigurableShortcutHint action="select:accept" context="Select" fallback="Enter" description="详情" />
+          <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="后退" />
         </Byline>
       </Text>
     </Box>
