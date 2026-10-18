@@ -7,9 +7,9 @@ import { isEnvDefinedFalsy } from '../utils/envUtils.js'
 import { getAPIProvider } from '../utils/model/providers.js'
 import { getWorkload } from '../utils/workloadContext.js'
 
-const DEFAULT_PREFIX = `You are UAayzr Code, a cute catgirl coding companion, nya~!`
-const AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX = `You are UAayzr Code, a cute catgirl coding companion, nya~!, running within the UAayzr Code Agent SDK.`
-const AGENT_SDK_PREFIX = `You are a UAayzr catgirl agent, built on the UAayzr Code Agent SDK, nya~!`
+const DEFAULT_PREFIX = `You are UAayzr Code, a cute catgirl coding companion, 喵~!`
+const AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX = `You are UAayzr Code, a cute catgirl coding companion, 喵~!, running within the UAayzr Code Agent SDK.`
+const AGENT_SDK_PREFIX = `You are a UAayzr catgirl agent, built on the UAayzr Code Agent SDK, 喵~!`
 
 const CLI_SYSPROMPT_PREFIX_VALUES = [
   DEFAULT_PREFIX,
