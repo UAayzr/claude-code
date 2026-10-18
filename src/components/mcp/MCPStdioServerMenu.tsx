@@ -50,7 +50,7 @@ export function MCPStdioServerMenu({
       onCancel();
     } catch (err) {
       const action = wasEnabled ? 'disable' : 'enable';
-      onComplete(`Failed to ${action} MCP server '${server.name}': ${errorMessage(err)}`);
+      onComplete(`对 MCP 服务器“${server.name}”${action === 'disable' ? '禁用' : '启用'}失败: ${errorMessage(err)}`);
     }
   }, [server.client.type, server.name, toggleMcpServer, onCancel, onComplete]);
 
@@ -64,7 +64,7 @@ export function MCPStdioServerMenu({
   // Only show "View tools" if server is not disabled and has tools
   if (server.client.type !== 'disabled' && serverToolsCount > 0) {
     menuOptions.push({
-      label: 'View tools',
+      label: '查看工具',
       value: 'tools',
     });
   }
@@ -72,20 +72,20 @@ export function MCPStdioServerMenu({
   // Only show reconnect option if the server is not disabled
   if (server.client.type !== 'disabled') {
     menuOptions.push({
-      label: 'Reconnect',
+      label: '重新连接',
       value: 'reconnectMcpServer',
     });
   }
 
   menuOptions.push({
-    label: server.client.type !== 'disabled' ? 'Disable' : 'Enable',
+    label: server.client.type !== 'disabled' ? '禁用' : '启用',
     value: 'toggle-enabled',
   });
 
   // If there are no other options, add a back option so Select handles escape
   if (menuOptions.length === 0) {
     menuOptions.push({
-      label: 'Back',
+      label: '返回',
       value: 'back',
     });
   }
@@ -94,13 +94,13 @@ export function MCPStdioServerMenu({
     return (
       <Box flexDirection="column" gap={1} padding={1}>
         <Text color="text">
-          Reconnecting to <Text bold>{server.name}</Text>
+          正在重新连接到 <Text bold>{server.name}</Text>
         </Text>
         <Box>
           <Spinner />
-          <Text> Restarting MCP server process</Text>
+          <Text> 正在重启 MCP 服务器进程</Text>
         </Box>
-        <Text dimColor>This may take a few moments.</Text>
+        <Text dimColor>这可能需要片刻。</Text>
       </Box>
     );
   }
@@ -109,40 +109,40 @@ export function MCPStdioServerMenu({
     <Box flexDirection="column">
       <Box flexDirection="column" paddingX={1} borderStyle={borderless ? undefined : 'round'}>
         <Box marginBottom={1}>
-          <Text bold>{capitalizedServerName} MCP Server</Text>
+          <Text bold>{capitalizedServerName} MCP 服务器</Text>
         </Box>
 
         <Box flexDirection="column" gap={0}>
           <Box>
-            <Text bold>Status: </Text>
+            <Text bold>状态: </Text>
             {server.client.type === 'disabled' ? (
-              <Text>{color('inactive', theme)(figures.radioOff)} disabled</Text>
+              <Text>{color('inactive', theme)(figures.radioOff)} 已禁用</Text>
             ) : server.client.type === 'connected' ? (
-              <Text>{color('success', theme)(figures.tick)} connected</Text>
+              <Text>{color('success', theme)(figures.tick)} 已连接</Text>
             ) : server.client.type === 'pending' ? (
               <>
                 <Text dimColor>{figures.radioOff}</Text>
-                <Text> connecting…</Text>
+                <Text> 连接中…</Text>
               </>
             ) : (
-              <Text>{color('error', theme)(figures.cross)} failed</Text>
+              <Text>{color('error', theme)(figures.cross)} 连接失败</Text>
             )}
           </Box>
 
           <Box>
-            <Text bold>Command: </Text>
+            <Text bold>命令: </Text>
             <Text dimColor>{server.config.command}</Text>
           </Box>
 
           {server.config.args && server.config.args.length > 0 && (
             <Box>
-              <Text bold>Args: </Text>
+              <Text bold>参数: </Text>
               <Text dimColor>{server.config.args.join(' ')}</Text>
             </Box>
           )}
 
           <Box>
-            <Text bold>Config location: </Text>
+            <Text bold>配置位置: </Text>
             <Text dimColor>{describeMcpConfigFilePath(getMcpConfigByName(server.name)?.scope ?? 'dynamic')}</Text>
           </Box>
 
@@ -156,8 +156,8 @@ export function MCPStdioServerMenu({
 
           {server.client.type === 'connected' && serverToolsCount > 0 && (
             <Box>
-              <Text bold>Tools: </Text>
-              <Text dimColor>{serverToolsCount} tools</Text>
+              <Text bold>工具: </Text>
+              <Text dimColor>{serverToolsCount} 个工具</Text>
             </Box>
           )}
         </Box>
@@ -195,12 +195,12 @@ export function MCPStdioServerMenu({
       <Box marginTop={1}>
         <Text dimColor italic>
           {exitState.pending ? (
-            <>Press {exitState.keyName} again to exit</>
+            <>再次按 {exitState.keyName} 退出</>
           ) : (
             <Byline>
-              <KeyboardShortcutHint shortcut="↑↓" action="navigate" />
-              <KeyboardShortcutHint shortcut="Enter" action="select" />
-              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="back" />
+              <KeyboardShortcutHint shortcut="↑↓" action="导航" />
+              <KeyboardShortcutHint shortcut="Enter" action="选择" />
+              <ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="返回" />
             </Byline>
           )}
         </Text>

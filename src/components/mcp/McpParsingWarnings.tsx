@@ -25,12 +25,12 @@ function McpConfigErrorSection({
     <Box flexDirection="column" marginTop={1}>
       <Box>
         {(hasErrors || hasWarnings) && (
-          <Text color={hasErrors ? 'error' : 'warning'}>[{hasErrors ? 'Failed to parse' : 'Contains warnings'}] </Text>
+          <Text color={hasErrors ? 'error' : 'warning'}>[{hasErrors ? '解析失败' : '包含警告'}] </Text>
         )}
         <Text>{getScopeLabel(scope)}</Text>
       </Box>
       <Box>
-        <Text dimColor>Location: </Text>
+        <Text dimColor>位置: </Text>
         <Text dimColor>{describeMcpConfigFilePath(scope)}</Text>
       </Box>
       <Box marginLeft={1} flexDirection="column">
@@ -40,7 +40,7 @@ function McpConfigErrorSection({
             <Box key={`error-${i}`}>
               <Text>
                 <Text dimColor>└ </Text>
-                <Text color="error">[Error]</Text>
+                <Text color="error">[错误]</Text>
                 <Text dimColor>
                   {' '}
                   {serverName && `[${serverName}] `}
@@ -58,7 +58,7 @@ function McpConfigErrorSection({
             <Box key={`warning-${i}`}>
               <Text>
                 <Text dimColor>└ </Text>
-                <Text color="warning">[Warning]</Text>
+                <Text color="warning">[警告]</Text>
                 <Text dimColor>
                   {' '}
                   {serverName && `[${serverName}] `}
@@ -100,10 +100,10 @@ export function McpParsingWarnings(): React.ReactNode {
 
   return (
     <Box flexDirection="column" marginTop={1} marginBottom={1}>
-      <Text bold>MCP Config Diagnostics</Text>
+      <Text bold>MCP 配置诊断</Text>
       <Box marginTop={1}>
         <Text dimColor>
-          For help configuring MCP servers, see:{' '}
+          配置 MCP 服务器请参见:{' '}
           <Link url="https://code.claude.com/docs/en/mcp">https://code.claude.com/docs/en/mcp</Link>
         </Text>
       </Box>

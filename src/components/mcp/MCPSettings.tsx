@@ -125,7 +125,7 @@ export function MCPSettings({ onComplete }: Props): React.ReactNode {
     // Only show "no servers" message if no regular servers AND no agent servers
     if (servers.length === 0 && agentMcpServers.length === 0) {
       onComplete(
-        'No MCP servers configured. Please run /doctor if this is unexpected. Otherwise, run `uaayzr mcp --help` or visit https://code.claude.com/docs/en/mcp to learn more.',
+        '尚未配置 MCP 服务器。若不应如此请运行 /doctor;否则运行 `uaayzr mcp --help` 或访问 https://code.claude.com/docs/en/mcp 了解更多。',
       );
     }
   }, [servers.length, filteredClients.length, agentMcpServers.length, onComplete]);

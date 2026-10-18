@@ -26,8 +26,8 @@ export function CapabilitiesSection({
 
   return (
     <Box>
-      <Text bold>Capabilities: </Text>
-      <Text color="text">{capabilities.length > 0 ? <Byline>{capabilities}</Byline> : 'none'}</Text>
+      <Text bold>能力: </Text>
+      <Text color="text">{capabilities.length > 0 ? <Byline>{capabilities}</Byline> : '无'}</Text>
     </Box>
   );
 }
