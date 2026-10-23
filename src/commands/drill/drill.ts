@@ -23,11 +23,11 @@ export const call: LocalCommandCall = async args => {
     return {
       type: 'text',
       value: [
-        `default prompt (cyberRisk): ${isCyberRiskEnabled() ? 'ON' : 'OFF'}`,
-        `  toggle: /drill cyberrisk on|off`,
-        `  settings: cyberRisk.enabled (default true) | env: CLAUDE_CODE_CYBER_RISK=1|0`,
-        `  cwd: ${getCwd()}`,
-        `  provider: ${getAPIProvider()}`,
+        `默认提示词(cyberRisk): ${isCyberRiskEnabled() ? '开启' : '关闭'}`,
+        `  开关: /drill cyberrisk on|off`,
+        `  设置: cyberRisk.enabled(默认 true)| 环境变量: CLAUDE_CODE_CYBER_RISK=1|0`,
+        `  工作目录: ${getCwd()}`,
+        `  模型提供方: ${getAPIProvider()}`,
       ].join('\n'),
     }
   }
@@ -37,7 +37,7 @@ export const call: LocalCommandCall = async args => {
     if (!arg2 || (arg2 !== 'on' && arg2 !== 'off')) {
       return {
         type: 'text',
-        value: `Default prompt (CYBER_RISK_INSTRUCTION) is ${isCyberRiskEnabled() ? 'ON' : 'OFF'}. Usage: /drill cyberrisk on|off`,
+        value: `默认提示词(CYBER_RISK_INSTRUCTION)当前${isCyberRiskEnabled() ? '开启' : '关闭'}。用法: /drill cyberrisk on|off`,
       }
     }
     const enable = arg2 === 'on'
@@ -45,17 +45,17 @@ export const call: LocalCommandCall = async args => {
     return {
       type: 'text',
       value: enable
-        ? 'Default prompt ON — 小码酱原生提示词常态注入系统提示词。'
-        : 'Default prompt OFF — CYBER_RISK_INSTRUCTION 不再注入,模型恢复默认行为。',
+        ? '默认提示词已开启 — 小码酱原生提示词常态注入系统提示词。'
+        : '默认提示词已关闭 — CYBER_RISK_INSTRUCTION 不再注入,模型恢复默认行为。',
     }
   }
 
   return {
     type: 'text',
     value: [
-      'Usage:',
-      '  /drill status               show default prompt switch state',
-      '  /drill cyberrisk on | off   toggle the default prompt (小码酱原生提示词)',
+      '用法:',
+      '  /drill status               查看默认提示词开关状态',
+      '  /drill cyberrisk on | off   切换默认提示词(小码酱原生提示词)',
     ].join('\n'),
   }
 }
