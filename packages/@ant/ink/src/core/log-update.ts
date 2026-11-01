@@ -5,7 +5,7 @@ import {
 } from '@alcalzone/ansi-tokenize'
 /** Debug logger — no-op placeholder until proper logger injection is added */
 const logForDebugging = (_message: string) => {}
-import type { Diff, FlickerReason, Frame } from './frame.js'
+import type { Diff, FullResetReason, Frame } from './frame.js'
 import type { Point } from './layout/geometry.js'
 import {
   type Cell,
@@ -151,7 +151,7 @@ export class LogUpdate {
       next.viewport.height < prev.viewport.height ||
       (prev.viewport.width !== 0 && next.viewport.width !== prev.viewport.width)
     ) {
-      return fullResetSequence_CAUSES_FLICKER(next, 'resize', stylePool)
+      return fullResetSequence(next, 'resize', stylePool)
     }
 
     // Legacy Windows console (pre-ConPTY, build < 17763): the old conhost
@@ -167,7 +167,7 @@ export class LogUpdate {
         startTime - this.lastLegacyReset >= legacyConsoleResetMs()
       ) {
         this.lastLegacyReset = startTime
-        return fullResetSequence_CAUSES_FLICKER(next, 'clear', stylePool)
+        return fullResetSequence(next, 'clear', stylePool)
       }
     }
 
@@ -240,7 +240,7 @@ export class LogUpdate {
       logForDebugging(
         `Full reset (shrink->below): prevHeight=${prev.screen.height}, nextHeight=${next.screen.height}, viewport=${prev.viewport.height}`,
       )
-      return fullResetSequence_CAUSES_FLICKER(next, 'offscreen', stylePool)
+      return fullResetSequence(next, 'offscreen', stylePool)
     }
 
     if (
@@ -264,7 +264,7 @@ export class LogUpdate {
       if (scrollbackChangeY >= 0) {
         const prevLine = readLine(prev.screen, scrollbackChangeY)
         const nextLine = readLine(next.screen, scrollbackChangeY)
-        return fullResetSequence_CAUSES_FLICKER(next, 'offscreen', stylePool, {
+        return fullResetSequence(next, 'offscreen', stylePool, {
           triggerY: scrollbackChangeY,
           prevLine,
           nextLine,
@@ -288,11 +288,7 @@ export class LogUpdate {
       // If we need to clear more lines than fit in the viewport, some are in
       // scrollback, so we need a full reset.
       if (linesToClear > prev.viewport.height) {
-        return fullResetSequence_CAUSES_FLICKER(
-          next,
-          'offscreen',
-          this.options.stylePool,
-        )
+        return fullResetSequence(next, 'offscreen', this.options.stylePool)
       }
 
       // clear(N) moves cursor UP by N-1 lines and to column 0
@@ -405,7 +401,7 @@ export class LogUpdate {
       }
     })
     if (needsFullReset) {
-      return fullResetSequence_CAUSES_FLICKER(next, 'offscreen', stylePool, {
+      return fullResetSequence(next, 'offscreen', stylePool, {
         triggerY: resetTriggerY,
         prevLine: readLine(prev.screen, resetTriggerY),
         nextLine: readLine(next.screen, resetTriggerY),
@@ -525,9 +521,9 @@ function readLine(screen: Screen, y: number): string {
   return line.trimEnd()
 }
 
-function fullResetSequence_CAUSES_FLICKER(
+function fullResetSequence(
   frame: Frame,
-  reason: FlickerReason,
+  reason: FullResetReason,
   stylePool: StylePool,
   debug?: { triggerY: number; prevLine: string; nextLine: string },
 ): Diff {

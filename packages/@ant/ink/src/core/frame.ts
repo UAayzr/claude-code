@@ -33,7 +33,7 @@ export function emptyFrame(
   }
 }
 
-export type FlickerReason = 'resize' | 'offscreen' | 'clear'
+export type FullResetReason = 'resize' | 'offscreen' | 'clear'
 
 export type FrameEvent = {
   durationMs: number
@@ -66,7 +66,7 @@ export type FrameEvent = {
   flickers: Array<{
     desiredHeight: number
     availableHeight: number
-    reason: FlickerReason
+    reason: FullResetReason
   }>
 }
 
@@ -75,7 +75,7 @@ export type Patch =
   | { type: 'clear'; count: number }
   | {
       type: 'clearTerminal'
-      reason: FlickerReason
+      reason: FullResetReason
       // Populated by log-update when a scrollback diff triggers the reset.
       // ink.tsx uses triggerY with findOwnerChainAtRow to attribute the
       // flicker to its source React component.
@@ -105,7 +105,7 @@ export type Diff = Patch[]
 export function shouldClearScreen(
   prevFrame: Frame,
   frame: Frame,
-): FlickerReason | undefined {
+): FullResetReason | undefined {
   const didResize =
     frame.viewport.height !== prevFrame.viewport.height ||
     frame.viewport.width !== prevFrame.viewport.width

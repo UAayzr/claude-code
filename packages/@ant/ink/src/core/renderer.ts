@@ -157,7 +157,7 @@ export default function createRenderer(
         // exactly `rows` tall (via <Box height={rows}>) but never
         // scrolls — the cursor.y clamp below keeps the cursor-restore
         // from emitting an LF. With the standard diff path, every frame
-        // is incremental; no fullResetSequence_CAUSES_FLICKER.
+        // is incremental; no fullResetSequence.
         height: options.altScreen ? terminalRows + 1 : terminalRows,
       },
       cursor: {

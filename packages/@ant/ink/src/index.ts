@@ -87,7 +87,7 @@ export type {
   AnsiColor,
 } from './core/styles.js'
 export type { Key } from './core/events/input-event.js'
-export type { FlickerReason, FrameEvent } from './core/frame.js'
+export type { FullResetReason, FrameEvent } from './core/frame.js'
 export type { MatchPosition } from './core/render-to-screen.js'
 export type { SelectionState, FocusMove } from './core/selection.js'
 export type { Progress } from './core/terminal.js'
