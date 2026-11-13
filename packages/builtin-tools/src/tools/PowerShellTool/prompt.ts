@@ -27,20 +27,14 @@ function getBackgroundUsageNote(): string | null {
   if (isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)) {
     return null
   }
-  return `  - You can use the \`run_in_background\` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes.`
+  return `  - You can use the \`run_in_background\` parameter to run a command in the background if you don't need the result immediately; you'll be notified when it completes.`
 }
 
 function getSleepGuidance(): string | null {
   if (isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)) {
     return null
   }
-  return `  - Avoid unnecessary \`Start-Sleep\` commands:
-    - Do not sleep between commands that can run immediately — just run them.
-    - If your command is long running and you would like to be notified when it finishes — simply run your command using \`run_in_background\`. There is no need to sleep in this case.
-    - Do not retry failing commands in a sleep loop — diagnose the root cause or consider an alternative approach.
-    - If waiting for a background task you started with \`run_in_background\`, you will be notified when it completes — do not poll.
-    - If you must poll an external process, use a check command rather than sleeping first.
-    - If you must sleep, keep the duration short (1-5 seconds) to avoid blocking the user.`
+  return `  - Avoid unnecessary \`Start-Sleep\`: just run commands that can run immediately; for long-running commands use \`run_in_background\` (you'll be notified when it completes) and don't poll or retry in a sleep loop. If you must sleep, keep it short (1-5 seconds).`
 }
 
 /**
@@ -108,14 +102,7 @@ Interactive and blocking commands (will hang — this tool runs with -NonInterac
    - Never use \`git rebase -i\`, \`git add -i\`, or other commands that open an interactive editor
 
 Passing multiline strings (commit messages, file content) to native executables:
-   - Use a single-quoted here-string so PowerShell does not expand \`$\` or backticks inside. The closing \`'@\` MUST be at column 0 (no leading whitespace) on its own line — indenting it is a parse error:
-<example>
-git commit -m @'
-Commit message here.
-Second line with $literal dollar signs.
-'@
-</example>
-   - Use \`@'...'@\` (single-quoted, literal) not \`@"..."@\` (double-quoted, interpolated) unless you need variable expansion
+   - Use a single-quoted here-string so PowerShell does not expand \`$\` or backticks inside. The closing \`'@\` MUST be at column 0 (no leading whitespace) on its own line — indenting it is a parse error. Use \`@'...'@\` (literal) not \`@"..."@\` (interpolated) unless you need variable expansion.
    - For arguments containing \`-\`, \`@\`, or other characters PowerShell parses as operators, use the stop-parsing token: \`git log --% --format=%H\`
 
 Usage notes:
@@ -124,13 +111,7 @@ Usage notes:
   - It is very helpful if you write a clear, concise description of what this command does.
   - If the output exceeds ${getMaxOutputLength()} characters, output will be truncated before being returned to you.
 ${backgroundNote ? backgroundNote + '\n' : ''}\
-  - Avoid using PowerShell to run commands that have dedicated tools, unless explicitly instructed:
-    - File search: Use ${GLOB_TOOL_NAME} (NOT Get-ChildItem -Recurse)
-    - Content search: Use ${GREP_TOOL_NAME} (NOT Select-String)
-    - Read files: Use ${FILE_READ_TOOL_NAME} (NOT Get-Content)
-    - Edit files: Use ${FILE_EDIT_TOOL_NAME}
-    - Write files: Use ${FILE_WRITE_TOOL_NAME} (NOT Set-Content/Out-File)
-    - Communication: Output text directly (NOT Write-Output/Write-Host)
+  - Avoid using PowerShell to run commands that have dedicated tools, unless explicitly instructed: file search (${GLOB_TOOL_NAME} over Get-ChildItem -Recurse), content search (${GREP_TOOL_NAME} over Select-String), read files (${FILE_READ_TOOL_NAME} over Get-Content), edit files (${FILE_EDIT_TOOL_NAME}), write files (${FILE_WRITE_TOOL_NAME} over Set-Content/Out-File), and prefer direct text output over Write-Output/Write-Host.
   - When issuing multiple commands:
     - If the commands are independent and can run in parallel, make multiple ${POWERSHELL_TOOL_NAME} tool calls in a single message.
     - If the commands depend on each other and must run sequentially, chain them in a single ${POWERSHELL_TOOL_NAME} call (see edition-specific chaining syntax above).

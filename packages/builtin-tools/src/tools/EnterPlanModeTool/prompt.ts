@@ -20,7 +20,7 @@ function getEnterPlanModeToolPromptExternal(): string {
     ? ''
     : WHAT_HAPPENS_SECTION
 
-  return `Use this tool proactively when you're about to start a non-trivial implementation task. Getting user sign-off on your approach before writing code prevents wasted effort and ensures alignment. This tool transitions you into plan mode where you can explore the codebase and design an implementation approach for user approval.
+  return `Use this tool proactively when you're about to start a non-trivial implementation task — getting user sign-off on your approach before writing code prevents wasted effort and ensures alignment. This tool transitions you into plan mode where you can explore the codebase and design an implementation approach for user approval.
 
 ## When to Use This Tool
 
@@ -46,7 +46,6 @@ ${whatHappens}## Important Notes
 
 - This tool REQUIRES user approval - they must consent to entering plan mode
 - If unsure whether to use it, err on the side of planning - it's better to get alignment upfront than to redo work
-- Users appreciate being consulted before significant changes are made to their codebase
 `
 }
 

@@ -91,20 +91,6 @@ When you need to delegate work that benefits from full conversation context (e.g
 `
     : ''
 
-  const writingThePromptSection = `
-
-## Writing the prompt
-
-${forkEnabled ? 'When spawning an agent without `fork: true`, it starts with zero context. ' : ''}Brief the agent like a smart colleague who just walked into the room — it hasn't seen this conversation, doesn't know what you've tried, doesn't understand why this task matters.
-- Explain what you're trying to accomplish and why, what you've already learned or ruled out, and enough context for the agent to make judgment calls.
-- If you need a short response, say so ("report in under 200 words").
-- Lookups: hand over the exact command. Investigations: hand over the question — prescribed steps become dead weight when the premise is wrong.
-
-${forkEnabled ? 'For non-fork agents, terse' : 'Terse'} command-style prompts produce shallow, generic work.
-
-**Never delegate understanding.** Don't write "based on your findings, fix the bug" or "based on the research, implement it." Write prompts that prove you understood: include file paths, line numbers, what specifically to change.
-`
-
   // When the gate is on, the agent list lives in an agent_listing_delta
   // attachment (see attachments.ts) instead of inline here. This keeps the
   // tool description static across MCP/plugin/permission changes so the
@@ -134,9 +120,6 @@ When using the ${AGENT_TOOL_NAME} tool, specify a subagent_type parameter to sel
   // Ant-native builds alias find/grep to embedded bfs/ugrep and remove the
   // dedicated Glob/Grep tools, so point at find via Bash instead.
   const embedded = hasEmbeddedSearchTools()
-  const fileSearchHint = embedded
-    ? '`find` via the Bash tool'
-    : `the ${GLOB_TOOL_NAME} tool`
   // The "class Foo" example is about content search. Non-embedded stays Glob
   // (original intent: find-the-file-containing). Embedded gets grep because
   // find -name doesn't look at file contents.
@@ -147,9 +130,8 @@ When using the ${AGENT_TOOL_NAME} tool, specify a subagent_type parameter to sel
     ? ''
     : `
 When NOT to use the ${AGENT_TOOL_NAME} tool:
-- If you want to read a specific file path, use the ${FILE_READ_TOOL_NAME} tool or ${fileSearchHint} instead of the ${AGENT_TOOL_NAME} tool, to find the match more quickly
-- If you are searching for a specific class definition like "class Foo", use ${contentSearchHint} instead, to find the match more quickly
-- If you are searching for code within a specific file or set of 2-3 files, use the ${FILE_READ_TOOL_NAME} tool instead of the ${AGENT_TOOL_NAME} tool, to find the match more quickly
+- For reading a specific file or searching within 2-3 files, use the ${FILE_READ_TOOL_NAME} tool instead, to find the match more quickly
+- For directed content searches like "class Foo", use ${contentSearchHint} instead, to find the match more quickly
 - Other tasks that are not related to the agent descriptions above
 `
 
@@ -177,7 +159,7 @@ Usage notes:
 - **Foreground vs background**: Use foreground (default) when you need the agent's results before you can proceed — e.g., research agents whose findings inform your next steps. Use background when you have genuinely independent work to do in parallel.`
       : ''
   }
-- To continue a previously spawned agent, use ${SEND_MESSAGE_TOOL_NAME} with the agent's ID or name as the \`to\` field. The agent resumes with its full context preserved. ${forkEnabled ? 'Each non-fork Agent invocation starts without context — provide a complete task description.' : 'Each Agent invocation starts fresh — provide a complete task description.'}
+- To continue a previously spawned agent, use ${SEND_MESSAGE_TOOL_NAME} with the agent's ID or name as the \`to\` field. The agent resumes with its full context preserved. ${forkEnabled ? 'Each non-fork Agent invocation starts without context — provide a complete task description; use `fork: true` to share your context and history instead.' : 'Each Agent invocation starts fresh — provide a complete task description.'}
 - The agent's outputs should generally be trusted
 - Clearly tell the agent whether you expect it to write code or just to do research (search, file reads, web fetches, etc.)${forkEnabled ? '' : ", since it is not aware of the user's intent"}
 - If the agent description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. Use your judgement.
@@ -194,5 +176,5 @@ Usage notes:
         ? `
 - The name, team_name, and mode parameters are not available in this context — teammates cannot spawn other teammates. Omit them to spawn a subagent.`
         : ''
-  }${whenToForkSection}${writingThePromptSection}`
+  }${whenToForkSection}`
 }
