@@ -11,7 +11,7 @@
  *   2. 工具描述源文件字节(>1KB 的 prompt.ts / constants.js)
  */
 import { spawnSync } from 'node:child_process'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const ROOT = join(__dirname, '..')

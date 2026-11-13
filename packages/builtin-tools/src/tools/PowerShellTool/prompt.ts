@@ -1,3 +1,4 @@
+import { feature } from 'bun:bundle'
 import { isEnvTruthy } from 'src/utils/envUtils.js'
 import { getMaxOutputLength } from 'src/utils/shell/outputLimits.js'
 import {
@@ -34,7 +35,13 @@ function getSleepGuidance(): string | null {
   if (isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS)) {
     return null
   }
-  return `  - Avoid unnecessary \`Start-Sleep\`: just run commands that can run immediately; for long-running commands use \`run_in_background\` (you'll be notified when it completes) and don't poll or retry in a sleep loop. If you must sleep, keep it short (1-5 seconds).`
+  const base =
+    "  - Avoid unnecessary `Start-Sleep`: just run commands that can run immediately; for long-running commands use `run_in_background` (you'll be notified when it completes) and don't poll or retry in a sleep loop."
+  // Must mirror the validateInput gate in PowerShellTool.tsx
+  // (feature('MONITOR_TOOL') && !isBackgroundTasksDisabled).
+  return feature('MONITOR_TOOL')
+    ? `${base} If you must sleep, keep it under 2 seconds (longer \`Start-Sleep\` as the first statement is blocked).`
+    : base
 }
 
 /**

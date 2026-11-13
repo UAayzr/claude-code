@@ -1,11 +1,7 @@
 import { getFeatureValue_CACHED_MAY_BE_STALE } from 'src/services/analytics/growthbook.js'
-import { getSubscriptionType } from 'src/utils/auth.js'
-import { hasEmbeddedSearchTools } from 'src/utils/embeddedTools.js'
 import { isEnvDefinedFalsy, isEnvTruthy } from 'src/utils/envUtils.js'
-import { isTeammate } from 'src/utils/teammate.js'
 import { isInProcessTeammate } from 'src/utils/teammateContext.js'
-import { FILE_READ_TOOL_NAME } from '../FileReadTool/prompt.js'
-import { GLOB_TOOL_NAME } from '../GlobTool/prompt.js'
+import { isTeammate } from 'src/utils/teammate.js'
 import { SEND_MESSAGE_TOOL_NAME } from '../SendMessageTool/constants.js'
 import { AGENT_TOOL_NAME } from './constants.js'
 import { isForkSubagentEnabled } from './forkSubagent.js'
@@ -117,58 +113,28 @@ When using the ${AGENT_TOOL_NAME} tool, specify a subagent_type parameter to sel
     return shared
   }
 
-  // Ant-native builds alias find/grep to embedded bfs/ugrep and remove the
-  // dedicated Glob/Grep tools, so point at find via Bash instead.
-  const embedded = hasEmbeddedSearchTools()
-  // The "class Foo" example is about content search. Non-embedded stays Glob
-  // (original intent: find-the-file-containing). Embedded gets grep because
-  // find -name doesn't look at file contents.
-  const contentSearchHint = embedded
-    ? '`grep` via the Bash tool'
-    : `the ${GLOB_TOOL_NAME} tool`
-  const whenNotToUseSection = forkEnabled
-    ? ''
-    : `
-When NOT to use the ${AGENT_TOOL_NAME} tool:
-- For reading a specific file or searching within 2-3 files, use the ${FILE_READ_TOOL_NAME} tool instead, to find the match more quickly
-- For directed content searches like "class Foo", use ${contentSearchHint} instead, to find the match more quickly
-- Other tasks that are not related to the agent descriptions above
-`
+  // When to use — judgment-style guidance (aligned with upstream): delegate
+  // when the task matches an agent type, when work parallelizes, or when a
+  // search would flood the context with output you only need as conclusions.
+  const whenToUseSection = `
+## When to use
 
-  // When listing via attachment, the "launch multiple agents" note is in the
-  // attachment message (conditioned on subscription there). When inline, keep
-  // the existing per-call getSubscriptionType() check.
-  const concurrencyNote =
-    !listViaAttachment && getSubscriptionType() !== 'pro'
-      ? `
-- Launch multiple agents concurrently whenever possible, to maximize performance; to do that, use a single message with multiple tool uses`
-      : ''
+Reach for this when the task matches an available agent type, when you have independent work to run in parallel, or when answering would mean reading across several files — delegate it and you keep the conclusion, not the file dumps. For a single-fact lookup where you already know the file, symbol, or value, search directly. Once you've delegated a search, don't also run it yourself — wait for the result.${forkEnabled ? ` A fork runs in the background and keeps its tool output out of your context — so you can keep chatting with the user while it works.` : ''}`
 
-  // Non-coordinator gets the full prompt with all sections
-  return `${shared}
-${whenNotToUseSection}
-
+  const usageNotes = `
 Usage notes:
-- Always include a short description (3-5 words) summarizing what the agent will do${concurrencyNote}
-- When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user with a concise summary of the result.${
+- Always include a short description (3-5 words) summarizing what the agent will do.
+- The agent's final report is not shown to the user — relay what matters.
+- To continue a previously spawned agent, use ${SEND_MESSAGE_TOOL_NAME} with the agent's ID or name as the \`to\` field. The agent resumes with its full context preserved. ${forkEnabled ? 'Each non-fork Agent invocation starts without context — provide a complete task description; use `fork: true` to share your context and history instead.' : 'Each Agent invocation starts fresh — provide a complete task description.'}
+- Each agent type's model, reasoning effort, and tools come from its definition (\`.claude/agents/*.md\` frontmatter or SDK \`agents\`).${
     // eslint-disable-next-line custom-rules/no-process-env-top-level
     !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS) &&
     !isInProcessTeammate()
       ? `
-- You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will be automatically notified when it completes — do NOT sleep, poll, or proactively check on its progress. Continue with other work or respond to the user instead.
-- **Foreground vs background**: Use foreground (default) when you need the agent's results before you can proceed — e.g., research agents whose findings inform your next steps. Use background when you have genuinely independent work to do in parallel.`
+- You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will be automatically notified when it completes — do NOT sleep, poll, or proactively check on its progress. Continue with other work or respond to the user instead.`
       : ''
   }
-- To continue a previously spawned agent, use ${SEND_MESSAGE_TOOL_NAME} with the agent's ID or name as the \`to\` field. The agent resumes with its full context preserved. ${forkEnabled ? 'Each non-fork Agent invocation starts without context — provide a complete task description; use `fork: true` to share your context and history instead.' : 'Each Agent invocation starts fresh — provide a complete task description.'}
-- The agent's outputs should generally be trusted
-- Clearly tell the agent whether you expect it to write code or just to do research (search, file reads, web fetches, etc.)${forkEnabled ? '' : ", since it is not aware of the user's intent"}
-- If the agent description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. Use your judgement.
-- If the user specifies that they want you to run agents "in parallel", you MUST send a single message with multiple ${AGENT_TOOL_NAME} tool use content blocks. For example, if you need to launch both a build-validator agent and a test-runner agent in parallel, send a single message with both tool calls.
 - You can optionally set \`isolation: "worktree"\` to run the agent in a temporary git worktree, giving it an isolated copy of the repository. The worktree is automatically cleaned up if the agent makes no changes; if changes are made, the worktree path and branch are returned in the result.${
-    process.env.USER_TYPE === 'ant'
-      ? `\n- You can set \`isolation: "remote"\` to run the agent in a remote CCR environment. This is always a background task; you'll be notified when it completes. Use for long-running tasks that need a fresh sandbox.`
-      : ''
-  }${
     isInProcessTeammate()
       ? `
 - The run_in_background, name, team_name, and mode parameters are not available in this context. Only synchronous subagents are supported.`
@@ -176,5 +142,10 @@ Usage notes:
         ? `
 - The name, team_name, and mode parameters are not available in this context — teammates cannot spawn other teammates. Omit them to spawn a subagent.`
         : ''
-  }${whenToForkSection}`
+  }`
+
+  // Non-coordinator gets the full prompt with all sections
+  return `${shared}
+${whenToUseSection}
+${usageNotes}${whenToForkSection}`
 }

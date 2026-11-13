@@ -1,4 +1,4 @@
-// 接口化精简版:删除了 6 个 few-shot 示例与 <reasoning> 教学块(原 5.8K),
+// 接口化精简版:删除了 8 个 few-shot 示例与 <reasoning> 教学块(原 9.3K),
 // 保留「何时用/何时不用」决策规则与 content/activeForm 接口事实。
 export const PROMPT = `Use this tool to create and manage a structured task list for your current coding session. This helps you track progress, organize complex tasks, and keep the user informed of overall progress.
 
