@@ -65,3 +65,4 @@ fixtures/
 
 # 浏览器 MCP 会话产物(快照/控制台日志,运行时生成)
 .playwright-mcp/
+.zawu/
