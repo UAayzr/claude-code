@@ -93,14 +93,9 @@ Pin minute/hour/day-of-month/month to specific values:
 For "every N minutes" / "every hour" / "weekdays at 9am" requests:
   "*/5 * * * *" (every 5 min), "0 * * * *" (hourly), "0 9 * * 1-5" (weekdays at 9am local)
 
-## Avoid the :00 and :30 minute marks when the task allows it
+## Time choices
 
-Every user who asks for "9am" gets \`0 9\`, and every user who asks for "hourly" gets \`0 *\` — which means requests from across the planet land on the API at the same instant. When the user's request is approximate, pick a minute that is NOT 0 or 30:
-  "every morning around 9" → "57 8 * * *" or "3 9 * * *" (not "0 9 * * *")
-  "hourly" → "7 * * * *" (not "0 * * * *")
-  "in an hour or so, remind me to..." → pick whatever minute you land on, don't round
-
-Only use minute 0 or 30 when the user names that exact time and clearly means it ("at 9:00 sharp", "at half past", coordinating with a meeting). When in doubt, nudge a few minutes early or late — the user will not notice, and the fleet will.
+When the user's requested time is approximate, pick an off-minute cron rather than rounding to \`:00\`/\`:30\`: "every morning around 9" → "57 8 * * *" (not "0 9 * * *"), "hourly" → "7 * * * *" (not "0 * * * *"). Use minute 0 or 30 only when the user names that exact time and clearly means it ("at 9:00 sharp", "at half past").
 
 ${durabilitySection}
 
