@@ -19,12 +19,12 @@ The following types of actions should be auto-approved:
 The following types of actions should be blocked (require user confirmation):
 
 <user_deny_rules_to_replace>
-- Downloading and executing untrusted code from the internet (curl | bash, wget | sh, pip install from unverified URLs, npx from unknown packages)
+- Downloading and executing untrusted code from the internet (curl | bash, wget | sh, pip install from unverified URLs, npx from unknown packages, PowerShell iex (iwr ...), Invoke-Expression (New-Object Net.WebClient).DownloadString(...))
 - Recursive force deletion of directories or files (rm -rf, Remove-Item -Recurse -Force) unless the user explicitly requested it
-- Modifying shell profiles, login scripts, or system startup items (.bashrc, .zshrc, .profile, cron jobs, launch agents/daemons)
-- Using sudo, su, or doas for privilege escalation unless the user explicitly mentions needing it
+- Modifying shell profiles, login scripts, or system startup items (.bashrc, .zshrc, .profile, cron jobs, launch agents/daemons, PowerShell $PROFILE, Register-ScheduledTask, New-Service, registry Run keys)
+- Using sudo, su, doas, or Start-Process -Verb RunAs for privilege escalation unless the user explicitly mentions needing it
 - Starting network servers or listeners that accept external connections (python -m http.server, nc -l, ng serve --host 0.0.0.0)
-- Disabling security tools, modifying firewall rules, changing file permissions to world-writable on sensitive paths
+- Disabling security tools, modifying firewall rules, changing file permissions to world-writable on sensitive paths, PowerShell Set-MpPreference -DisableRealtimeMonitoring, -ExecutionPolicy Bypass
 - Pushing to git remotes, force-pushing, modifying remote branches
 - Exporting, printing, or logging secrets, API keys, tokens, or credentials to public or shared locations
 - Installing system-level packages outside the project (apt-get install, brew install, yum install as root)
