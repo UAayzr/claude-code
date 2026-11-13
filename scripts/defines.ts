@@ -39,7 +39,6 @@ export function getMacroDefines(): Record<string, string> {
 export const DEFAULT_BUILD_FEATURES = [
   'BUDDY', // 陪伴宠物角色（Squirtle Waddles）
   'TRANSCRIPT_CLASSIFIER', // 对话分类器，用于标注会话类型
-  'POWERSHELL_AUTO_MODE', // PowerShell 工具校验通过 AI 分类器(auto mode 审批)
   'BRIDGE_MODE', // Remote Control / Bridge 模式，远程控制会话
   'AGENT_TRIGGERS_REMOTE', // sessionIngress 模块级 Map 累积（非 GB 级主因）
   'CHICAGO_MCP', // Chicago MCP 集成（内部代号）

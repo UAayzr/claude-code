@@ -430,16 +430,8 @@ export async function buildYoloSystemPrompt(
   const includeBashPromptRules = feature('BASH_CLASSIFIER')
     ? !usingExternal
     : false
-  // PowerShell 危险引导对 external 构建同样生效:flag 开即拼接。
-  // POWERSHELL_DENY_GUIDANCE 常量本身已由 feature('POWERSHELL_AUTO_MODE')
-  // 门控(flag 关时编译为空数组,DCE 消除),因此这里无需再依赖
-  // usingExternal——外部构建的 UAayzr 用户同样需要分类器识别
-  // iex(iwr) 下载执行 / Remove-Item -Recurse -Force / $PROFILE 等
-  // PowerShell 特有攻击面(Bash 泛化规则覆盖不全)。
-  // 注:feature() 只能用于三元/if 条件位置(Bun 编译器约束),故用
-  // `? true : false` 形式展开,flag 编译期替换后等价于其真值。
   const includePowerShellGuidance = feature('POWERSHELL_AUTO_MODE')
-    ? true
+    ? !usingExternal
     : false
   const allowDescriptions = [
     ...(includeBashPromptRules ? getBashPromptAllowDescriptions(context) : []),
