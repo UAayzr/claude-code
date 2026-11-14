@@ -5,7 +5,13 @@ mock.module('bun:bundle', () => ({
 }))
 
 let settingsJson: { cyberRisk?: unknown } = {}
+// Spread the real module so other exports stay intact. Bun's mock.module is
+// process-global, so replacing settings.js with only getInitialSettings breaks
+// any later test whose import chain reaches settings.js (e.g. tools.test.ts ->
+// searchExtraTools.js -> memdir/paths.js needs getSettingsForSource).
+const realSettings = await import('src/utils/settings/settings.js')
 mock.module('src/utils/settings/settings.js', () => ({
+  ...realSettings,
   getInitialSettings: () => settingsJson,
 }))
 

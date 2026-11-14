@@ -5,7 +5,13 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 const settingsState: { defaultShell?: 'bash' | 'powershell' } = {}
 
+// Spread the real module: Bun's mock.module is process-global, so replacing
+// settings.js with only getInitialSettings breaks any later test whose import
+// chain reaches other exports (e.g. autoModeConfig.test.ts needs
+// mergeAutoModeConfigs).
+const realSettings = await import('src/utils/settings/settings.js')
 mock.module('src/utils/settings/settings.js', () => ({
+  ...realSettings,
   getInitialSettings: () => ({ ...settingsState }),
 }))
 

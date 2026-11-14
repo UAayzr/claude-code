@@ -4,7 +4,13 @@ import { describe, expect, test, beforeEach, afterEach, mock } from 'bun:test'
 mock.module('src/utils/thinking.js', () => ({
   isUltrathinkEnabled: () => false,
 }))
+// Spread the real module: Bun's mock.module is process-global, so replacing
+// settings.js with only getInitialSettings breaks any later test whose import
+// chain reaches other exports (e.g. autoModeConfig.test.ts needs
+// mergeAutoModeConfigs).
+const realSettings = await import('src/utils/settings/settings.js')
 mock.module('src/utils/settings/settings.js', () => ({
+  ...realSettings,
   getInitialSettings: () => ({}),
 }))
 mock.module('src/utils/auth.js', () => ({

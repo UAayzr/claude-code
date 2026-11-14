@@ -10,12 +10,6 @@ mock.module('src/utils/log.ts', logMock)
 // bun:bundle must be mocked before imports that use feature()
 mock.module('bun:bundle', () => ({ feature: () => false }))
 
-// settings.js must be mocked to cut bootstrap chain
-mock.module('src/utils/settings/settings.js', () => ({
-  getSettings_DEPRECATED: () => ({}),
-  updateSettingsForSource: () => {},
-}))
-
 let tmpDir: string
 
 beforeEach(() => {

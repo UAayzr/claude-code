@@ -3,10 +3,6 @@ import { logMock } from '../../../../tests/mocks/log.js'
 
 mock.module('src/utils/log.ts', logMock)
 mock.module('bun:bundle', () => ({ feature: () => false }))
-mock.module('src/utils/settings/settings.js', () => ({
-  getSettings_DEPRECATED: () => ({}),
-  updateSettingsForSource: () => {},
-}))
 
 beforeEach(() => {
   // Clean OpenAI env vars before each test

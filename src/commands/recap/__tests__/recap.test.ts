@@ -19,13 +19,6 @@ mock.module('src/utils/debug.ts', () => ({
   isDebug: () => false,
 }))
 
-// Mock settings to avoid filesystem side effects
-mock.module('src/utils/settings/settings.js', () => ({
-  getCachedSettings: () => ({}),
-  getSettings: async () => ({}),
-  updateSettings: async () => {},
-}))
-
 // Mock analytics (GrowthBook) — required for isEnabled()
 let gbValue = true
 mock.module('src/services/analytics/growthbook.js', () => ({

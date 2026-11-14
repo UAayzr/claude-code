@@ -11,10 +11,10 @@ import { debugMock } from '../../../../tests/mocks/debug'
 mock.module('src/utils/log.ts', logMock)
 mock.module('src/utils/debug.ts', debugMock)
 mock.module('bun:bundle', () => ({ feature: () => false }))
-mock.module('src/utils/settings/settings.js', () => ({
-  getCachedOrDefaultSettings: () => ({}),
-  getSettings: () => ({}),
-}))
+// Keep the real settings module intact: Bun's mock.module is process-global,
+// so a partial replacement leaks into later tests in the same process.
+const realSettings = await import('src/utils/settings/settings.js')
+mock.module('src/utils/settings/settings.js', () => ({ ...realSettings }))
 mock.module('src/utils/config.ts', () => ({
   isConfigEnabled: () => true,
   getGlobalConfig: () => ({
