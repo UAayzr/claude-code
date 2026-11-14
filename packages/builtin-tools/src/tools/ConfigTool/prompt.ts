@@ -65,7 +65,15 @@ ${globalSettings.join('\n')}
 ### Project Settings (stored in settings.json)
 ${projectSettings.join('\n')}
 
-${modelSection}`
+${modelSection}
+## Examples
+- Get theme: { "setting": "theme" }
+- Set dark theme: { "setting": "theme", "value": "dark" }
+- Enable vim mode: { "setting": "editorMode", "value": "vim" }
+- Enable verbose: { "setting": "verbose", "value": true }
+- Change model: { "setting": "model", "value": "opus" }
+- Change permission mode: { "setting": "permissions.defaultMode", "value": "plan" }
+`
 }
 
 function generateModelSection(): string {
