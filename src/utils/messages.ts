@@ -260,6 +260,28 @@ export function isClassifierDenial(content: string): boolean {
 }
 
 /**
+ * Extract just the classifier's reason from a denial message, dropping the
+ * boilerplate buildYoloRejectionMessage appends (workaround guidance, rule
+ * hints). Returns null when the content is not a classifier denial.
+ *
+ * Used by the UI to show the user why auto mode blocked the action — the full
+ * message stays in the tool_result so the model still sees the guidance.
+ */
+export function extractClassifierDenialReason(content: string): string | null {
+  if (!isClassifierDenial(content)) return null
+  const rest = content.slice(AUTO_MODE_REJECTION_PREFIX.length)
+  // buildYoloRejectionMessage appends this exact guidance sentence after the
+  // reason; everything before it is the classifier's reason. The full sentence
+  // is used as the anchor so a reason that merely contains a similar phrase
+  // isn't truncated early.
+  const end = rest.indexOf(
+    ". If you have other tasks that don't depend on this action",
+  )
+  const reason = end > 0 ? rest.slice(0, end) : rest
+  return reason.trim() || null
+}
+
+/**
  * Build a rejection message for auto mode classifier denials.
  * Encourages continuing with other tasks and suggests permission rules.
  *

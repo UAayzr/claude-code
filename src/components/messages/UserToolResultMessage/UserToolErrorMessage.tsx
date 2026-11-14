@@ -1,11 +1,11 @@
 import { feature } from 'bun:bundle';
 import type { ToolResultBlockParam } from '@anthropic-ai/sdk/resources/index.mjs';
 import * as React from 'react';
-import { BULLET_OPERATOR } from '../../../constants/figures.js';
 import { Text } from '@anthropic/ink';
 import { filterToolProgressMessages, type Tool, type Tools } from '../../../Tool.js';
 import type { ProgressMessage } from '../../../types/message.js';
 import {
+  extractClassifierDenialReason,
   INTERRUPT_MESSAGE_FOR_TOOL_USE,
   isClassifierDenial,
   PLAN_REJECTION_PREFIX,
@@ -53,9 +53,16 @@ export function UserToolErrorMessage({
   }
 
   if (feature('TRANSCRIPT_CLASSIFIER') && typeof param.content === 'string' && isClassifierDenial(param.content)) {
+    // Show the classifier's actual reason to the user. The full message
+    // (with workaround guidance and rule hints) still goes to the model via
+    // the tool_result; here we render only the reason.
+    const reason = extractClassifierDenialReason(param.content);
     return (
-      <MessageResponse height={1}>
-        <Text dimColor>Denied by auto mode classifier {BULLET_OPERATOR} /feedback if incorrect</Text>
+      <MessageResponse>
+        <Text wrap="wrap">
+          <Text dimColor>Denied by auto mode classifier</Text>
+          {reason ? <Text color="subtle">: {reason}</Text> : null}
+        </Text>
       </MessageResponse>
     );
   }

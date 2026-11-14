@@ -23,6 +23,7 @@ import {
   normalizeMessages,
   normalizeMessagesForAPI,
   isClassifierDenial,
+  extractClassifierDenialReason,
   buildYoloRejectionMessage,
   buildClassifierUnavailableMessage,
   AUTO_REJECT_MESSAGE,
@@ -430,6 +431,39 @@ describe('isClassifierDenial', () => {
 
   test('returns false for normal content', () => {
     expect(isClassifierDenial('hello world')).toBe(false)
+  })
+})
+
+// ─── extractClassifierDenialReason ──────────────────────────────────────
+
+describe('extractClassifierDenialReason', () => {
+  test('extracts the reason and drops the appended guidance', () => {
+    const content = buildYoloRejectionMessage(
+      '[Security Weaken] disabling the guard',
+    )
+    expect(extractClassifierDenialReason(content)).toBe(
+      '[Security Weaken] disabling the guard',
+    )
+  })
+
+  test('returns null for non-classifier content', () => {
+    expect(extractClassifierDenialReason('hello world')).toBeNull()
+  })
+
+  test('returns the whole remainder when the guidance suffix is absent', () => {
+    expect(
+      extractClassifierDenialReason(
+        'Permission for this action has been denied. Reason: unsafe command',
+      ),
+    ).toBe('unsafe command')
+  })
+
+  test('returns null when the reason is empty', () => {
+    expect(
+      extractClassifierDenialReason(
+        'Permission for this action has been denied. Reason: ',
+      ),
+    ).toBeNull()
   })
 })
 
