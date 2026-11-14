@@ -126,7 +126,7 @@ Usage notes:
 - Always include a short description (3-5 words) summarizing what the agent will do.
 - The agent's final report is not shown to the user — relay what matters.
 - To continue a previously spawned agent, use ${SEND_MESSAGE_TOOL_NAME} with the agent's ID or name as the \`to\` field. The agent resumes with its full context preserved. ${forkEnabled ? 'Each non-fork Agent invocation starts without context — provide a complete task description; use `fork: true` to share your context and history instead.' : 'Each Agent invocation starts fresh — provide a complete task description.'}
-- Each agent type's model, reasoning effort, and tools come from its definition (\`.claude/agents/*.md\` frontmatter or SDK \`agents\`).${
+- Each agent type's model, reasoning effort, and tools come from its definition (\`.uaayzr/agents/*.md\` frontmatter or SDK \`agents\`).${
     // eslint-disable-next-line custom-rules/no-process-env-top-level
     !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS) &&
     !isInProcessTeammate()
