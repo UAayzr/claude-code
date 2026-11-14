@@ -8,6 +8,9 @@
  *   import { stateMock } from '../../../tests/mocks/state'
  *   mock.module('src/bootstrap/state.js', stateMock)
  */
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 export function stateMock() {
   const noop = () => {}
   return {
@@ -19,10 +22,10 @@ export function stateMock() {
     onSessionSwitch: () => () => {},
 
     // CWD / project
-    getOriginalCwd: () => '/mock/cwd',
+    getOriginalCwd: () => join(tmpdir(), 'uaayzr-mock-cwd'),
     getSessionProjectDir: () => null,
-    getProjectRoot: () => '/mock/project',
-    getCwdState: () => '/mock/cwd',
+    getProjectRoot: () => join(tmpdir(), 'uaayzr-mock-project'),
+    getCwdState: () => join(tmpdir(), 'uaayzr-mock-cwd'),
     setCwdState: noop,
     setOriginalCwd: noop,
     setProjectRoot: noop,

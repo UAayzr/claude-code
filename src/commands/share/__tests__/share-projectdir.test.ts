@@ -92,8 +92,8 @@ let _mockProjectDir: string | null = null
 mock.module('src/bootstrap/state.js', () => ({
   getSessionId: () => 'test-session-pd',
   getSessionProjectDir: () => _mockProjectDir,
-  getOriginalCwd: () => '/mock/cwd',
-  getProjectRoot: () => '/mock/project',
+  getOriginalCwd: () => join(tmpdir(), 'uaayzr-mock-cwd'),
+  getProjectRoot: () => join(tmpdir(), 'uaayzr-mock-project'),
   getIsNonInteractiveSession: () => false,
   regenerateSessionId: () => {},
   getParentSessionId: () => undefined,
@@ -143,7 +143,7 @@ mock.module('src/bootstrap/state.js', () => ({
   getLastAPIRequestMessages: () => [],
   getSdkAgentProgressSummariesEnabled: () => false,
   addSlowOperation: () => {},
-  getCwdState: () => '/mock/cwd',
+  getCwdState: () => join(tmpdir(), 'uaayzr-mock-cwd'),
   setCwdState: () => {},
 }))
 

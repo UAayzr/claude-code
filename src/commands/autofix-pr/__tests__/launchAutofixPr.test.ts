@@ -7,6 +7,8 @@ import {
   mock,
   test,
 } from 'bun:test'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { LocalJSXCommandCall } from '../../../types/command.js'
 import { debugMock } from '../../../../tests/mocks/debug.js'
 import { logMock } from '../../../../tests/mocks/log.js'
@@ -112,10 +114,10 @@ mock.module('src/bootstrap/state.js', () => ({
   getSessionId: () => 'parent-session-id',
   getParentSessionId: () => undefined,
   // Additional exports needed by transitive imports (e.g. cwd.ts, sandbox-adapter.ts)
-  getCwdState: () => '/mock/cwd',
-  getOriginalCwd: () => '/mock/cwd',
+  getCwdState: () => join(tmpdir(), 'uaayzr-mock-cwd'),
+  getOriginalCwd: () => join(tmpdir(), 'uaayzr-mock-cwd'),
   getSessionProjectDir: () => null,
-  getProjectRoot: () => '/mock/project',
+  getProjectRoot: () => join(tmpdir(), 'uaayzr-mock-project'),
   setCwdState: noop,
   setOriginalCwd: noop,
   setLastAPIRequestMessages: noop,
