@@ -1,16 +1,5 @@
-import { toJSONSchema } from 'zod/v4'
-import { SettingsSchema } from '../../utils/settings/types.js'
-import { jsonStringify } from '../../utils/slowOperations.js'
 import { registerBundledSkill } from '../bundledSkills.js'
-
-/**
- * Generate JSON Schema from the settings Zod schema.
- * This keeps the skill prompt in sync with the actual types.
- */
-function generateSettingsSchema(): string {
-  const jsonSchema = toJSONSchema(SettingsSchema(), { io: 'input' })
-  return jsonStringify(jsonSchema, null, 2)
-}
+import { generateSettingsJSONSchema } from '../../utils/settings/schemaOutput.js'
 
 const SETTINGS_EXAMPLES_DOCS = `## Settings File Locations
 
@@ -459,8 +448,11 @@ export function registerUpdateConfigSkill(): void {
         return [{ type: 'text', text: prompt }]
       }
 
-      // Generate schema dynamically to stay in sync with types
-      const jsonSchema = generateSettingsSchema()
+      // 生成 settings 的 JSON Schema，让技能提示词与实际类型保持同步。
+      // 复用 schemaOutput 里的统一实现：它带了 unrepresentable: 'any'，
+      // 能容忍 enabledPlugins 字段里的 z.undefined()（zod v4 无法把
+      // undefined 表达成 JSON Schema，不加该选项会直接抛错）。
+      const jsonSchema = generateSettingsJSONSchema()
 
       let prompt = UPDATE_CONFIG_PROMPT
       prompt += `\n\n## Full Settings JSON Schema\n\n\`\`\`json\n${jsonSchema}\n\`\`\``
