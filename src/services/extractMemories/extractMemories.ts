@@ -15,7 +15,7 @@
 
 import { feature } from 'bun:bundle'
 import { basename } from 'path'
-import { getIsRemoteMode } from '../../bootstrap/state.js'
+import { getIsRemoteMode, getTotalOutputTokens } from '../../bootstrap/state.js'
 import type { CanUseToolFn } from '../../hooks/useCanUseTool.js'
 import { ENTRYPOINT_NAME } from '../../memdir/memdir.js'
 import {
@@ -65,6 +65,23 @@ const teamMemPaths = feature('TEAMMEM')
   ? (require('../../memdir/teamMemPaths.js') as typeof import('../../memdir/teamMemPaths.js'))
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+// ============================================================================
+// 会话级触发门槛 —— 需要调整提取频率时，只改下面两个数字
+// ============================================================================
+
+/** 自动提取需要的最小会话时长（毫秒）。当前为 20 分钟。
+ *
+ *  含义：本次进程启动之后，至少运行这么久才会触发自动记忆提取。
+ *  这样闲聊几分钟就结束的会话不会被提取。 */
+const EXTRACT_MIN_UPTIME_MS = 20 * 60 * 1000
+
+/** 自动提取需要的最小累计输出 token 数。当前为 2 万。
+ *
+ *  含义：模型累计输出达到这个量，才算「真的干过活」，而不是随便聊了两句。
+ *  注意：这个计数是整个进程累计的，包含后台任务（提示建议、上下文压缩等）
+ *  的消耗，因此比用户实际看到的模型输出略高一些。 */
+const EXTRACT_MIN_OUTPUT_TOKENS = 20_000
 
 // ============================================================================
 // Helpers
@@ -312,6 +329,15 @@ export function initExtractMemories(): void {
   /** Counts eligible turns since the last extraction run. Resets to 0 after each run. */
   let turnsSinceLastExtraction = 0
 
+  /** 上次成功写入记忆时，进程累计输出 token 是多少。
+   *  null 表示本次会话还没成功提取过。
+   *
+   *  为什么用 token 数而不是布尔值来判断「本会话是否已提取」：
+   *  用户执行 /clear 时，底层的 token 计数会被清零。清零后当前 token 数
+   *  一定小于这里记录的值，于是判定自动变成「新会话」，无需额外监听
+   *  sessionId 变化。这是一个顺带实现的复位机制。 */
+  let outputTokensAtLastSave: number | null = null
+
   /** When a call arrives during an in-progress run, we stash the context here
    *  and run one trailing extraction after the current one finishes. */
   let pendingContext:
@@ -384,6 +410,7 @@ export function initExtractMemories(): void {
 
     inProgress = true
     const startTime = Date.now()
+    let didExtract = false
     try {
       logForDebugging(
         `[extractMemories] starting — ${newMessageCount} new messages, memoryDir=${memoryDir}`,
@@ -491,6 +518,14 @@ export function initExtractMemories(): void {
         }
         appendSystemMessage?.(msg)
       }
+
+      // 只有真正写入了记忆文件，才认为「本次会话已提取过」。
+      // 如果模型跑完但一个文件都没写，说明它判断本次对话没有值得记的内容。
+      // 这种情况下不记录水位，下次满足条件时还能再试一次。
+      if (writtenPaths.length > 0) {
+        outputTokensAtLastSave = getTotalOutputTokens()
+        didExtract = true
+      }
     } catch (error) {
       // Extraction is best-effort — log but don't notify on error
       logForDebugging(`[extractMemories] error: ${error}`)
@@ -500,19 +535,21 @@ export function initExtractMemories(): void {
     } finally {
       inProgress = false
 
-      // If a call arrived while we were running, run a trailing extraction
-      // with the latest stashed context. The trailing run will compute its
-      // newMessageCount relative to the cursor we just advanced — so it only
-      // picks up messages added between the two calls, not the full history.
-      const trailing = pendingContext
+      // 如果提取期间又有新的一轮对话结束，它会把上下文暂存到 pendingContext。
+      // 这里在当前提取结束后补跑一次，只处理两次调用之间新增的消息。
+      //
+      // 但只有在本次提取「没有成功保存」时才补跑。
+      // 原因是补跑不经过 executeExtractMemoriesImpl 的门槛检查，
+      // 如果本次已经成功保存过，补跑会导致一个会话弹出两次提示。
+      const trailingContext = pendingContext
       pendingContext = undefined
-      if (trailing) {
+      if (trailingContext && !didExtract) {
         logForDebugging(
           '[extractMemories] running trailing extraction for stashed context',
         )
         await runExtraction({
-          context: trailing.context,
-          appendSystemMessage: trailing.appendSystemMessage,
+          context: trailingContext.context,
+          appendSystemMessage: trailingContext.appendSystemMessage,
           isTrailingRun: true,
         })
       }
@@ -545,6 +582,48 @@ export function initExtractMemories(): void {
 
     // Skip in remote mode
     if (getIsRemoteMode()) {
+      return
+    }
+
+    // ── 会话级门槛 ──
+    // 目的：只在真正干过活的会话里提取一次，避免聊几句就弹 Saved N memories。
+    //
+    // 三道检查按「最便宜的先判断」排序，任意一道不通过就直接返回。
+    // 这里全部使用 logForDebugging 而不是 logEvent：本函数每轮对话都会执行，
+    // 用 logEvent 会向分析服务发送大量重复事件。
+
+    const currentOutputTokens = getTotalOutputTokens()
+
+    // 检查一：本会话是否已经提取过。
+    // 如果上次成功保存时记录了 token 水位，而现在 token 数没有下降，
+    // 说明还是同一个会话，直接跳过。
+    // 反过来，如果 token 数变小了（用户执行了 /clear），视为新会话，放行。
+    if (
+      outputTokensAtLastSave !== null &&
+      currentOutputTokens >= outputTokensAtLastSave
+    ) {
+      return
+    }
+
+    // 检查二：本次进程是否运行够久。
+    // 用 process.uptime() 而不是 getTotalDuration()，因为后者在 --resume
+    // 恢复旧会话时会被还原成上次的时长，导致一开口就触发。
+    // process.uptime() 始终从本次进程启动算起，语义正确。
+    const uptimeMs = process.uptime() * 1000
+    if (uptimeMs < EXTRACT_MIN_UPTIME_MS) {
+      const uptimeSeconds = Math.floor(uptimeMs / 1000)
+      logForDebugging(
+        `[extractMemories] 跳过：进程仅运行 ${uptimeSeconds} 秒，未达到 ${EXTRACT_MIN_UPTIME_MS / 1000} 秒`,
+      )
+      return
+    }
+
+    // 检查三：累计输出 token 是否够多。
+    // 防止「开着窗口挂机 20 分钟但没怎么干活」也触发提取。
+    if (currentOutputTokens < EXTRACT_MIN_OUTPUT_TOKENS) {
+      logForDebugging(
+        `[extractMemories] 跳过：累计输出 ${currentOutputTokens} token，未达到 ${EXTRACT_MIN_OUTPUT_TOKENS}`,
+      )
       return
     }
 
