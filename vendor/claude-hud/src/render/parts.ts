@@ -1,16 +1,18 @@
-import type { FirstLineSegment, PathLevels } from '../config.js';
-import { DEFAULT_CONFIG } from '../config.js';
-import { formatAuthSegment } from '../auth.js';
-import { formatUsd } from '../cost.js';
-import { formatModelName, getProviderLabel, resolveModelName } from '../stdin.js';
-import { t } from '../i18n/index.js';
-import { formatTokens } from '../utils/format.js';
-import { getFileHref, safeHyperlink } from '../utils/hyperlinks.js';
-import { sanitizeDisplayText } from '../utils/sanitize.js';
-import type { Frame, Layout } from './frame.js';
-import { custom, dim, label, model as modelColor, project as projectColor } from './colors.js';
-import { claudeCodeVersion, effort, sessionCostUsd, sessionDuration, sessionName } from './derive.js';
-import { vcsPart } from './vcs.js';
+import type { FirstLineSegment, PathLevels } from '../config.ts';
+import { DEFAULT_CONFIG } from '../config.ts';
+import { formatAuthSegment } from '../auth.ts';
+import { formatEffort } from '../effort.ts';
+import { formatUsd } from '../cost.ts';
+import { formatModelName, getProviderLabel, resolveModelName } from '../stdin.ts';
+import { t } from '../i18n/index.ts';
+import { formatTokens } from '../utils/format.ts';
+import { getFileHref, safeHyperlink } from '../utils/hyperlinks.ts';
+import { displayLabel, sanitizeDisplayText } from '../utils/sanitize.ts';
+import { truncateString } from '../utils/truncate.ts';
+import type { Frame, Layout } from './frame.ts';
+import { custom, dim, label, model as modelColor, project as projectColor } from './colors.ts';
+import { claudeCodeVersion, effort, sessionCostUsd, sessionDuration, sessionName } from './derive.ts';
+import { vcsPart } from './vcs.ts';
 
 /** A first-line part; `key` lets projectLineOrder move it, null keeps its slot. */
 export interface Part {
@@ -21,10 +23,7 @@ export interface Part {
 function effortSuffix(f: Frame): string {
   const display = f.config?.display;
   const info = display?.showEffortLevel ? effort(f) : null;
-  if (!info) return '';
-  // The symbol alone can't carry the ultracode marker, so symbol mode keeps the full form.
-  if (display?.effortFormat === 'symbol' && info.symbol && !info.level.startsWith('ultracode(')) return ` ${info.symbol}`;
-  return display?.effortFormat === 'text' || !info.symbol ? ` ${info.level}` : ` ${info.symbol} ${info.level}`;
+  return info ? ` ${formatEffort(info, display?.effortFormat)}` : '';
 }
 
 /** `[Opus 5.5 ◑ high | Bedrock]`, or with the provider first when showProvider is on. */
@@ -41,10 +40,12 @@ export function modelBadge(f: Frame): string {
   return modelColor(`[${text}]`, f.config?.colors);
 }
 
+const pathSegments = (path: string): string[] => path.split(/[/\\]/).filter(Boolean);
+
 /** An untrusted cwd shown with the configured number of trailing segments, on POSIX and Windows. */
 function formatProjectPath(cwd: string, pathLevels: PathLevels): string {
   const safe = sanitizeDisplayText(cwd);
-  const segments = safe.split(/[/\\]/).filter(Boolean);
+  const segments = pathSegments(safe);
   if (pathLevels !== 'full') {
     return segments.slice(-pathLevels).join('/') || (/^[/\\]/.test(safe) ? '/' : safe);
   }
@@ -52,6 +53,19 @@ function formatProjectPath(cwd: string, pathLevels: PathLevels): string {
   if (/^[A-Za-z]:[\\/]/.test(safe)) return segments.length === 1 ? `${segments[0]}/` : segments.join('/');
   if (/^[\\/]/.test(safe)) return segments.length > 0 ? `/${segments.join('/')}` : '/';
   return segments.join('/') || safe;
+}
+
+/**
+ * The name of the directory Claude Code was launched in, when the shown path no
+ * longer includes it: cwd left it or is pathLevels or more below it.
+ */
+function launchDirName(cwd: string, launchDir: unknown, pathLevels: PathLevels): string | null {
+  if (pathLevels === 'full' || typeof launchDir !== 'string') return null;
+  const launch = pathSegments(sanitizeDisplayText(launchDir));
+  const current = pathSegments(sanitizeDisplayText(cwd));
+  const inside = launch.every((segment, i) => current[i] === segment);
+  if (inside && current.length - launch.length < pathLevels) return null;
+  return launch.at(-1) ?? null;
 }
 
 const MAX_ADDED_DIRS = 5;
@@ -63,9 +77,9 @@ function addedDirNames(f: Frame): Array<{ dir: string; name: string }> {
   return dirs
     .filter((dir): dir is string => typeof dir === 'string' && dir.length > 0)
     .map((dir) => {
-      const segments = dir.split(/[/\\]/).filter(Boolean);
+      const segments = pathSegments(dir);
       const name = sanitizeDisplayText(segments[segments.length - 1] ?? dir);
-      return { dir, name: name.length > ADDED_DIR_NAME_MAX ? `${name.slice(0, ADDED_DIR_NAME_MAX - 1)}…` : name };
+      return { dir, name: truncateString(name, ADDED_DIR_NAME_MAX, '…') };
     })
     .filter(({ name }) => name.length > 0);
 }
@@ -88,7 +102,10 @@ export function projectParts(f: Frame, layout: Layout): string[] {
   const colors = f.config?.colors;
   let project: string | null = null;
   if (display?.showProject !== false && f.stdin.cwd) {
-    const text = projectColor(formatProjectPath(f.stdin.cwd, f.config?.pathLevels ?? 1), colors);
+    const pathLevels = f.config?.pathLevels ?? 1;
+    const path = formatProjectPath(f.stdin.cwd, pathLevels);
+    const launch = display?.showLaunchDir ? launchDirName(f.stdin.cwd, f.stdin.workspace?.project_dir, pathLevels) : null;
+    const text = projectColor(launch ? `${launch} › ${path}` : path, colors);
     project = layout === 'expanded' ? safeHyperlink(getFileHref(f.stdin.cwd), text) : text;
   }
   if (layout === 'expanded' && display?.showAddedDirs !== false && (display?.addedDirsLayout ?? 'inline') === 'inline') {
@@ -121,7 +138,7 @@ function prettifyAdvisorId(rawId: string): string {
 export function advisorPart(f: Frame): string | null {
   const display = f.config?.display;
   if (display?.showAdvisor !== true) return null;
-  const clean = (value: unknown): string => (typeof value === 'string' ? sanitizeDisplayText(value.trim()).slice(0, ADVISOR_MAX_LENGTH) : '');
+  const clean = (value: unknown): string => displayLabel(value, ADVISOR_MAX_LENGTH);
   const override = clean(display.advisorOverride);
   const name = override || clean(prettifyAdvisorId(clean(f.transcript?.advisorModel)));
   return name ? `${label(`${t('label.advisor')}:`, f.config?.colors)} ${name}` : null;

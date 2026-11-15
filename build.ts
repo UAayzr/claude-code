@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile, cp } from 'fs/promises'
 import { join } from 'path'
 import { getMacroDefines } from './scripts/defines.ts'
 import { DEFAULT_BUILD_FEATURES } from './scripts/defines.ts'
+import { copyClaudeHud } from './scripts/copy-hud.ts'
 
 const outdir = 'dist'
 
@@ -96,23 +97,10 @@ const soundsDir = join(outdir, 'vendor', 'sounds')
 await cp('src/utils/vendor/sounds', soundsDir, { recursive: true })
 console.log(`Copied src/utils/vendor/sounds/ → ${soundsDir}/`)
 
-// Step 4.5: Compile vendored claude-hud (statusline HUD). Source is TS with
-// zero npm runtime deps; build bundles it into dist/vendor/claude-hud/index.js.
-const hudOut = join(outdir, 'vendor', 'claude-hud')
-const hudResult = await Bun.build({
-  entrypoints: ['vendor/claude-hud/src/index.ts'],
-  outdir: hudOut,
-  target: 'node',
-  format: 'esm',
-})
-if (!hudResult.success) {
-  console.error('claude-hud build failed:')
-  for (const log of hudResult.logs) {
-    console.error(log)
-  }
-  process.exit(1)
-}
-console.log(`Built vendor/claude-hud/ → ${hudOut}/`)
+// Step 4.5: Copy vendored claude-hud (statusline HUD). 0.15+ is a multi-file
+// runtime (hud.mjs → collector.mjs → node src/main.ts) that resolves its own
+// neighbours via import.meta.url, so bundling it would silently produce no output.
+await copyClaudeHud(outdir)
 
 // Step 5: Generate cli-bun and cli-node executable entry points
 const cliBun = join(outdir, 'cli-bun.js')

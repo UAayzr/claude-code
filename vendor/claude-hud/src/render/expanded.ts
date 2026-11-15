@@ -1,21 +1,25 @@
-import type { HudElement } from '../config.js';
-import { DEFAULT_ELEMENT_ORDER, DEFAULT_MERGE_GROUPS, DEFAULT_PROJECT_LINE_ORDER } from '../config.js';
-import type { Frame } from './frame.js';
-import { activityLine } from './activity.js';
-import { separatorLine, visibleWidth } from './ansi.js';
-import { contextLine } from './context.js';
-import type { LabelAlign } from './labels.js';
-import { addedDirsLine, cacheHitRateLine, environmentLine, memoryLine, promptCacheLine, sessionTimeLine } from './lines.js';
-import { orderParts } from './order.js';
+import type { HudElement } from '../config.ts';
+import { DEFAULT_ELEMENT_ORDER, DEFAULT_MERGE_GROUPS, DEFAULT_PROJECT_LINE_ORDER } from '../config.ts';
+import type { Frame } from './frame.ts';
+import { activityLine } from './activity.ts';
+import { separatorLine, visibleWidth } from './ansi.ts';
+import { contextLine } from './context.ts';
+import type { LabelAlign } from './labels.ts';
+import { addedDirsLine, cacheHitRateLine, environmentLine, memoryLine, promptCacheLine, sessionTimeLine } from './lines.ts';
+import { orderParts } from './order.ts';
 import {
   advisorPart, authPart, compactionsPart, costPart, customLinePart, durationPart, extraPart, modelBadge,
   projectParts, sessionNamePart, sessionTokensSummary, speedPart, versionPart, type Part,
-} from './parts.js';
-import { usageParts } from './usage.js';
-import { gitFilesLine } from './vcs.js';
-import { t } from '../i18n/index.js';
+} from './parts.ts';
+import { usageParts } from './usage.ts';
+import { gitFilesLine } from './vcs.ts';
+import { t } from '../i18n/index.ts';
 
 const ACTIVITY = new Set<HudElement>(['tools', 'skills', 'mcp', 'agents', 'todos']);
+
+function elementOrder(f: Frame): HudElement[] {
+  return f.config?.elementOrder ?? DEFAULT_ELEMENT_ORDER;
+}
 
 function projectLine(f: Frame): string | null {
   const display = f.config?.display;
@@ -31,7 +35,8 @@ function projectLine(f: Frame): string | null {
   add(versionPart(f), 'version');
   add(extraPart(f), 'extra');
   add(durationPart(f), 'duration');
-  add(costPart(f), 'cost');
+  // Until cost is placed in elementOrder, it stays on the first line.
+  if (!elementOrder(f).includes('cost')) add(costPart(f), 'cost');
   add(speedPart(f), 'speed');
   add(authPart(f), 'auth');
   add(customLinePart(f, 'last'));
@@ -50,6 +55,8 @@ function elementLine(f: Frame, element: HudElement, align: LabelAlign = {}): str
     case 'memory': return memoryLine(f, align);
     case 'environment': return environmentLine(f);
     case 'sessionTime': return sessionTimeLine(f);
+    case 'sessionTokens': return f.config?.display?.showSessionTokens ? sessionTokensSummary(f, t('label.tokens')) : null;
+    case 'cost': return costPart(f);
     default: return activityLine(f, element);
   }
 }
@@ -71,7 +78,7 @@ interface Row {
 
 /** The expanded layout: one row per element in elementOrder, merging adjacent mergeGroups members. */
 export function expandedLines(f: Frame): string[] {
-  const order = f.config?.elementOrder ?? DEFAULT_ELEMENT_ORDER;
+  const order = elementOrder(f);
   const groups = new Map<HudElement, Set<HudElement>>();
   for (const group of f.config?.display?.mergeGroups ?? DEFAULT_MERGE_GROUPS) {
     const members = new Set(group);
@@ -133,8 +140,9 @@ export function expandedLines(f: Frame): string[] {
   const lines = rows.map(({ line }) => line);
   const gitFiles = gitFilesLine(f);
   if (gitFiles) lines.push(gitFiles);
-  if (f.config?.display?.showSessionTokens) {
-    const tokens = sessionTokensSummary(f, t('label.tokens'));
+  // Until sessionTokens is placed in elementOrder, the summary keeps its own last line.
+  if (!order.includes('sessionTokens')) {
+    const tokens = elementLine(f, 'sessionTokens');
     if (tokens) lines.push(tokens);
   }
   const compactions = compactionsPart(f);

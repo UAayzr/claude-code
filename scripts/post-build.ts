@@ -3,12 +3,13 @@
  * Post-build processing for Vite build output.
  *
  * 1. Patch globalThis.Bun destructuring in third-party deps for Node.js compat
- * 2. Copy native addon files
+ * 2. Copy native addon files and the vendored claude-hud
  * 3. Generate dual entry points (cli-bun.js, cli-node.js)
  */
 import { readdir, readFile, writeFile, cp } from 'node:fs/promises'
 import { chmodSync } from 'node:fs'
 import { join } from 'node:path'
+import { copyClaudeHud } from './copy-hud.ts'
 
 const outdir = 'dist'
 
@@ -71,6 +72,10 @@ async function postBuild() {
   const soundsDir = join(outdir, 'vendor', 'sounds')
   await cp('src/utils/vendor/sounds', soundsDir, { recursive: true } as never)
   console.log(`Copied src/utils/vendor/sounds/ → ${soundsDir}/`)
+
+  // claude-hud 是多文件运行时，必须原样复制（详见 scripts/copy-hud.ts）。
+  // 此前 Vite 管线完全没有这一步，导致发布产物里没有状态栏。
+  await copyClaudeHud(outdir)
 
   // Step 3: Generate dual entry points
   const cliBun = join(outdir, 'cli-bun.js')

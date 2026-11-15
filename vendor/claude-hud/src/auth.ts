@@ -1,42 +1,33 @@
 import * as fs from 'node:fs';
-import * as os from 'node:os';
-import { getClaudeConfigJsonPath } from './claude-config-dir.js';
-import { sanitizeDisplayText } from './utils/sanitize.js';
+import { displayLabel } from './utils/sanitize.ts';
+import { truncateString } from './utils/truncate.ts';
 
 /**
- * Authentication info for the current UAayzr login, derived from the
- * `oauthAccount` block UAayzr persists in ~/.uaayzr.json, or
- * $UAAYZR_CONFIG_DIR/.uaayzr.json when the config directory is overridden.
+ * Authentication info for the current Claude Code login, derived from the
+ * `oauthAccount` block Claude Code persists in ~/.claude.json, or
+ * $CLAUDE_CONFIG_DIR/.claude.json when the config directory is overridden.
  *
  *   method: human-readable auth/plan label (e.g. "Claude Max 20x", "API Key")
  *   user:   account identifier (email local part, falling back to displayName)
+ *   email:  the full email address, for display.authUserFullEmail
  */
 export interface AuthInfo {
   method: string | null;
   user: string | null;
+  email: string | null;
 }
 
-const EMPTY_AUTH_INFO: AuthInfo = { method: null, user: null };
-const API_KEY_AUTH_INFO: AuthInfo = { method: 'API Key', user: null };
+const EMPTY_AUTH_INFO: AuthInfo = { method: null, user: null, email: null };
+const API_KEY_AUTH_INFO: AuthInfo = { method: 'API Key', user: null, email: null };
 const AUTH_VALUE_MAX_LEN = 128;
 
 function hasApiKey(env: NodeJS.ProcessEnv): boolean {
   return typeof env.ANTHROPIC_API_KEY === 'string' && env.ANTHROPIC_API_KEY.trim().length > 0;
 }
 
-// Strip ANSI sequences and control/bidi characters so values from
-// claude.json can never smuggle escape sequences into the terminal.
-function sanitizeValue(value: string): string {
-  return sanitizeDisplayText(value).trim().slice(0, AUTH_VALUE_MAX_LEN);
-}
-
+// Values from claude.json are sanitized so they can never smuggle escape sequences into the terminal.
 function readString(obj: Record<string, unknown>, key: string): string | null {
-  const value = obj[key];
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const sanitized = sanitizeValue(value);
-  return sanitized.length > 0 ? sanitized : null;
+  return displayLabel(obj[key], AUTH_VALUE_MAX_LEN) || null;
 }
 
 /**
@@ -96,22 +87,22 @@ export function deriveAuthInfo(claudeJson: unknown, env: NodeJS.ProcessEnv = pro
   const email = readString(account, 'emailAddress');
   const user = email ? email.split('@')[0] : readString(account, 'displayName');
 
-  return { method, user };
+  return { method, user, email };
 }
 
 /**
- * Cache of the two DERIVED fields, keyed on the source file's identity.
+ * Cache of the DERIVED fields, keyed on the source file's identity.
  *
  * The identity combines mtime, ctime, size, device, and inode so a replacement
  * or rapid rewrite cannot reuse a stale entry based on one timestamp alone.
  */
-export function readAuthInfo(): AuthInfo {
+export function readAuthInfo(claudeJson: string): AuthInfo {
   // An API key wins over whatever OAuth profile claude.json still holds.
   if (hasApiKey(process.env)) {
     return API_KEY_AUTH_INFO;
   }
   try {
-    return deriveAuthInfo(JSON.parse(fs.readFileSync(getClaudeConfigJsonPath(os.homedir()), 'utf8')));
+    return deriveAuthInfo(JSON.parse(fs.readFileSync(claudeJson, 'utf8')));
   } catch {
     return EMPTY_AUTH_INFO;
   }
@@ -121,17 +112,17 @@ export function truncateUser(user: string, maxLength: number): string {
   if (maxLength <= 0 || user.length <= maxLength) {
     return user;
   }
-  return `${user.slice(0, maxLength)}…`;
+  return `${truncateString(user, maxLength, '')}…`;
 }
 
 /**
  * Builds the standalone auth segment for the end of the first HUD line,
- * honoring the showAuth / showAuthUser / authUserLength display settings.
+ * honoring the showAuth / showAuthUser / authUserFullEmail / authUserLength display settings.
  * Returns e.g. "Claude Max 20x · yukinosh…", or null when nothing to show.
  */
 export function formatAuthSegment(
   info: AuthInfo | null | undefined,
-  display: { showAuth?: boolean; showAuthUser?: boolean; authUserLength?: number } | undefined,
+  display: { showAuth?: boolean; showAuthUser?: boolean; authUserFullEmail?: boolean; authUserLength?: number } | undefined,
 ): string | null {
   if (!info) {
     return null;
@@ -141,8 +132,9 @@ export function formatAuthSegment(
   if (display?.showAuth && info.method) {
     parts.push(info.method);
   }
-  if (display?.showAuthUser && info.user) {
-    parts.push(truncateUser(info.user, display?.authUserLength ?? 8));
+  const user = display?.authUserFullEmail && info.email ? info.email : info.user;
+  if (display?.showAuthUser && user) {
+    parts.push(truncateUser(user, display?.authUserLength ?? 8));
   }
 
   return parts.length > 0 ? parts.join(' · ') : null;

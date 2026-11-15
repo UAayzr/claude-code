@@ -1,5 +1,5 @@
-import { createDebug } from './debug.js';
-import { GitTimeoutError, runGit } from './git-runner.js';
+import { createDebug } from './debug.ts';
+import type { Ask, Probe } from './channel.ts';
 
 const debug = createDebug('git');
 
@@ -49,21 +49,23 @@ export interface GitStatusOptions {
   repo?: GitRepoIdentity | null;
 }
 
-const QUIET = ['-c', 'core.quotePath=false', '--no-optional-locks'];
+type GitAnswer = { stdout: string } | { error: 'timeout' | 'failed' } | null | undefined;
 
-export async function getGitStatus(cwd?: string, options: GitStatusOptions = {}): Promise<GitStatus | null> {
-  if (!cwd) return null;
+const run = async (ask: Ask, probe: Probe): Promise<GitAnswer> => (await ask([probe]))[probe] as GitAnswer;
+const stdoutOf = (answer: GitAnswer): string | null => (answer && 'stdout' in answer ? answer.stdout : null);
 
-  let output: string;
-  try {
-    output = await runGit(cwd, [...QUIET, 'status', '--porcelain=v2', '--branch', '-z'], 1000);
-  } catch (err) {
-    debug('git status failed:', err instanceof Error ? err.message : err);
-    return err instanceof GitTimeoutError ? getBranchOnly(cwd, options.repo) : null;
+/** The repo's status, from the git runs collector.mjs makes with the repo's own config defused. */
+export async function getGitStatus(ask: Ask, options: GitStatusOptions = {}): Promise<GitStatus | null> {
+  const answer = await run(ask, 'git.status');
+  const output = stdoutOf(answer);
+  if (output === null) {
+    const error = answer && 'error' in answer ? answer.error : null;
+    debug('git status failed:', error ?? 'no cwd');
+    return error === 'timeout' ? getBranchOnly(ask, options.repo) : null;
   }
 
   const parsed = parseStatus(output);
-  const branch = parsed.head ?? await describeDetachedHead(cwd, parsed.oid);
+  const branch = parsed.head ?? await describeDetachedHead(ask, parsed.oid);
   if (!branch) return null;
 
   const status: GitStatus = {
@@ -77,42 +79,35 @@ export async function getGitStatus(cwd?: string, options: GitStatusOptions = {})
 
   status.fileStats = parsed.fileStats;
   if (options.lineDiffs) {
-    try {
-      const diffs = parseNumstat(await runGit(cwd, [...QUIET, 'diff', '--numstat', '-z', 'HEAD'], 2000));
-      status.lineDiff = { added: 0, deleted: 0 };
-      for (const diff of diffs.values()) {
-        status.lineDiff.added += diff.added;
-        status.lineDiff.deleted += diff.deleted;
-      }
-      for (const file of parsed.fileStats.trackedFiles) {
-        const diff = diffs.get(file.fullPath);
-        if (diff) file.lineDiff = diff;
-      }
-    } catch (err) {
-      debug('git diff --numstat failed:', err instanceof Error ? err.message : err);
+    const numstat = stdoutOf(await run(ask, 'git.numstat'));
+    if (numstat === null) {
+      debug('git diff-index --numstat failed');
+      return status;
+    }
+    const diffs = parseNumstat(numstat);
+    status.lineDiff = { added: 0, deleted: 0 };
+    for (const diff of diffs.values()) {
+      status.lineDiff.added += diff.added;
+      status.lineDiff.deleted += diff.deleted;
+    }
+    for (const file of parsed.fileStats.trackedFiles) {
+      const diff = diffs.get(file.fullPath);
+      if (diff) file.lineDiff = diff;
     }
   }
   return status;
 }
 
 // A status that timed out in a large repo still leaves the branch worth showing.
-async function getBranchOnly(cwd: string, repo: GitRepoIdentity | null | undefined): Promise<GitStatus | null> {
-  try {
-    const branch = (await runGit(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'], 1000)).trim();
-    if (!branch || branch === 'HEAD') return null;
-    return { branch, isDirty: false, ahead: 0, behind: 0, branchUrl: githubRefUrl(repo, branch) };
-  } catch {
-    return null;
-  }
+async function getBranchOnly(ask: Ask, repo: GitRepoIdentity | null | undefined): Promise<GitStatus | null> {
+  const branch = stdoutOf(await run(ask, 'git.branch'))?.trim();
+  if (!branch || branch === 'HEAD') return null;
+  return { branch, isDirty: false, ahead: 0, behind: 0, branchUrl: githubRefUrl(repo, branch) };
 }
 
-async function describeDetachedHead(cwd: string, oid: string | null): Promise<string | null> {
-  try {
-    const tag = (await runGit(cwd, ['describe', '--tags', '--exact-match', 'HEAD'], 1000)).trim();
-    if (tag) return tag;
-  } catch {
-    // Untagged commit.
-  }
+async function describeDetachedHead(ask: Ask, oid: string | null): Promise<string | null> {
+  const tag = stdoutOf(await run(ask, 'git.describe'))?.trim();
+  if (tag) return tag;
   return oid && /^[0-9a-f]{7,}$/.test(oid) ? `detached:${oid.slice(0, 7)}` : null;
 }
 

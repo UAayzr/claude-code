@@ -1,17 +1,20 @@
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
-import { getHudPluginDir } from './claude-config-dir.js';
-import { getNativeCostUsd } from './cost.js';
-import { createDebug } from './debug.js';
-import type { StdinData } from './types.js';
-import { SEVEN_DAY_WINDOW_MS } from './usage-pace.js';
+import type { WeeklyCostPeriod } from './config.ts';
+import { getNativeCostUsd } from './cost.ts';
+import { createDebug } from './debug.ts';
+import type { StdinData } from './types.ts';
+import { SEVEN_DAY_WINDOW_MS } from './usage-pace.ts';
 
 const debug = createDebug('daily-cost');
 
 // Content changes always write; renders that only refresh last-seen times are throttled.
 export const DAILY_COST_WRITE_THROTTLE_MS = 30_000;
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+// An update takes a few milliseconds, so a lock older than this belongs to a crashed process.
+const LOCK_STALE_MS = 2_000;
+const LOCK_WAIT_MS = 500;
+const LOCK_RETRY_MS = 10;
 
 type LedgerSession = {
   // Native total when the session was first seen today, and inside the current week.
@@ -33,27 +36,34 @@ type Ledger = {
 
 export type CostTotals = {
   todayUsd: number;
-  // Null until the 7-day usage window's reset time is known.
+  // Null on the quota period until the 7-day usage window's reset time is known.
   weekUsd: number | null;
 };
 
 export type DailyCostDeps = {
-  homeDir: () => string;
+  dataDir: () => string;
   now: () => number;
 };
 
-const defaultDeps: DailyCostDeps = {
-  homeDir: () => os.homedir(),
-  now: () => Date.now(),
-};
-
-export function getDailyCostLedgerPath(homeDir: string): string {
-  return path.join(getHudPluginDir(homeDir), 'daily-cost.json');
+export function getDailyCostLedgerPath(dataDir: string): string {
+  return path.join(dataDir, 'daily-cost.json');
 }
 
 function localDateKey(now: number): string {
   const date = new Date(now);
   return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+}
+
+// Date#getDay order, so each weekday's index is its day number.
+const WEEKDAYS: readonly WeeklyCostPeriod[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+// The latest 00:00 local time on `day` (0 = Sunday). Stepping back by calendar days, not by 24 hours,
+// keeps it at midnight in a week that crosses a daylight-saving change.
+function calendarWeekStart(now: number, day: number): number {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - ((date.getDay() - day + 7) % 7));
+  return date.getTime();
 }
 
 const isAmount = (value: unknown): value is number =>
@@ -115,16 +125,61 @@ function writeLedger(ledgerPath: string, ledger: Ledger, now: number): void {
   }
 }
 
+// Renders run in separate processes that share one ledger. The rename in writeLedger keeps
+// the file whole, but two overlapping read-modify-write cycles still drop the earlier
+// writer's changes, including a whole new session and its baseline. A lock file taken with
+// O_EXCL makes each cycle run alone. The clock here is the real one, since `deps.now` is
+// the caller's logical time. If the lock can't be taken, the update goes ahead without it.
+function withLedgerLock<T>(ledgerPath: string, update: () => T): T {
+  const lockPath = `${ledgerPath}.lock`;
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  let held = false;
+  try {
+    fs.mkdirSync(path.dirname(ledgerPath), { recursive: true, mode: 0o700 });
+    while (!held) {
+      try {
+        fs.closeSync(fs.openSync(lockPath, 'wx', 0o600));
+        held = true;
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+        try {
+          if (Date.now() - fs.statSync(lockPath).mtimeMs > LOCK_STALE_MS) fs.rmSync(lockPath, { force: true });
+        } catch {
+          // The holder released it between the two calls; try again.
+        }
+        if (Date.now() >= deadline) throw new Error('timed out waiting for the ledger lock');
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, LOCK_RETRY_MS);
+      }
+    }
+  } catch (err) {
+    debug('Updating the ledger without a lock:', err instanceof Error ? err.message : err);
+  }
+  try {
+    return update();
+  } finally {
+    if (held) fs.rmSync(lockPath, { force: true });
+  }
+}
+
 // Folds the session's native cost into the ledger and returns today's and this
 // week's spend across sessions, or null when nothing has been recorded.
 export function getCostTotals(
   stdin: StdinData,
-  options?: { allowRoutedCost?: boolean; sevenDayResetAt?: Date | null },
-  deps: DailyCostDeps = defaultDeps,
+  options: { allowRoutedCost?: boolean; sevenDayResetAt?: Date | null; weeklyCostPeriod?: WeeklyCostPeriod } | undefined,
+  deps: DailyCostDeps,
+): CostTotals | null {
+  const ledgerPath = getDailyCostLedgerPath(deps.dataDir());
+  return withLedgerLock(ledgerPath, () => updateLedger(ledgerPath, stdin, options, deps));
+}
+
+function updateLedger(
+  ledgerPath: string,
+  stdin: StdinData,
+  options: { allowRoutedCost?: boolean; sevenDayResetAt?: Date | null; weeklyCostPeriod?: WeeklyCostPeriod } | undefined,
+  deps: DailyCostDeps,
 ): CostTotals | null {
   const now = deps.now();
   const today = localDateKey(now);
-  const ledgerPath = getDailyCostLedgerPath(deps.homeDir());
   const stored = readLedger(ledgerPath);
   const ledger: Ledger = stored ?? { date: today, sessions: {}, week: { start: now, carry: 0 } };
   let changed = stored === null;
@@ -145,9 +200,12 @@ export function getCostTotals(
     changed = true;
   }
 
-  // Restart the week when the quota window behind the Weekly bar opened after accumulation began.
+  // Restart the week when its window opened after accumulation began: the quota window behind the
+  // Weekly bar, or with weeklyCostPeriod a calendar week from the chosen weekday's midnight.
+  const day = WEEKDAYS.indexOf(options?.weeklyCostPeriod ?? 'quota');
   const resetAt = options?.sevenDayResetAt?.getTime();
-  const windowStart = resetAt !== undefined && Number.isFinite(resetAt) ? resetAt - SEVEN_DAY_WINDOW_MS : null;
+  const quotaStart = resetAt !== undefined && Number.isFinite(resetAt) ? resetAt - SEVEN_DAY_WINDOW_MS : null;
+  const windowStart = day >= 0 ? calendarWeekStart(now, day) : quotaStart;
   if (windowStart !== null && ledger.week.start < windowStart) {
     for (const session of Object.values(ledger.sessions)) session.weekBaseline = session.total;
     ledger.week = { start: now, carry: 0 };

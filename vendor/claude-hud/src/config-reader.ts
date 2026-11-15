@@ -1,8 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
-import { createDebug } from './debug.js';
-import { getClaudeConfigDir, getClaudeConfigJsonPath } from './claude-config-dir.js';
+import { createDebug } from './debug.ts';
+import type { Paths } from './channel.ts';
 
 const debug = createDebug('config-reader');
 
@@ -52,76 +51,65 @@ function countRules(dir: string, state = { visited: new Set<string>(), entries: 
   state.visited.add(root);
   state.directories += 1;
 
-  let count = 0;
+  let entries: string[];
   try {
-    for (const entry of fs.readdirSync(root)) {
-      if (++state.entries > MAX_RULE_ENTRIES) break;
-      const target = realPath(path.join(root, entry));
-      if (!target || state.visited.has(target)) continue;
-      const stat = fs.statSync(target);
-      if (stat.isDirectory()) {
-        count += countRules(target, state);
-      } else if (stat.isFile() && entry.endsWith('.md')) {
-        state.visited.add(target);
-        count += 1;
-      }
-    }
+    entries = fs.readdirSync(root);
   } catch (error) {
     debug(`Failed to read rules from ${dir}:`, error);
+    return 0;
+  }
+  let count = 0;
+  for (const entry of entries) {
+    if (++state.entries > MAX_RULE_ENTRIES) break;
+    const target = realPath(path.join(root, entry));
+    if (!target || state.visited.has(target)) continue;
+    // A link out of the read grants can't be stat'ed; skip it, not the entries after it.
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(target);
+    } catch (error) {
+      debug(`Failed to read rule ${target}:`, error);
+      continue;
+    }
+    if (stat.isDirectory()) {
+      count += countRules(target, state);
+    } else if (stat.isFile() && entry.endsWith('.md')) {
+      state.visited.add(target);
+      count += 1;
+    }
   }
   return count;
 }
 
-function sameLocation(a: string, b: string): boolean {
-  const normalize = (p: string): string => {
-    const resolved = path.resolve(p).replace(/[\\/]+$/, '') || path.parse(path.resolve(p)).root;
-    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
-  };
-  if (normalize(a) === normalize(b)) return true;
-  const realA = realPath(a);
-  const realB = realPath(b);
-  return realA !== null && realB !== null && normalize(realA) === normalize(realB);
-}
+/** Counts what the user and project configure. Each file comes from `paths`, so a missing one counts 0. */
+export function countConfigs(paths: Pick<Paths, 'user' | 'project' | 'claudeJson'>): ConfigCounts {
+  const exists = (file: string | null): boolean => file !== null && fs.existsSync(file);
+  const { user, project } = paths;
 
-export function countConfigs(cwd?: string): ConfigCounts {
-  const homeDir = os.homedir();
-  const claudeDir = getClaudeConfigDir(homeDir);
-  const exists = (...parts: string[]): boolean => fs.existsSync(path.join(...parts));
-
-  const userSettings = readJson(path.join(claudeDir, 'settings.json'));
-  const claudeJson = readJson(getClaudeConfigJsonPath(homeDir));
+  const userSettings = readJson(user.settings);
+  const claudeJson = readJson(paths.claudeJson);
   const userMcp = new Set([...keysOf(userSettings?.mcpServers), ...keysOf(claudeJson?.mcpServers)]);
   for (const name of stringsOf(claudeJson?.disabledMcpServers)) userMcp.delete(name);
 
-  let claudeMdCount = exists(claudeDir, 'CLAUDE.md') ? 1 : 0;
-  let rulesCount = countRules(path.join(claudeDir, 'rules'));
+  let claudeMdCount = exists(user.claudeMd) ? 1 : 0;
+  let rulesCount = countRules(user.rules);
   let hooksCount = keysOf(userSettings?.hooks).length;
   const projectMcp = new Set<string>();
 
-  if (cwd) {
-    const projectDir = path.join(cwd, '.uaayzr');
-    // When the project's .uaayzr is the user config dir, its files were counted above.
-    const isUserDir = sameLocation(projectDir, claudeDir);
-    claudeMdCount += [
-      exists(cwd, 'CLAUDE.md'),
-      exists(cwd, 'CLAUDE.local.md'),
-      !isUserDir && exists(projectDir, 'CLAUDE.md'),
-      exists(projectDir, 'CLAUDE.local.md'),
-    ].filter(Boolean).length;
+  if (project) {
+    claudeMdCount += [exists(project.claudeMd), exists(project.localMd), exists(project.dotClaudeMd), exists(project.dotLocalMd)]
+      .filter(Boolean).length;
+    if (project.rules) rulesCount += countRules(project.rules);
+    const projectSettings = project.settings ? readJson(project.settings) : null;
+    for (const name of keysOf(projectSettings?.mcpServers)) projectMcp.add(name);
+    hooksCount += keysOf(projectSettings?.hooks).length;
 
-    if (!isUserDir) {
-      rulesCount += countRules(path.join(projectDir, 'rules'));
-      const projectSettings = readJson(path.join(projectDir, 'settings.json'));
-      for (const name of keysOf(projectSettings?.mcpServers)) projectMcp.add(name);
-      hooksCount += keysOf(projectSettings?.hooks).length;
-    }
-
-    const localSettings = readJson(path.join(projectDir, 'settings.local.json'));
+    const localSettings = readJson(project.localSettings);
     for (const name of keysOf(localSettings?.mcpServers)) projectMcp.add(name);
     hooksCount += keysOf(localSettings?.hooks).length;
 
     const disabledMcpJson = new Set(stringsOf(localSettings?.disabledMcpjsonServers));
-    for (const name of keysOf(readJson(path.join(cwd, '.mcp.json'))?.mcpServers)) {
+    for (const name of keysOf(readJson(project.mcpJson)?.mcpServers)) {
       if (!disabledMcpJson.has(name)) projectMcp.add(name);
     }
   }

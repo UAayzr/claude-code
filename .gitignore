@@ -66,3 +66,9 @@ fixtures/
 # 浏览器 MCP 会话产物(快照/控制台日志,运行时生成)
 .playwright-mcp/
 .zawu/
+
+# claude-hud 上游仓库的本地克隆，用于升级时取源码与对照测试。
+# 它自带 .git 和 30 个测试文件，纳入版本控制会让 bun test 扫到上游测试
+# （断言的是 ~/.claude 路径，与我们的品牌化不符），因此整体排除。
+# 注意：前导 / 必不可少——不带 / 会连 vendor/claude-hud/ 一起误伤。
+/claude-hud/

@@ -1,4 +1,4 @@
 [test]
 root = "."
 timeout = 10000
-pathIgnorePatterns = ["agent-notifications/**"]
+pathIgnorePatterns = ["agent-notifications/**", "claude-hud/**"]
