@@ -5850,16 +5850,24 @@ export function REPL({
     return transcriptReturn;
   }
 
-  // Show the placeholder until the real user message appears in
-  // displayedMessages. userInputOnProcessing stays set for the whole turn
-  // (cleared in resetLoadingState); this length check hides it once
-  // displayedMessages grows past the baseline captured at submit time.
-  // Covers both gaps: before setMessages is called (processUserInput), and
-  // while deferredMessages lags behind messages. Suppressed when viewing an
-  // agent — displayedMessages is a different array there, and onAgentSubmit
-  // doesn't use the placeholder anyway.
+  // Show the placeholder until the real user message lands in messages.
+  // userInputOnProcessing stays set for the whole turn (cleared in
+  // resetLoadingState); this length check hides it once messages grows past
+  // the baseline captured at submit time.
+  //
+  // Compare against `messages`, NOT `displayedMessages`: the baseline is
+  // messagesRef.current.length (full array), while displayedMessages falls
+  // back to deferredMessages during loading — which is capped to the last
+  // DEFERRED_CAP (500) entries. On Windows showStreamingText is always false
+  // (hasCursorUpViewportYankBug), so loading always takes that capped branch.
+  // Past 500 messages the capped length can never exceed the baseline, so the
+  // placeholder would never hide and would render alongside the real message.
+  // `messages` is never truncated — only the render path is.
+  //
+  // Suppressed when viewing an agent — messages is a different array there,
+  // and onAgentSubmit doesn't use the placeholder anyway.
   const placeholderText =
-    userInputOnProcessing && !viewedAgentTask && displayedMessages.length <= userInputBaselineRef.current
+    userInputOnProcessing && !viewedAgentTask && messages.length <= userInputBaselineRef.current
       ? userInputOnProcessing
       : undefined;
 
