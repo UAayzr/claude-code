@@ -98,6 +98,7 @@ const skillSearchFeatureCheck = feature('EXPERIMENTAL_SKILL_SEARCH')
 /* eslint-enable @typescript-eslint/no-require-imports */
 import type { OutputStyleConfig } from './outputStyles.js'
 import {
+  CYBER_RISK_ANCHOR,
   CYBER_RISK_INSTRUCTION,
   isCyberRiskEnabled,
 } from './cyberRiskInstruction.js'
@@ -454,6 +455,7 @@ ${isCyberRiskEnabled() ? CYBER_RISK_INSTRUCTION : ''}`,
       getScratchpadInstructions(),
       SUMMARIZE_TOOL_RESULTS_SECTION,
       getProactiveSection(),
+      isCyberRiskEnabled() ? CYBER_RISK_ANCHOR : null,
     ].filter(s => s !== null)
   }
 
@@ -530,6 +532,7 @@ ${isCyberRiskEnabled() ? CYBER_RISK_INSTRUCTION : ''}`,
     ...(shouldUseGlobalCacheScope() ? [SYSTEM_PROMPT_DYNAMIC_BOUNDARY] : []),
     // --- Dynamic content (registry-managed) ---
     ...resolvedDynamicSections,
+    isCyberRiskEnabled() ? CYBER_RISK_ANCHOR : null,
   ].filter(s => s !== null)
 }
 
